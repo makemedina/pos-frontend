@@ -5,8 +5,7 @@
 // llegaba al backend real). Ahora se usa el mismo host con el que se
 // abrio la app (sea localhost o la IP de la red local), solo cambiando
 // el puerto al del backend.
-export const API_URL = `${window.location.protocol}//${window.location.hostname}:3000/api`;
-
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 // ---------- MANEJO DE SESION ----------
 // El backend ahora exige un token en cada llamada (Authorization: Bearer <token>).
 // Antes no existia ningun mecanismo de sesion; esto centraliza el token en
