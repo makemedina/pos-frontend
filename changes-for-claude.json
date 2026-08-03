@@ -1,0 +1,95 @@
+{
+  "project": "pos-frontend",
+  "root": "/Users/marcomedina/Downloads/Mr Carnes POS/pos-frontend",
+  "summary": "Se completó el flujo de venta: búsqueda de productos, mejoras en el carrito (mostrar líneas y eliminar), y autorización en checkout para precios por debajo del costo. Se añadió filtrado y se manejó la fusión de cantidades iguales en el carrito.",
+  "run_commands": {
+    "install": "npm install",
+    "dev": "npm run dev  # abre http://localhost:5173/",
+    "build": "npm run build",
+    "preview": "npm run preview"
+  },
+  "dev_server": {
+    "local": "http://localhost:5173/",
+    "network": "http://192.168.0.243:5173/ (según entorno original)"
+  },
+  "api_endpoint": {
+    "base": "http://localhost:3000/api",
+    "file": "src/api.ts"
+  },
+  "modified_files": [
+    {
+      "path": "src/App.tsx",
+      "changes": [
+        "Agregado filtro de búsqueda (estado 'filtro') y filtrado de catálogo.",
+        "agregarAlCarrito ahora fusiona cantidades si la misma variante y precio ya existe en el carrito.",
+        "Se añadió eliminarDelCarrito(index) y se pasa a <Carrito /> como onEliminar.",
+        "confirmarVenta ahora acepta campos opcionales autorizadoPorId y motivoAutorizacion y los incluye en el payload de items si existen."
+      ],
+      "key_signatures": {
+        "agregarAlCarrito": "(item: ItemCarrito) => void  // fusiona cantidades por varianteId+precio",
+        "eliminarDelCarrito": "(index: number) => void",
+        "confirmarVenta": "async (datos: { clienteId, esCredito, montoPagadoAhora, metodoPago, autorizadoPorId?, motivoAutorizacion? })"
+      }
+    },
+    {
+      "path": "src/Carrito.tsx",
+      "changes": [
+        "Interfaz Props ahora incluye onEliminar(index: number)",
+        "Se añadió render de cada línea del carrito con botón para quitar (✕), mostrando producto, marca, cantidad y precio unitario.",
+        "Estilo y markup para mostrar múltiples líneas + total."
+      ],
+      "key_signatures": {
+        "Carrito": "function Carrito({ items, onCobrar, onEliminar }: Props)"
+      }
+    },
+    {
+      "path": "src/Checkout.tsx",
+      "changes": [
+        "onConfirmar (prop) ahora acepta autorizadoPorId y motivoAutorizacion opcionales.",
+        "Se detecta requiereAutorizacion = true cuando alguna linea tiene precioUnitario < costoLote (y costoLote != null).",
+        "Si requiere autorizacion se muestran campos de ID de autorizacion y motivo; al confirmar valida que esos campos estén presentes y los pasa al callback.",
+        "Pequeñas mejoras: useEffect para ajustar montoPagado cuando se cambia esCredito; evitar NaN en inputs numéricos.",
+        "Se añadió control de error para autorización (errorAutorizacion)."
+      ],
+      "key_signatures": {
+        "onConfirmar": "(datos: { clienteId, esCredito, montoPagadoAhora, metodoPago, autorizadoPorId?, motivoAutorizacion? }) => void"
+      }
+    },
+    {
+      "path": "src/index.css",
+      "changes": [
+        "Estilos nuevos para la lista del carrito (.carrito-detalle, .linea-carrito, .boton-quitar), bloque de autorizacion (.bloque-autorizacion) y mensajes de sin resultados.",
+        "Mantiene el resto del CSS existente." 
+      ]
+    },
+    {
+      "path": "src/api.ts",
+      "changes": [
+        "No se cambiaron las URLs, pero hay información del shape del payload: registrarVenta(payload: CrearVentaPayload) acepta items con campos autorizadoPorId y motivoAutorizacion si se pasan.",
+        "Asegurarse de que el backend entienda esos campos o adaptar api.ts para otra estructura si fuera necesario."
+      ]
+    }
+  ],
+  "testing_steps": [
+    "1) npm run dev y abrir http://localhost:5173/",
+    "2) En la pantalla principal usar el buscador para filtrar productos por nombre/marca/categoría.",
+    "3) Click en una tarjeta de producto abre modal para agregar: ajustar cantidad y precio; si precio < costoLote se muestra aviso (pero la autorizacion se solicita en checkout).",
+    "4) Añadir uno o más productos (si añades la misma variante al mismo precio, se suma la cantidad).",
+    "5) Abrir el carrito con 'Cobrar' -> se abre Checkout; seleccionar/crear cliente, elegir metodo de pago y crédito si aplica.",
+    "6) Si algún item tiene precio < costoLote: aparecerán campos de autorizacion (ID + motivo). Ingresarlos para poder confirmar.",
+    "7) Confirmar venta envía el payload a POST /api/ventas con items que pueden incluir autorizadoPorId y motivoAutorizacion. Verificar respuesta y banner en UI."
+  ],
+  "notes_and_tips": {
+    "dev_server_running_in_session": "En esta sesión ya se arrancó el servidor Vite (http://localhost:5173/) — desde otra máquina o contenedor podrías necesitar exponer puertos o ejecutar localmente.",
+    "backend": "La app asume un backend en http://localhost:3000/api. Si no existe, para pruebas rápidas se puede mockear modificando src/api.ts para devolver datos estáticos (ej: return Promise.resolve([...]) ).",
+    "edge_cases": [
+      "Si el backend devuelve errores con shape { code: 'STOCK_INSUFICIENTE' } o { code: 'REQUIERE_AUTORIZACION' }, App.tsx ya maneja esos códigos y muestra mensajes.",
+      "Si se desea autorizar localmente sin backend, modificar Checkout.tsx para aceptar un checkbox 'omitir autorizacion' en entorno dev."
+    ],
+    "recommended_next_steps": [
+      "(Opcional) Añadir confirmación visual que muestre el payload enviado antes de llamar al backend para facilitar debug.",
+      "(Opcional) Persistir carrito en localStorage para que sobreviva recargas durante ventas largas.",
+      "(Opcional) Añadir tests unitarios para funciones puras como agregarAlCarrito (fusionar cantidad)."
+    ]
+  }
+}

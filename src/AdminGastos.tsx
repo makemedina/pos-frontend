@@ -1,0 +1,275 @@
+import { useEffect, useState } from 'react';
+import { headerAuth, API_URL, buscarProveedores, crearProveedorRapido, type Proveedor } from './api';
+import { exportarAExcel } from './exportarExcel';
+
+interface CategoriaGasto {
+  id: string;
+  nombre: string;
+  departamento: string;
+}
+
+interface Gasto {
+  id: string;
+  concepto: string;
+  monto: number;
+  metodoPago: string;
+  fecha: string;
+  categoria: CategoriaGasto;
+  proveedor: { nombre: string } | null;
+  registradoPor: { nombre: string };
+}
+
+interface Props {
+  onCerrar: () => void;
+}
+
+const DEPARTAMENTOS = ['Operativos', 'Administrativos', 'Recursos Humanos', 'Financieros'];
+
+export function AdminGastos({ onCerrar }: Props) {
+  const [categorias, setCategorias] = useState<CategoriaGasto[]>([]);
+  const [gastos, setGastos] = useState<Gasto[]>([]);
+  const [concepto, setConcepto] = useState('');
+  const [monto, setMonto] = useState('');
+  const [metodoPago, setMetodoPago] = useState('efectivo');
+  const [categoriaId, setCategoriaId] = useState('');
+  const [mensaje, setMensaje] = useState<string | null>(null);
+
+  const [busquedaProveedor, setBusquedaProveedor] = useState('');
+  const [resultadosProveedor, setResultadosProveedor] = useState<Proveedor[]>([]);
+  const [proveedorElegido, setProveedorElegido] = useState<Proveedor | null>(null);
+
+  const [mostrarNuevaCategoria, setMostrarNuevaCategoria] = useState(false);
+  const [nombreCategoriaNueva, setNombreCategoriaNueva] = useState('');
+  const [departamentoNuevo, setDepartamentoNuevo] = useState(DEPARTAMENTOS[0]);
+
+  useEffect(() => {
+    cargar();
+  }, []);
+
+  async function cargar() {
+    try {
+      const [catRes, gastoRes] = await Promise.all([
+        fetch(`${API_URL}/gastos/categorias`, { headers: headerAuth() }),
+        fetch(`${API_URL}/gastos`, { headers: headerAuth() }),
+      ]);
+      const categoriasData = await catRes.json();
+      const gastosData = await gastoRes.json();
+      setCategorias(categoriasData);
+      setGastos(gastosData);
+      if (categoriasData[0] && !categoriasData.some((c: CategoriaGasto) => c.id === categoriaId)) {
+        setCategoriaId(categoriasData[0].id);
+      }
+    } catch {
+      setMensaje('No se pudo cargar los gastos');
+    }
+  }
+
+  async function buscarProveedor(valor: string) {
+    setBusquedaProveedor(valor);
+    if (valor.length < 2) {
+      setResultadosProveedor([]);
+      return;
+    }
+    setResultadosProveedor(await buscarProveedores(valor));
+  }
+
+  function elegirProveedor(p: Proveedor) {
+    setProveedorElegido(p);
+    setResultadosProveedor([]);
+    setBusquedaProveedor('');
+  }
+
+  async function crearProveedorDesdeGasto() {
+    if (!busquedaProveedor.trim()) return;
+    try {
+      const nuevo = await crearProveedorRapido(busquedaProveedor.trim());
+      setProveedorElegido(nuevo);
+      setResultadosProveedor([]);
+      setBusquedaProveedor('');
+    } catch {
+      setMensaje('No se pudo crear el proveedor.');
+    }
+  }
+
+  async function crearCategoriaNueva() {
+    if (!nombreCategoriaNueva.trim()) return;
+    try {
+      const res = await fetch(`${API_URL}/gastos/categorias`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headerAuth() },
+        body: JSON.stringify({ nombre: nombreCategoriaNueva.trim(), departamento: departamentoNuevo }),
+      });
+      if (!res.ok) throw new Error();
+      const nueva = await res.json();
+      setCategorias((prev) => [...prev, nueva]);
+      setCategoriaId(nueva.id);
+      setNombreCategoriaNueva('');
+      setMostrarNuevaCategoria(false);
+    } catch {
+      setMensaje('No se pudo crear la categoría.');
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!categoriaId) {
+      setMensaje('Elige una categoría antes de guardar.');
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/gastos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headerAuth() },
+        body: JSON.stringify({
+          categoriaId,
+          proveedorId: proveedorElegido?.id,
+          concepto,
+          monto: Number(monto),
+          metodoPago,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'No se pudo guardar');
+      setMensaje('Gasto registrado');
+      setConcepto('');
+      setMonto('');
+      setProveedorElegido(null);
+      cargar();
+    } catch (err: any) {
+      setMensaje(err.message || 'No se pudo registrar el gasto');
+    }
+  }
+
+  async function exportar() {
+    try {
+      await exportarAExcel(
+        gastos.map((g) => ({
+          Fecha: new Date(g.fecha).toLocaleString(),
+          Concepto: g.concepto,
+          Categoria: g.categoria.nombre,
+          Departamento: g.categoria.departamento,
+          Proveedor: g.proveedor?.nombre || '',
+          Monto: Number(g.monto),
+          'Metodo de pago': g.metodoPago,
+          'Registrado por': g.registradoPor.nombre,
+        })),
+        'gastos'
+      );
+    } catch {
+      setMensaje('No hay gastos para exportar.');
+    }
+  }
+
+  const categoriasPorDepartamento = categorias.reduce<Record<string, CategoriaGasto[]>>((acc, c) => {
+    (acc[c.departamento] ??= []).push(c);
+    return acc;
+  }, {});
+
+  return (
+    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2>Gastos</h2>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={exportar}>📊 Exportar Excel</button>
+            <button onClick={onCerrar}>Cerrar</button>
+          </div>
+        </div>
+
+        {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
+
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+          <h3>Registrar gasto</h3>
+          <input value={concepto} onChange={(e) => setConcepto(e.target.value)} placeholder="Concepto" required />
+          <input value={monto} onChange={(e) => setMonto(e.target.value)} type="number" step="0.01" placeholder="Monto" required />
+          <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)}>
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+          </select>
+
+          <label className="etiqueta">Categoría</label>
+          {!mostrarNuevaCategoria ? (
+            <>
+              <select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
+                {Object.entries(categoriasPorDepartamento).map(([departamento, cats]) => (
+                  <optgroup key={departamento} label={departamento}>
+                    {cats.map((c) => (
+                      <option key={c.id} value={c.id}>{c.nombre}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+              <button type="button" className="boton-secundario" onClick={() => setMostrarNuevaCategoria(true)} style={{ width: '100%', marginTop: 0 }}>
+                + Nueva categoría
+              </button>
+            </>
+          ) : (
+            <div style={{ display: 'grid', gap: 8 }}>
+              <input
+                placeholder="Nombre de la categoría"
+                value={nombreCategoriaNueva}
+                onChange={(e) => setNombreCategoriaNueva(e.target.value)}
+              />
+              <select value={departamentoNuevo} onChange={(e) => setDepartamentoNuevo(e.target.value)}>
+                {DEPARTAMENTOS.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" onClick={crearCategoriaNueva}>Guardar categoría</button>
+                <button type="button" onClick={() => setMostrarNuevaCategoria(false)}>Cancelar</button>
+              </div>
+            </div>
+          )}
+
+          <label className="etiqueta">Proveedor (opcional)</label>
+          {proveedorElegido ? (
+            <div className="cliente-chip">
+              <span>{proveedorElegido.nombre}</span>
+              <button type="button" onClick={() => setProveedorElegido(null)}>Quitar</button>
+            </div>
+          ) : (
+            <>
+              <input
+                className="buscador"
+                placeholder="Buscar proveedor por nombre"
+                value={busquedaProveedor}
+                onChange={(e) => buscarProveedor(e.target.value)}
+              />
+              {resultadosProveedor.map((p) => (
+                <div key={p.id} className="resultado-cliente" onClick={() => elegirProveedor(p)}>
+                  {p.nombre}
+                </div>
+              ))}
+              {busquedaProveedor.length >= 2 && resultadosProveedor.length === 0 && (
+                <button type="button" className="boton-secundario" onClick={crearProveedorDesdeGasto} style={{ width: '100%', marginTop: 0 }}>
+                  + Agregar "{busquedaProveedor}" como proveedor nuevo
+                </button>
+              )}
+            </>
+          )}
+
+          <button type="submit">Guardar gasto</button>
+        </form>
+
+        <div style={{ display: 'grid', gap: '0.75rem' }}>
+          {gastos.map((gasto) => (
+            <div key={gasto.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <strong>{gasto.concepto}</strong>
+                  <div>{gasto.categoria.nombre}</div>
+                  {gasto.proveedor && <div style={{ fontSize: 12, color: '#6b7280' }}>Proveedor: {gasto.proveedor.nombre}</div>}
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div>${Number(gasto.monto).toFixed(2)}</div>
+                  <small>{gasto.registradoPor.nombre}</small>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
