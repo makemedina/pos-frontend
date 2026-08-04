@@ -816,6 +816,17 @@ export async function actualizarCorte(id: string, efectivoContado: number, saldo
   return res.json();
 }
 
+export async function eliminarCorte(id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/corte/caja/${id}`, {
+    method: 'DELETE',
+    headers: headerAuth(),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo eliminar el corte');
+  }
+}
+
 export interface ItemCompraDetalle {
   producto: string;
   marca: string;

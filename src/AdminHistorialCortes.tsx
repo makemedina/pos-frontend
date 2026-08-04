@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
-import { obtenerHistorialCortes, actualizarCorte, type CorteHistorico } from './api';
+import { obtenerHistorialCortes, actualizarCorte, eliminarCorte, type CorteHistorico } from './api';
 
 interface Props {
   onCerrar: () => void;
@@ -14,6 +14,8 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
   const [editando, setEditando] = useState<CorteHistorico | null>(null);
   const [efectivoContado, setEfectivoContado] = useState('');
   const [saldoBancoContado, setSaldoBancoContado] = useState('');
+  const [confirmandoEliminarId, setConfirmandoEliminarId] = useState<string | null>(null);
+  const [eliminando, setEliminando] = useState(false);
 
   useEffect(() => {
     cargar();
@@ -47,6 +49,20 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
       cargar();
     } catch {
       setMensaje('No se pudo actualizar el corte.');
+    }
+  }
+
+  async function confirmarEliminar(id: string, fecha: string) {
+    setEliminando(true);
+    try {
+      await eliminarCorte(id);
+      setMensaje(`Corte del ${new Date(fecha).toLocaleDateString()} eliminado.`);
+      setConfirmandoEliminarId(null);
+      cargar();
+    } catch (err: any) {
+      setMensaje(err.message || 'No se pudo eliminar el corte.');
+    } finally {
+      setEliminando(false);
     }
   }
 
@@ -91,8 +107,34 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                       </>
                     )}
                   </div>
-                  <button onClick={() => empezarEdicion(c)}>Editar</button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <button onClick={() => empezarEdicion(c)}>Editar</button>
+                    <button
+                      onClick={() => setConfirmandoEliminarId(c.id)}
+                      style={{ background: '#fff2f1', color: '#b91c1c' }}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
+
+                {confirmandoEliminarId === c.id && (
+                  <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
+                    <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                      ¿Seguro que quieres eliminar el corte del {new Date(c.fecha).toLocaleDateString()}?
+                      Esto puede afectar el cuadre del corte del día siguiente que ya se guardó (se
+                      comparará contra el corte anterior a este). No se puede deshacer.
+                    </p>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <button onClick={() => confirmarEliminar(c.id, c.fecha)} disabled={eliminando} style={{ flex: 1 }}>
+                        {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
+                      </button>
+                      <button onClick={() => setConfirmandoEliminarId(null)} style={{ flex: 1 }}>
+                        No, regresar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
