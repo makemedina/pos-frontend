@@ -17,6 +17,8 @@ interface Gasto {
   categoria: CategoriaGasto;
   proveedor: { nombre: string } | null;
   registradoPor: { nombre: string };
+  cancelado: boolean;
+  canceladoEn: string | null;
 }
 
 interface Props {
@@ -44,6 +46,12 @@ export function AdminGastos({ onCerrar }: Props) {
 
   const [pestana, setPestana] = useState<'registrar' | 'historico'>('registrar');
   const [busquedaGasto, setBusquedaGasto] = useState('');
+
+  const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
+  const [necesitaAutorizacion, setNecesitaAutorizacion] = useState(false);
+  const [autorizadoPorTelefono, setAutorizadoPorTelefono] = useState('');
+  const [autorizadoPin, setAutorizadoPin] = useState('');
+  const [cancelando, setCancelando] = useState(false);
 
   useEffect(() => {
     cargar();
@@ -110,6 +118,37 @@ export function AdminGastos({ onCerrar }: Props) {
       setMostrarNuevaCategoria(false);
     } catch {
       setMensaje('No se pudo crear la categoría.');
+    }
+  }
+
+  async function confirmarCancelacion(gastoId: string) {
+    setCancelando(true);
+    try {
+      const res = await fetch(`${API_URL}/gastos/${gastoId}/cancelar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headerAuth() },
+        body: JSON.stringify(
+          necesitaAutorizacion ? { telefono: autorizadoPorTelefono, pin: autorizadoPin } : {}
+        ),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (data.code === 'REQUIERE_AUTORIZACION') {
+          setNecesitaAutorizacion(true);
+          setMensaje('Este gasto es de un día anterior: se necesita el teléfono y PIN de un administrador para cancelarlo.');
+        } else {
+          setMensaje(data.error || 'No se pudo cancelar el gasto.');
+        }
+        return;
+      }
+      setMensaje('Gasto cancelado.');
+      setConfirmandoId(null);
+      setNecesitaAutorizacion(false);
+      setAutorizadoPorTelefono('');
+      setAutorizadoPin('');
+      cargar();
+    } finally {
+      setCancelando(false);
     }
   }
 
@@ -309,6 +348,49 @@ export function AdminGastos({ onCerrar }: Props) {
                       <small>{gasto.registradoPor.nombre}</small>
                     </div>
                   </div>
+
+                  {gasto.cancelado ? (
+                    <div className="aviso-alerta" style={{ marginTop: 8 }}>
+                      ❌ Cancelado{gasto.canceladoEn ? ` el ${new Date(gasto.canceladoEn).toLocaleString()}` : ''}
+                    </div>
+                  ) : confirmandoId === gasto.id ? (
+                    <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
+                      <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                        ¿Seguro que quieres cancelar este gasto? No se puede deshacer.
+                      </p>
+                      {necesitaAutorizacion && (
+                        <>
+                          <input
+                            placeholder="Teléfono del administrador"
+                            value={autorizadoPorTelefono}
+                            onChange={(e) => setAutorizadoPorTelefono(e.target.value)}
+                          />
+                          <input
+                            placeholder="PIN"
+                            type="password"
+                            value={autorizadoPin}
+                            onChange={(e) => setAutorizadoPin(e.target.value)}
+                          />
+                        </>
+                      )}
+                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        <button onClick={() => confirmarCancelacion(gasto.id)} disabled={cancelando} style={{ flex: 1 }}>
+                          {cancelando ? 'Cancelando...' : 'Sí, cancelar'}
+                        </button>
+                        <button onClick={() => { setConfirmandoId(null); setNecesitaAutorizacion(false); }} style={{ flex: 1 }}>
+                          No, regresar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      className="boton-secundario"
+                      onClick={() => setConfirmandoId(gasto.id)}
+                      style={{ width: '100%', marginTop: 8, background: '#fff2f1', color: '#b91c1c' }}
+                    >
+                      🗑️ Cancelar gasto
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
