@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { API_URL, headerAuth, cargarSaldosIniciales, importarProveedores } from './api';
+import { API_URL, headerAuth, cargarSaldosIniciales, importarProveedores, cargarFacturasIniciales } from './api';
 
 interface Props {
   onCerrar: () => void;
@@ -11,6 +11,26 @@ interface FilaInventario {
   costo: number;
   precio: number;
   stock: number;
+}
+
+// Acepta "Proveedor<TAB>Telefono<TAB>Factura<TAB>$1,234.56" (desde Excel)
+// o separado por comas. El importe se limpia de "$", comas y espacios.
+function parsearFacturas(texto: string): { proveedor: string; telefono?: string; factura: string; importe: number }[] {
+  return texto
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0)
+    .map((linea) => (linea.includes('\t') ? linea.split('\t') : linea.split(',')).map((p) => p.trim()))
+    .filter((partes) => partes.length >= 4)
+    .map((partes) => ({
+      proveedor: partes[0],
+      telefono: partes[1] || undefined,
+      factura: partes[2],
+      importe: Number(partes[3].replace(/[$,\s]/g, '')),
+    }))
+    // Descarta automaticamente la fila de encabezado, porque
+    // Number("Importe") es NaN.
+    .filter((f) => f.proveedor && f.factura && !isNaN(f.importe));
 }
 
 function parsearFilas(texto: string): FilaInventario[] {
@@ -150,6 +170,26 @@ export function AdminHerramientas({ onCerrar }: Props) {
     }
   }
 
+  // ---------- Cargar facturas iniciales de proveedores ----------
+  const [textoFacturas, setTextoFacturas] = useState('');
+  const [cargandoFacturas, setCargandoFacturas] = useState(false);
+
+  const facturasDetectadas = parsearFacturas(textoFacturas);
+
+  async function cargarFacturas() {
+    if (facturasDetectadas.length === 0) return;
+    setCargandoFacturas(true);
+    try {
+      const { creadas } = await cargarFacturasIniciales(facturasDetectadas);
+      setMensaje(`Se cargaron ${creadas} facturas pendientes de proveedores.`);
+      setTextoFacturas('');
+    } catch (err: any) {
+      setMensaje(err.message);
+    } finally {
+      setCargandoFacturas(false);
+    }
+  }
+
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
@@ -176,6 +216,26 @@ export function AdminHerramientas({ onCerrar }: Props) {
           />
           <button onClick={importarListaProveedores} disabled={importandoProveedores || proveedoresDetectados.length === 0}>
             {importandoProveedores ? 'Importando...' : `Importar ${proveedoresDetectados.length} proveedor(es)`}
+          </button>
+        </div>
+
+        {/* ---------- Cargar facturas iniciales de proveedores ---------- */}
+        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+          <h3>🧾 Cargar facturas iniciales de proveedores</h3>
+          <p style={{ fontSize: 13, color: '#6b7280' }}>
+            Pega Proveedor, Teléfono, Factura e Importe (desde Excel o con comas). Si el
+            proveedor no existe, se crea con ese teléfono. Cada fila queda como una factura
+            pendiente real — aparece en "Facturas pendientes" y se puede abonar normal.
+          </p>
+          <textarea
+            rows={8}
+            placeholder={'Productos meza\t6681494535\t129958\t$7,511.76\nCarnes el Tigre\t6679969480\t65\t$1,730.57\n...'}
+            value={textoFacturas}
+            onChange={(e) => setTextoFacturas(e.target.value)}
+            style={{ width: '100%', resize: 'vertical', fontFamily: 'monospace', fontSize: 12 }}
+          />
+          <button onClick={cargarFacturas} disabled={cargandoFacturas || facturasDetectadas.length === 0}>
+            {cargandoFacturas ? 'Cargando...' : `Cargar ${facturasDetectadas.length} factura(s)`}
           </button>
         </div>
 

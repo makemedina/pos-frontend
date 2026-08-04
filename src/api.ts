@@ -303,6 +303,21 @@ export async function cargarSaldosIniciales(
   return res.json();
 }
 
+export async function cargarFacturasIniciales(
+  filas: { proveedor: string; telefono?: string; factura: string; importe: number }[]
+): Promise<{ creadas: number }> {
+  const res = await fetch(`${API_URL}/admin/cargar-facturas-iniciales`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ filas }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar las facturas iniciales');
+  }
+  return res.json();
+}
+
 export async function actualizarCliente(
   id: string,
   datos: { nombre?: string; telefono?: string; direccion?: string; permiteVentaCredito?: boolean }
