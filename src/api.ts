@@ -1,11 +1,10 @@
-// Antes esto estaba fijo a 'localhost', lo cual solo funciona cuando el
-// navegador y el backend estan en la MISMA maquina. Desde un celular en
-// la misma red, "localhost" apunta al propio celular, no a la Mac -- por
-// eso el login fallaba sin ningun error visible (la peticion nunca
-// llegaba al backend real). Ahora se usa el mismo host con el que se
-// abrio la app (sea localhost o la IP de la red local), solo cambiando
-// el puerto al del backend.
-export const API_URL = `${window.location.protocol}//${window.location.hostname}:3000/api`;
+// PRIORIDAD 1: si existe VITE_API_URL (configurada en Cloudflare Pages / .env
+// para produccion), se usa esa -- apunta directo al backend real en Railway.
+// PRIORIDAD 2 (respaldo, solo para pruebas locales en la misma red sin esa
+// variable configurada): se usa el mismo host con el que se abrio la app,
+// cambiando el puerto al 3000 del backend local.
+export const API_URL =
+  (import.meta.env as any).VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:3000/api`;
 
 // ---------- MANEJO DE SESION ----------
 // El backend ahora exige un token en cada llamada (Authorization: Bearer <token>).
