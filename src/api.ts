@@ -275,6 +275,19 @@ export async function crearClienteCompleto(datos: { nombre: string; telefono: st
   return res.json();
 }
 
+export async function importarClientes(nombres: string[]): Promise<{ creados: number }> {
+  const res = await fetch(`${API_URL}/clientes/importar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ nombres }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron importar los clientes');
+  }
+  return res.json();
+}
+
 export async function actualizarCliente(
   id: string,
   datos: { nombre?: string; telefono?: string; direccion?: string; permiteVentaCredito?: boolean }

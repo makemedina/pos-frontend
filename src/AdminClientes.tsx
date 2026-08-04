@@ -3,6 +3,7 @@ import {
   obtenerClientesConSaldo,
   obtenerClienteDetalle,
   crearClienteCompleto,
+  importarClientes,
   actualizarCliente,
   obtenerVentasDeCliente,
   obtenerMovimientosDeCliente,
@@ -29,6 +30,9 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [cargandoLista, setCargandoLista] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [mostrarAlta, setMostrarAlta] = useState(false);
+  const [mostrarImportar, setMostrarImportar] = useState(false);
+  const [textoImportar, setTextoImportar] = useState('');
+  const [importando, setImportando] = useState(false);
 
   const [nombreNuevo, setNombreNuevo] = useState('');
   const [telefonoNuevo, setTelefonoNuevo] = useState('');
@@ -96,6 +100,23 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       cargarLista();
     } catch {
       setMensaje('No se pudo crear el cliente.');
+    }
+  }
+
+  async function importarLista() {
+    const nombres = textoImportar.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
+    if (nombres.length === 0) return;
+    setImportando(true);
+    try {
+      const { creados } = await importarClientes(nombres);
+      setMensaje(`Se importaron ${creados} clientes.`);
+      setTextoImportar('');
+      setMostrarImportar(false);
+      cargarLista();
+    } catch (err: any) {
+      setMensaje(err.message || 'No se pudo importar la lista.');
+    } finally {
+      setImportando(false);
     }
   }
 
@@ -234,7 +255,10 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 <option value="conDeuda">Con deuda</option>
                 <option value="sinDeuda">Sin deuda</option>
               </select>
-              <button onClick={() => setMostrarAlta(true)}>+ Nuevo cliente</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setMostrarAlta(true)}>+ Nuevo cliente</button>
+                <button onClick={() => setMostrarImportar(true)}>📋 Importar lista</button>
+              </div>
             </div>
 
             {mostrarAlta && (
@@ -245,6 +269,28 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={crearNuevoCliente}>Guardar</button>
                   <button onClick={() => setMostrarAlta(false)}>Cancelar</button>
+                </div>
+              </div>
+            )}
+
+            {mostrarImportar && (
+              <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+                <p style={{ fontSize: 13, color: '#6b7280' }}>
+                  Pega la lista de nombres, uno por línea. Se crean sin teléfono — lo puedes
+                  agregar después desde el detalle de cada cliente.
+                </p>
+                <textarea
+                  rows={10}
+                  placeholder={'Luis Valdez\nManuel Garcia\nDavid Erenas\n...'}
+                  value={textoImportar}
+                  onChange={(e) => setTextoImportar(e.target.value)}
+                  style={{ width: '100%', resize: 'vertical', fontFamily: 'inherit' }}
+                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={importarLista} disabled={importando}>
+                    {importando ? 'Importando...' : `Importar ${textoImportar.split('\n').filter((l) => l.trim()).length} clientes`}
+                  </button>
+                  <button onClick={() => setMostrarImportar(false)}>Cancelar</button>
                 </div>
               </div>
             )}
