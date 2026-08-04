@@ -885,7 +885,7 @@ export interface ResumenMovimientosInventario {
 }
 
 export interface FiltrosMovimientosInventario {
-  periodo?: 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
+  periodo?: 'todos' | 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
   desde?: string;
   hasta?: string;
   productoId?: string;
@@ -935,7 +935,7 @@ export interface VentaHistorial {
 }
 
 export interface FiltrosHistorial {
-  periodo?: 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
+  periodo?: 'todos' | 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
   desde?: string;
   hasta?: string;
   clienteId?: string;
