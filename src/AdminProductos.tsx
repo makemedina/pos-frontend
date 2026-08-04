@@ -26,6 +26,7 @@ const ETIQUETAS_TIPO: Record<MovimientoVariante['tipo'], { texto: string; color:
 export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste, esAdmin }: Props) {
   const [productos, setProductos] = useState<ProductoGestion[]>([]);
   const [verSinStock, setVerSinStock] = useState(true);
+  const [busquedaProducto, setBusquedaProducto] = useState('');
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
@@ -75,7 +76,11 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
     else setCompraAbierta(m.navegarA.id);
   }
 
-  const productosVisibles = verSinStock ? productos : productos.filter((p) => p.stockDisponible > 0);
+  const productosVisibles = (verSinStock ? productos : productos.filter((p) => p.stockDisponible > 0)).filter((p) => {
+    if (!busquedaProducto.trim()) return true;
+    const q = busquedaProducto.trim().toLowerCase();
+    return p.producto.toLowerCase().includes(q) || p.marca.toLowerCase().includes(q);
+  });
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
@@ -99,6 +104,13 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
               <input type="checkbox" checked={verSinStock} onChange={(e) => setVerSinStock(e.target.checked)} />
               Ver también productos sin stock
             </label>
+
+            <input
+              className="buscador"
+              placeholder="Buscar producto o marca"
+              value={busquedaProducto}
+              onChange={(e) => setBusquedaProducto(e.target.value)}
+            />
 
             {cargando ? (
               <p>Cargando...</p>
@@ -201,7 +213,15 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
           }}
         />
       )}
-      {compraAbierta && <CompraDetalleModal compraId={compraAbierta} onCerrar={() => setCompraAbierta(null)} />}
+      {compraAbierta && (
+        <CompraDetalleModal
+          compraId={compraAbierta}
+          onCerrar={() => setCompraAbierta(null)}
+          onCancelada={() => {
+            if (productoElegido) abrirProducto(productoElegido);
+          }}
+        />
+      )}
     </div>
   );
 }

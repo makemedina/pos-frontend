@@ -225,7 +225,9 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
         )}
       </div>
 
-      {compraAbierta && <CompraDetalleModal compraId={compraAbierta} onCerrar={() => setCompraAbierta(null)} />}
+      {compraAbierta && (
+        <CompraDetalleModal compraId={compraAbierta} onCerrar={() => setCompraAbierta(null)} onCancelada={cargar} />
+      )}
     </div>
   );
 }

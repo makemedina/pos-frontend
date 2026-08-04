@@ -27,12 +27,22 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
     }
   }
 
+  const [busqueda, setBusqueda] = useState('');
   const totalPendiente = facturas.reduce((acc, f) => acc + f.saldoPendiente, 0);
+
+  const facturasFiltradas = facturas.filter((f) => {
+    if (!busqueda.trim()) return true;
+    const q = busqueda.trim().toLowerCase();
+    return (
+      f.proveedor.nombre.toLowerCase().includes(q) ||
+      (f.numeroFactura || '').toLowerCase().includes(q)
+    );
+  });
 
   async function exportar() {
     try {
       await exportarAExcel(
-        facturas.map((f) => ({
+        facturasFiltradas.map((f) => ({
           Proveedor: f.proveedor.nombre,
           Telefono: f.proveedor.telefono || '',
           Factura: f.numeroFactura || '',
@@ -61,14 +71,21 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
+        <input
+          className="buscador"
+          placeholder="Buscar por proveedor o número de factura"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
+
         {cargando ? (
           <p>Cargando...</p>
-        ) : facturas.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>No hay facturas pendientes de pago.</p>
+        ) : facturasFiltradas.length === 0 ? (
+          <p style={{ color: '#6b7280' }}>No hay facturas pendientes que coincidan.</p>
         ) : (
           <>
             <div style={{ display: 'grid', gap: '0.75rem' }}>
-              {facturas.map((f) => (
+              {facturasFiltradas.map((f) => (
                 <div key={f.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>

@@ -19,6 +19,7 @@ type Nivel = 'clientes' | 'notas' | 'pagos';
 export function AdminCartera({ onCerrar }: Props) {
   const [nivel, setNivel] = useState<Nivel>('clientes');
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [busquedaCartera, setBusquedaCartera] = useState('');
   const [exportando, setExportando] = useState(false);
   const [cargando, setCargando] = useState(true);
 
@@ -141,6 +142,9 @@ export function AdminCartera({ onCerrar }: Props) {
   }
 
   const totalCartera = clientes.reduce((acc, c) => acc + c.saldoTotal, 0);
+  const clientesFiltrados = clientes.filter(
+    (c) => !busquedaCartera.trim() || c.nombre.toLowerCase().includes(busquedaCartera.trim().toLowerCase())
+  );
 
   async function exportar() {
     setExportando(true);
@@ -199,9 +203,15 @@ export function AdminCartera({ onCerrar }: Props) {
         {/* ---------- NIVEL 1: CLIENTES ---------- */}
         {!cargando && nivel === 'clientes' && (
           <>
+            <input
+              className="buscador"
+              placeholder="Buscar cliente por nombre"
+              value={busquedaCartera}
+              onChange={(e) => setBusquedaCartera(e.target.value)}
+            />
             <div style={{ display: 'grid', gap: '0.75rem' }}>
-              {clientes.length === 0 && <p style={{ color: '#6b7280' }}>No hay clientes con historial de credito.</p>}
-              {clientes.map((c) => (
+              {clientesFiltrados.length === 0 && <p style={{ color: '#6b7280' }}>No hay clientes que coincidan.</p>}
+              {clientesFiltrados.map((c) => (
                 <div
                   key={c.id}
                   style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}

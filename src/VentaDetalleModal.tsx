@@ -5,17 +5,20 @@ import type { DatosRecibo } from './construirRecibo';
 
 interface Props {
   ventaId: string;
-  esAdmin: boolean;
+  esAdmin?: boolean;
   onCerrar: () => void;
   onCancelada?: () => void;
 }
 
-export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: Props) {
+export function VentaDetalleModal({ ventaId, onCerrar, onCancelada }: Props) {
   const [venta, setVenta] = useState<VentaDetalle | null>(null);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [mostrarRecibo, setMostrarRecibo] = useState(false);
   const [confirmandoCancelacion, setConfirmandoCancelacion] = useState(false);
+  const [necesitaAutorizacion, setNecesitaAutorizacion] = useState(false);
+  const [autorizadoPorTelefono, setAutorizadoPorTelefono] = useState('');
+  const [autorizadoPin, setAutorizadoPin] = useState('');
   const [cancelando, setCancelando] = useState(false);
 
   useEffect(() => {
@@ -28,14 +31,23 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
   async function confirmarCancelacion() {
     setCancelando(true);
     try {
-      await cancelarVenta(ventaId);
+      await cancelarVenta(
+        ventaId,
+        necesitaAutorizacion ? { telefono: autorizadoPorTelefono, pin: autorizadoPin } : undefined
+      );
       setMensaje('Venta cancelada. El stock se regresó al inventario.');
       setConfirmandoCancelacion(false);
+      setNecesitaAutorizacion(false);
       onCancelada?.();
       const actualizada = await obtenerDetalleVenta(ventaId);
       setVenta(actualizada);
     } catch (err: any) {
-      setMensaje(err.error || 'No se pudo cancelar la venta.');
+      if (err.code === 'REQUIERE_AUTORIZACION') {
+        setNecesitaAutorizacion(true);
+        setMensaje('Esta venta es de un día anterior: se necesita el teléfono y PIN de un administrador para cancelarla.');
+      } else {
+        setMensaje(err.error || 'No se pudo cancelar la venta.');
+      }
     } finally {
       setCancelando(false);
     }
@@ -124,7 +136,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
               🧾 Generar recibo
             </button>
 
-            {esAdmin && !venta.cancelada && !confirmandoCancelacion && (
+            {!venta.cancelada && !confirmandoCancelacion && (
               <button
                 className="boton-secundario"
                 onClick={() => setConfirmandoCancelacion(true)}
@@ -140,11 +152,34 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
                   ¿Seguro que quieres cancelar esta venta? El stock se regresará al inventario
                   y el saldo pendiente quedará en cero. Esta acción no se puede deshacer.
                 </p>
+
+                {necesitaAutorizacion && (
+                  <>
+                    <input
+                      placeholder="Teléfono del administrador"
+                      value={autorizadoPorTelefono}
+                      onChange={(e) => setAutorizadoPorTelefono(e.target.value)}
+                    />
+                    <input
+                      placeholder="PIN"
+                      type="password"
+                      value={autorizadoPin}
+                      onChange={(e) => setAutorizadoPin(e.target.value)}
+                    />
+                  </>
+                )}
+
                 <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                   <button onClick={confirmarCancelacion} disabled={cancelando} style={{ flex: 1 }}>
                     {cancelando ? 'Cancelando...' : 'Sí, cancelar venta'}
                   </button>
-                  <button onClick={() => setConfirmandoCancelacion(false)} style={{ flex: 1 }}>
+                  <button
+                    onClick={() => {
+                      setConfirmandoCancelacion(false);
+                      setNecesitaAutorizacion(false);
+                    }}
+                    style={{ flex: 1 }}
+                  >
                     No, regresar
                   </button>
                 </div>

@@ -130,9 +130,72 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                 <h3>Resumen del día</h3>
                 <div>Ventas: ${Number(resumen.ventas?.total ?? 0).toFixed(2)}</div>
                 <div>Cobrado (de ventas de hoy): ${Number(resumen.ventas?.cobrado ?? 0).toFixed(2)}</div>
+                <div>Compras: ${Number(resumen.compras?.total ?? 0).toFixed(2)}</div>
                 <div>Gastos: ${Number(resumen.gastos?.total ?? 0).toFixed(2)}</div>
                 <div>Cartera: ${Number(resumen.cartera ?? 0).toFixed(2)}</div>
                 <div>Cuentas por pagar: ${Number(resumen.cuentasPorPagar ?? 0).toFixed(2)}</div>
+              </div>
+            )}
+
+            {resumen && resumen.ventas.detalle.length > 0 && (
+              <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+                <h3>Ventas del día ({resumen.ventas.detalle.length})</h3>
+                {resumen.ventas.detalle.map((v) => (
+                  <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                    <span>#{v.folio} · {v.cliente} · {v.vendedor}</span>
+                    <span>
+                      ${v.total.toFixed(2)}{' '}
+                      <small style={{ color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                        ({v.estadoPago === 'pagada' ? 'pagada' : `saldo $${v.saldoPendiente.toFixed(2)}`})
+                      </small>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {resumen && resumen.compras.detalle.length > 0 && (
+              <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+                <h3>Compras del día ({resumen.compras.detalle.length})</h3>
+                {resumen.compras.detalle.map((c) => (
+                  <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                    <span>{c.proveedor} · {c.numeroFactura || 'sin factura'}</span>
+                    <span>
+                      ${c.total.toFixed(2)}{' '}
+                      <small style={{ color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                        ({c.estadoPago === 'pagada' ? 'pagada' : `saldo $${c.saldoPendiente.toFixed(2)}`})
+                      </small>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {resumen && (resumen.canceladas.ventas.length > 0 || resumen.canceladas.compras.length > 0) && (
+              <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fff2f1' }}>
+                <h3 style={{ color: '#b91c1c' }}>❌ Cancelado hoy</h3>
+                {resumen.canceladas.ventas.map((v) => (
+                  <div key={v.id} style={{ fontSize: 13, borderBottom: '1px solid #fecaca', paddingBottom: 4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Venta #{v.folio} · {v.cliente}</span>
+                      <strong>${v.total.toFixed(2)}</strong>
+                    </div>
+                    <small style={{ color: '#6b7280' }}>
+                      Original: {new Date(v.fechaOriginal).toLocaleDateString()} · Cancelada por {v.canceladaPor} el {new Date(v.canceladaEn).toLocaleString()}
+                    </small>
+                  </div>
+                ))}
+                {resumen.canceladas.compras.map((c) => (
+                  <div key={c.id} style={{ fontSize: 13, borderBottom: '1px solid #fecaca', paddingBottom: 4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Compra {c.numeroFactura || 'sin factura'} · {c.proveedor}</span>
+                      <strong>${c.total.toFixed(2)}</strong>
+                    </div>
+                    <small style={{ color: '#6b7280' }}>
+                      Original: {new Date(c.fechaOriginal).toLocaleDateString()} · Cancelada por {c.canceladaPor} el {new Date(c.canceladaEn).toLocaleString()}
+                    </small>
+                  </div>
+                ))}
               </div>
             )}
 

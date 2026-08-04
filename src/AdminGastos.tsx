@@ -42,6 +42,9 @@ export function AdminGastos({ onCerrar }: Props) {
   const [nombreCategoriaNueva, setNombreCategoriaNueva] = useState('');
   const [departamentoNuevo, setDepartamentoNuevo] = useState(DEPARTAMENTOS[0]);
 
+  const [pestana, setPestana] = useState<'registrar' | 'historico'>('registrar');
+  const [busquedaGasto, setBusquedaGasto] = useState('');
+
   useEffect(() => {
     cargar();
   }, []);
@@ -143,7 +146,7 @@ export function AdminGastos({ onCerrar }: Props) {
   async function exportar() {
     try {
       await exportarAExcel(
-        gastos.map((g) => ({
+        gastosFiltrados.map((g) => ({
           Fecha: new Date(g.fecha).toLocaleString(),
           Concepto: g.concepto,
           Categoria: g.categoria.nombre,
@@ -165,110 +168,152 @@ export function AdminGastos({ onCerrar }: Props) {
     return acc;
   }, {});
 
+  const gastosFiltrados = gastos.filter((g) => {
+    if (!busquedaGasto.trim()) return true;
+    const q = busquedaGasto.trim().toLowerCase();
+    return (
+      g.concepto.toLowerCase().includes(q) ||
+      g.categoria.nombre.toLowerCase().includes(q) ||
+      (g.proveedor?.nombre || '').toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Gastos</h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={exportar}>📊 Exportar Excel</button>
+            {pestana === 'historico' && <button onClick={exportar}>📊 Exportar Excel</button>}
             <button onClick={onCerrar}>Cerrar</button>
           </div>
         </div>
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-          <h3>Registrar gasto</h3>
-          <input value={concepto} onChange={(e) => setConcepto(e.target.value)} placeholder="Concepto" required />
-          <input value={monto} onChange={(e) => setMonto(e.target.value)} type="number" step="0.01" placeholder="Monto" required />
-          <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)}>
-            <option value="efectivo">Efectivo</option>
-            <option value="transferencia">Transferencia</option>
-          </select>
-
-          <label className="etiqueta">Categoría</label>
-          {!mostrarNuevaCategoria ? (
-            <>
-              <select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
-                {Object.entries(categoriasPorDepartamento).map(([departamento, cats]) => (
-                  <optgroup key={departamento} label={departamento}>
-                    {cats.map((c) => (
-                      <option key={c.id} value={c.id}>{c.nombre}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              <button type="button" className="boton-secundario" onClick={() => setMostrarNuevaCategoria(true)} style={{ width: '100%', marginTop: 0 }}>
-                + Nueva categoría
-              </button>
-            </>
-          ) : (
-            <div style={{ display: 'grid', gap: 8 }}>
-              <input
-                placeholder="Nombre de la categoría"
-                value={nombreCategoriaNueva}
-                onChange={(e) => setNombreCategoriaNueva(e.target.value)}
-              />
-              <select value={departamentoNuevo} onChange={(e) => setDepartamentoNuevo(e.target.value)}>
-                {DEPARTAMENTOS.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" onClick={crearCategoriaNueva}>Guardar categoría</button>
-                <button type="button" onClick={() => setMostrarNuevaCategoria(false)}>Cancelar</button>
-              </div>
-            </div>
-          )}
-
-          <label className="etiqueta">Proveedor (opcional)</label>
-          {proveedorElegido ? (
-            <div className="cliente-chip">
-              <span>{proveedorElegido.nombre}</span>
-              <button type="button" onClick={() => setProveedorElegido(null)}>Quitar</button>
-            </div>
-          ) : (
-            <>
-              <input
-                className="buscador"
-                placeholder="Buscar proveedor por nombre"
-                value={busquedaProveedor}
-                onChange={(e) => buscarProveedor(e.target.value)}
-              />
-              {resultadosProveedor.map((p) => (
-                <div key={p.id} className="resultado-cliente" onClick={() => elegirProveedor(p)}>
-                  {p.nombre}
-                </div>
-              ))}
-              {busquedaProveedor.length >= 2 && resultadosProveedor.length === 0 && (
-                <button type="button" className="boton-secundario" onClick={crearProveedorDesdeGasto} style={{ width: '100%', marginTop: 0 }}>
-                  + Agregar "{busquedaProveedor}" como proveedor nuevo
-                </button>
-              )}
-            </>
-          )}
-
-          <button type="submit">Guardar gasto</button>
-        </form>
-
-        <div style={{ display: 'grid', gap: '0.75rem' }}>
-          {gastos.map((gasto) => (
-            <div key={gasto.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div>
-                  <strong>{gasto.concepto}</strong>
-                  <div>{gasto.categoria.nombre}</div>
-                  {gasto.proveedor && <div style={{ fontSize: 12, color: '#6b7280' }}>Proveedor: {gasto.proveedor.nombre}</div>}
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div>${Number(gasto.monto).toFixed(2)}</div>
-                  <small>{gasto.registradoPor.nombre}</small>
-                </div>
-              </div>
-            </div>
+        <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #e5e5ea' }}>
+          {(['registrar', 'historico'] as const).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPestana(p)}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '8px 4px',
+                borderBottom: pestana === p ? '2px solid #007aff' : '2px solid transparent',
+                fontWeight: pestana === p ? 700 : 400,
+                color: pestana === p ? '#007aff' : '#374151',
+              }}
+            >
+              {p === 'registrar' ? 'Registrar' : 'Histórico'}
+            </button>
           ))}
         </div>
+
+        {pestana === 'registrar' && (
+          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+            <h3>Registrar gasto</h3>
+            <input value={concepto} onChange={(e) => setConcepto(e.target.value)} placeholder="Concepto" required />
+            <input value={monto} onChange={(e) => setMonto(e.target.value)} type="number" step="0.01" placeholder="Monto" required />
+            <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)}>
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+            </select>
+
+            <label className="etiqueta">Categoría</label>
+            {!mostrarNuevaCategoria ? (
+              <>
+                <select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
+                  {Object.entries(categoriasPorDepartamento).map(([departamento, cats]) => (
+                    <optgroup key={departamento} label={departamento}>
+                      {cats.map((c) => (
+                        <option key={c.id} value={c.id}>{c.nombre}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <button type="button" className="boton-secundario" onClick={() => setMostrarNuevaCategoria(true)} style={{ width: '100%', marginTop: 0 }}>
+                  + Nueva categoría
+                </button>
+              </>
+            ) : (
+              <div style={{ display: 'grid', gap: 8 }}>
+                <input
+                  placeholder="Nombre de la categoría"
+                  value={nombreCategoriaNueva}
+                  onChange={(e) => setNombreCategoriaNueva(e.target.value)}
+                />
+                <select value={departamentoNuevo} onChange={(e) => setDepartamentoNuevo(e.target.value)}>
+                  {DEPARTAMENTOS.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button type="button" onClick={crearCategoriaNueva}>Guardar categoría</button>
+                  <button type="button" onClick={() => setMostrarNuevaCategoria(false)}>Cancelar</button>
+                </div>
+              </div>
+            )}
+
+            <label className="etiqueta">Proveedor (opcional)</label>
+            {proveedorElegido ? (
+              <div className="cliente-chip">
+                <span>{proveedorElegido.nombre}</span>
+                <button type="button" onClick={() => setProveedorElegido(null)}>Quitar</button>
+              </div>
+            ) : (
+              <>
+                <input
+                  className="buscador"
+                  placeholder="Buscar proveedor por nombre"
+                  value={busquedaProveedor}
+                  onChange={(e) => buscarProveedor(e.target.value)}
+                />
+                {resultadosProveedor.map((p) => (
+                  <div key={p.id} className="resultado-cliente" onClick={() => elegirProveedor(p)}>
+                    {p.nombre}
+                  </div>
+                ))}
+                {busquedaProveedor.length >= 2 && resultadosProveedor.length === 0 && (
+                  <button type="button" className="boton-secundario" onClick={crearProveedorDesdeGasto} style={{ width: '100%', marginTop: 0 }}>
+                    + Agregar "{busquedaProveedor}" como proveedor nuevo
+                  </button>
+                )}
+              </>
+            )}
+
+            <button type="submit">Guardar gasto</button>
+          </form>
+        )}
+
+        {pestana === 'historico' && (
+          <>
+            <input
+              className="buscador"
+              placeholder="Buscar por concepto, categoría o proveedor"
+              value={busquedaGasto}
+              onChange={(e) => setBusquedaGasto(e.target.value)}
+            />
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              {gastosFiltrados.length === 0 && <p style={{ color: '#6b7280' }}>No hay gastos que coincidan.</p>}
+              {gastosFiltrados.map((gasto) => (
+                <div key={gasto.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div>
+                      <strong>{gasto.concepto}</strong>
+                      <div>{gasto.categoria.nombre}</div>
+                      {gasto.proveedor && <div style={{ fontSize: 12, color: '#6b7280' }}>Proveedor: {gasto.proveedor.nombre}</div>}
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div>${Number(gasto.monto).toFixed(2)}</div>
+                      <small>{gasto.registradoPor.nombre}</small>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

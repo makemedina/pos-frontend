@@ -24,6 +24,7 @@ type Pestana = 'datos' | 'transacciones' | 'movimientos';
 
 export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [filtro, setFiltro] = useState<Filtro>('todos');
+  const [busquedaCliente, setBusquedaCliente] = useState('');
   const [clientes, setClientes] = useState<ClienteConSaldo[]>([]);
   const [cargandoLista, setCargandoLista] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -175,6 +176,12 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
     }
   }
 
+  const clientesFiltrados = clientes.filter((c) => {
+    if (!busquedaCliente.trim()) return true;
+    const q = busquedaCliente.trim().toLowerCase();
+    return c.nombre.toLowerCase().includes(q) || c.telefono.includes(busquedaCliente.trim());
+  });
+
   const ventasFiltradas = ventas.filter((v) => {
     if (!busquedaProducto.trim()) return true;
     const q = busquedaProducto.trim().toLowerCase();
@@ -242,12 +249,19 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
               </div>
             )}
 
+            <input
+              className="buscador"
+              placeholder="Buscar por nombre o teléfono"
+              value={busquedaCliente}
+              onChange={(e) => setBusquedaCliente(e.target.value)}
+            />
+
             {cargandoLista ? (
               <p>Cargando...</p>
             ) : (
               <div style={{ display: 'grid', gap: '0.5rem' }}>
-                {clientes.length === 0 && <p style={{ color: '#6b7280' }}>No hay clientes que coincidan.</p>}
-                {clientes.map((c) => (
+                {clientesFiltrados.length === 0 && <p style={{ color: '#6b7280' }}>No hay clientes que coincidan.</p>}
+                {clientesFiltrados.map((c) => (
                   <div
                     key={c.id}
                     style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}

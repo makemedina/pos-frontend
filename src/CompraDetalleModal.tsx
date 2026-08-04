@@ -1,15 +1,25 @@
 import { useEffect, useState } from 'react';
-import { obtenerDetalleCompra, type CompraDetalle } from './api';
+import { obtenerDetalleCompra, cancelarCompra, type CompraDetalle } from './api';
+import { generarImagenRecibo, generarPdfRecibo, compartirArchivo } from './reciboExport';
 
 interface Props {
   compraId: string;
   onCerrar: () => void;
+  onCancelada?: () => void;
 }
 
-export function CompraDetalleModal({ compraId, onCerrar }: Props) {
+const ELEMENT_ID = 'compra-recibo-render';
+
+export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
   const [compra, setCompra] = useState<CompraDetalle | null>(null);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [exportando, setExportando] = useState<'imagen' | 'pdf' | null>(null);
+  const [confirmandoCancelacion, setConfirmandoCancelacion] = useState(false);
+  const [necesitaAutorizacion, setNecesitaAutorizacion] = useState(false);
+  const [autorizadoPorTelefono, setAutorizadoPorTelefono] = useState('');
+  const [autorizadoPin, setAutorizadoPin] = useState('');
+  const [cancelando, setCancelando] = useState(false);
 
   useEffect(() => {
     obtenerDetalleCompra(compraId)
@@ -17,6 +27,55 @@ export function CompraDetalleModal({ compraId, onCerrar }: Props) {
       .catch(() => setMensaje('No se pudo cargar el detalle de la compra.'))
       .finally(() => setCargando(false));
   }, [compraId]);
+
+  async function descargarImagen() {
+    setExportando('imagen');
+    try {
+      const blob = await generarImagenRecibo(ELEMENT_ID);
+      await compartirArchivo(blob, `compra-${compra?.numeroFactura || compraId}.png`, 'image/png');
+    } catch {
+      setMensaje('No se pudo generar la imagen.');
+    } finally {
+      setExportando(null);
+    }
+  }
+
+  async function descargarPdf() {
+    setExportando('pdf');
+    try {
+      const blob = await generarPdfRecibo(ELEMENT_ID);
+      await compartirArchivo(blob, `compra-${compra?.numeroFactura || compraId}.pdf`, 'application/pdf');
+    } catch {
+      setMensaje('No se pudo generar el PDF.');
+    } finally {
+      setExportando(null);
+    }
+  }
+
+  async function confirmarCancelacion() {
+    setCancelando(true);
+    try {
+      await cancelarCompra(
+        compraId,
+        necesitaAutorizacion ? { telefono: autorizadoPorTelefono, pin: autorizadoPin } : undefined
+      );
+      setMensaje('Compra cancelada. El inventario de esa mercancía se puso en cero.');
+      setConfirmandoCancelacion(false);
+      setNecesitaAutorizacion(false);
+      onCancelada?.();
+      const actualizada = await obtenerDetalleCompra(compraId);
+      setCompra(actualizada);
+    } catch (err: any) {
+      if (err.code === 'REQUIERE_AUTORIZACION') {
+        setNecesitaAutorizacion(true);
+        setMensaje('Esta compra es de un día anterior: se necesita el teléfono y PIN de un administrador para cancelarla.');
+      } else {
+        setMensaje(err.error || 'No se pudo cancelar la compra.');
+      }
+    } finally {
+      setCancelando(false);
+    }
+  }
 
   return (
     <div className="modal-fondo" onClick={onCerrar} style={{ zIndex: 30 }}>
@@ -30,7 +89,7 @@ export function CompraDetalleModal({ compraId, onCerrar }: Props) {
         {cargando && <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>}
 
         {compra && (
-          <>
+          <div id={ELEMENT_ID}>
             <div className="resumen-nota">
               <div className="linea-resumen">
                 <span>Fecha</span>
@@ -69,7 +128,73 @@ export function CompraDetalleModal({ compraId, onCerrar }: Props) {
                 {compra.estadoPago === 'pagada' ? 'Pagada' : `Saldo: $${compra.saldoPendiente.toFixed(2)}`}
               </span>
             </div>
-          </>
+
+            {compra.cancelada && (
+              <div className="aviso-alerta" style={{ marginTop: 8 }}>
+                ❌ Esta compra fue cancelada{compra.canceladaEn ? ` el ${new Date(compra.canceladaEn).toLocaleString()}` : ''}.
+                El inventario que había agregado ya se puso en cero.
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button onClick={descargarImagen} disabled={!!exportando} style={{ flex: 1 }}>
+                {exportando === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
+              </button>
+              <button onClick={descargarPdf} disabled={!!exportando} style={{ flex: 1 }}>
+                {exportando === 'pdf' ? 'Generando...' : '📄 PDF'}
+              </button>
+            </div>
+
+            {!compra.cancelada && !confirmandoCancelacion && (
+              <button
+                className="boton-secundario"
+                onClick={() => setConfirmandoCancelacion(true)}
+                style={{ width: '100%', marginTop: 8, background: '#fff2f1', color: '#b91c1c' }}
+              >
+                🗑️ Cancelar compra
+              </button>
+            )}
+
+            {confirmandoCancelacion && (
+              <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
+                <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                  ¿Seguro que quieres cancelar esta compra? Solo se puede si nada de esa
+                  mercancía se ha vendido todavía. Esta acción no se puede deshacer.
+                </p>
+
+                {necesitaAutorizacion && (
+                  <>
+                    <input
+                      placeholder="Teléfono del administrador"
+                      value={autorizadoPorTelefono}
+                      onChange={(e) => setAutorizadoPorTelefono(e.target.value)}
+                    />
+                    <input
+                      placeholder="PIN"
+                      type="password"
+                      value={autorizadoPin}
+                      onChange={(e) => setAutorizadoPin(e.target.value)}
+                    />
+                  </>
+                )}
+
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <button onClick={confirmarCancelacion} disabled={cancelando} style={{ flex: 1 }}>
+                    {cancelando ? 'Cancelando...' : 'Sí, cancelar compra'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setConfirmandoCancelacion(false);
+                      setNecesitaAutorizacion(false);
+                    }}
+                    style={{ flex: 1 }}
+                  >
+                    No, regresar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -5,7 +5,8 @@
 // llegaba al backend real). Ahora se usa el mismo host con el que se
 // abrio la app (sea localhost o la IP de la red local), solo cambiando
 // el puerto al del backend.
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+export const API_URL = `${window.location.protocol}//${window.location.hostname}:3000/api`;
+
 // ---------- MANEJO DE SESION ----------
 // El backend ahora exige un token en cada llamada (Authorization: Bearer <token>).
 // Antes no existia ningun mecanismo de sesion; esto centraliza el token en
@@ -322,10 +323,14 @@ export async function obtenerDetalleVenta(ventaId: string): Promise<VentaDetalle
   return res.json();
 }
 
-export async function cancelarVenta(ventaId: string): Promise<VentaDetalle> {
+export async function cancelarVenta(
+  ventaId: string,
+  autorizacion?: { telefono: string; pin: string }
+): Promise<VentaDetalle> {
   const res = await fetch(`${API_URL}/ventas/${ventaId}/cancelar`, {
     method: 'POST',
-    headers: headerAuth(),
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(autorizacion || {}),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw { ...data, status: res.status };
@@ -548,11 +553,52 @@ export interface PagoProveedorDetalleCorte {
   registradoPor: string;
 }
 
+export interface VentaDetalleCorte {
+  id: string;
+  folio: number;
+  cliente: string;
+  vendedor: string;
+  total: number;
+  saldoPendiente: number;
+  estadoPago: string;
+  fecha: string;
+}
+
+export interface CompraDetalleCorte {
+  id: string;
+  numeroFactura: string | null;
+  proveedor: string;
+  total: number;
+  saldoPendiente: number;
+  estadoPago: string;
+  fecha: string;
+}
+
+export interface VentaCanceladaCorte {
+  id: string;
+  folio: number;
+  cliente: string;
+  total: number;
+  fechaOriginal: string;
+  canceladaEn: string;
+  canceladaPor: string;
+}
+
+export interface CompraCanceladaCorte {
+  id: string;
+  numeroFactura: string | null;
+  proveedor: string;
+  total: number;
+  fechaOriginal: string;
+  canceladaEn: string;
+  canceladaPor: string;
+}
+
 export interface ResumenCorteDia {
   yaExisteCorteHoy: boolean;
   corteExistente: { id: string; efectivoContado: number; saldoBancoContado: number } | null;
-  ventas: { total: number; cobrado: number; cantidad: number };
-  compras: { total: number; cantidad: number };
+  ventas: { total: number; cobrado: number; cantidad: number; detalle: VentaDetalleCorte[] };
+  compras: { total: number; cantidad: number; detalle: CompraDetalleCorte[] };
   gastos: { total: number; cantidad: number };
   pagosClientes: {
     total: number;
@@ -570,6 +616,7 @@ export interface ResumenCorteDia {
   };
   cartera: number;
   cuentasPorPagar: number;
+  canceladas: { ventas: VentaCanceladaCorte[]; compras: CompraCanceladaCorte[] };
   // Solo presentes si el usuario tiene permiso de ver utilidad:
   utilidadDia?: number;
   valorInventario?: number;
@@ -643,9 +690,25 @@ export interface CompraDetalle {
   total: number;
   saldoPendiente: number;
   estadoPago: string;
+  cancelada: boolean;
+  canceladaEn: string | null;
   proveedor: { id: string; nombre: string; telefono: string | null };
   metodosPago: string[];
   items: ItemCompraDetalle[];
+}
+
+export async function cancelarCompra(
+  compraId: string,
+  autorizacion?: { telefono: string; pin: string }
+): Promise<CompraDetalle> {
+  const res = await fetch(`${API_URL}/compras/${compraId}/cancelar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(autorizacion || {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
 }
 
 export async function obtenerDetalleCompra(compraId: string): Promise<CompraDetalle> {
@@ -669,6 +732,8 @@ export interface CompraHistorial {
   total: number;
   saldoPendiente: number;
   estadoPago: string;
+  cancelada: boolean;
+  canceladaEn: string | null;
   proveedor: { id: string; nombre: string; telefono: string | null };
   metodosPago: string[];
   items: ItemCompraHistorial[];
@@ -767,7 +832,7 @@ export interface VentaHistorial {
 }
 
 export interface FiltrosHistorial {
-  periodo?: 'todos' | 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
+  periodo?: 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
   desde?: string;
   hasta?: string;
   clienteId?: string;

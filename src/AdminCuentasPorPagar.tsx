@@ -13,6 +13,7 @@ interface Props {
 
 export function AdminCuentasPorPagar({ onCerrar }: Props) {
   const [facturas, setFacturas] = useState<FacturaPendiente[]>([]);
+  const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
@@ -88,6 +89,12 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     }
   }
 
+  const facturasFiltradas = facturas.filter((f) => {
+    if (!busqueda.trim()) return true;
+    const q = busqueda.trim().toLowerCase();
+    return f.proveedor.nombre.toLowerCase().includes(q) || (f.numeroFactura || '').toLowerCase().includes(q);
+  });
+
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
@@ -103,8 +110,14 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         {/* ---------- NIVEL 1: LISTA DE FACTURAS PENDIENTES ---------- */}
         {!cargando && !facturaElegida && (
           <div style={{ display: 'grid', gap: '0.75rem' }}>
-            {facturas.length === 0 && <p style={{ color: '#6b7280' }}>No hay cuentas por pagar.</p>}
-            {facturas.map((f) => (
+            <input
+              className="buscador"
+              placeholder="Buscar por proveedor o número de factura"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+            />
+            {facturasFiltradas.length === 0 && <p style={{ color: '#6b7280' }}>No hay cuentas por pagar que coincidan.</p>}
+            {facturasFiltradas.map((f) => (
               <div
                 key={f.id}
                 style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
