@@ -443,6 +443,19 @@ export async function crearProveedorRapido(nombre: string, telefono?: string): P
   return res.json();
 }
 
+export async function importarProveedores(nombres: string[]): Promise<{ creados: number }> {
+  const res = await fetch(`${API_URL}/proveedores/importar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ nombres }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron importar los proveedores');
+  }
+  return res.json();
+}
+
 // ---------- COMPRAS ----------
 
 export interface ItemCompraPayload {

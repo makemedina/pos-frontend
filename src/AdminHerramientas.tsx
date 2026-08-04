@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { API_URL, headerAuth, cargarSaldosIniciales } from './api';
+import { API_URL, headerAuth, cargarSaldosIniciales, importarProveedores } from './api';
 
 interface Props {
   onCerrar: () => void;
@@ -127,6 +127,29 @@ export function AdminHerramientas({ onCerrar }: Props) {
     }
   }
 
+  // ---------- Importar lista de proveedores ----------
+  const [textoProveedores, setTextoProveedores] = useState('');
+  const [importandoProveedores, setImportandoProveedores] = useState(false);
+
+  const proveedoresDetectados = textoProveedores
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+
+  async function importarListaProveedores() {
+    if (proveedoresDetectados.length === 0) return;
+    setImportandoProveedores(true);
+    try {
+      const { creados } = await importarProveedores(proveedoresDetectados);
+      setMensaje(`Se importaron ${creados} proveedores.`);
+      setTextoProveedores('');
+    } catch (err: any) {
+      setMensaje(err.message);
+    } finally {
+      setImportandoProveedores(false);
+    }
+  }
+
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
@@ -136,6 +159,25 @@ export function AdminHerramientas({ onCerrar }: Props) {
         </div>
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
+
+        {/* ---------- Importar lista de proveedores ---------- */}
+        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+          <h3>🚚 Importar lista de proveedores</h3>
+          <p style={{ fontSize: 13, color: '#6b7280' }}>
+            Pega los nombres, uno por línea. Se crean sin teléfono — lo puedes agregar después
+            desde la búsqueda de proveedor en Compras o Gastos.
+          </p>
+          <textarea
+            rows={8}
+            placeholder={'Proveedor 1\nProveedor 2\n...'}
+            value={textoProveedores}
+            onChange={(e) => setTextoProveedores(e.target.value)}
+            style={{ width: '100%', resize: 'vertical', fontFamily: 'monospace', fontSize: 12 }}
+          />
+          <button onClick={importarListaProveedores} disabled={importandoProveedores || proveedoresDetectados.length === 0}>
+            {importandoProveedores ? 'Importando...' : `Importar ${proveedoresDetectados.length} proveedor(es)`}
+          </button>
+        </div>
 
         {/* ---------- Cargar inventario inicial ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
