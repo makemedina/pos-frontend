@@ -749,13 +749,14 @@ export interface ResumenCorteDia {
   saldoBancoSistema: number;
   saldoEfectivoSistema: number;
   canceladas: { ventas: VentaCanceladaCorte[]; compras: CompraCanceladaCorte[] };
-  // Solo presentes si el usuario tiene permiso de ver utilidad:
+  // Solo presentes si el usuario tiene permiso de ver utilidad. Nota:
+  // balanzaTotal/diferenciaCuadre de HOY no vienen del backend -- todavia
+  // no se sabe cuanto hay en efectivo/banco hasta que se cuenten, asi que
+  // se calculan en vivo en la pantalla con lo que se vaya escribiendo.
   utilidadDia?: number;
   valorInventario?: number;
-  balanzaTotal?: number;
   balanzaAyer?: number | null;
   balanzaEsperada?: number | null;
-  diferenciaCuadre?: number | null;
 }
 
 export async function obtenerCorteDelDia(): Promise<ResumenCorteDia> {

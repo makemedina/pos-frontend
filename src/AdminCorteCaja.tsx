@@ -308,37 +308,54 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
               </div>
             )}
 
-            {tieneUtilidad && (
-              <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fefce8' }}>
-                <h3>Utilidad y balanza (solo visible para administración)</h3>
-                <div>Utilidad del día: <strong>{formatoMoneda(resumen!.utilidadDia!)}</strong></div>
-                <div style={{ fontSize: 13, color: '#6b7280' }}>
-                  Balanza = cartera por cobrar + valor de inventario − cuentas por pagar
-                </div>
-                <div>Cartera por cobrar: {formatoMoneda(resumen!.cartera)}</div>
-                <div>Valor de inventario: {formatoMoneda(resumen!.valorInventario!)}</div>
-                <div>Cuentas por pagar: {formatoMoneda(resumen!.cuentasPorPagar)}</div>
-                <div style={{ fontWeight: 700, fontSize: 16 }}>
-                  Balanza total: {formatoMoneda(resumen!.balanzaTotal!)}
-                </div>
+            {tieneUtilidad && (() => {
+              // Mientras no se guarde el corte de hoy, se usa lo que el
+              // usuario vaya escribiendo en el formulario; si ya se
+              // guardo, se usa lo que quedo capturado ese dia.
+              const efectivoUsado = resumen!.corteExistente
+                ? resumen!.corteExistente.efectivoContado
+                : Number(efectivoContado) || 0;
+              const bancoUsado = resumen!.corteExistente
+                ? resumen!.corteExistente.saldoBancoContado
+                : Number(saldoBancoContado) || 0;
+              const balanzaHoy =
+                efectivoUsado + bancoUsado + resumen!.cartera + resumen!.valorInventario! - resumen!.cuentasPorPagar;
+              const diferencia = resumen!.balanzaEsperada != null ? balanzaHoy - resumen!.balanzaEsperada : null;
 
-                {resumen?.balanzaAyer != null && (
-                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>
-                      Cuadre: balanza de ayer ({formatoMoneda(resumen.balanzaAyer)}) + utilidad de hoy − gastos de hoy
-                      = {formatoMoneda(resumen.balanzaEsperada!)} esperado
-                    </div>
-                    {Math.abs(resumen.diferenciaCuadre ?? 0) < 0.01 ? (
-                      <div style={{ color: '#16a34a', fontWeight: 600 }}>✓ Cuadra</div>
-                    ) : (
-                      <div className="texto-alerta" style={{ fontWeight: 600 }}>
-                        ⚠ No cuadra. Diferencia: {formatoMoneda(resumen.diferenciaCuadre!)}
-                      </div>
-                    )}
+              return (
+                <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fefce8' }}>
+                  <h3>Utilidad y balanza (solo visible para administración)</h3>
+                  <div>Utilidad del día: <strong>{formatoMoneda(resumen!.utilidadDia!)}</strong></div>
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>
+                    Balanza = efectivo + banco + cartera por cobrar + valor de inventario − cuentas por pagar
                   </div>
-                )}
-              </div>
-            )}
+                  <div>Efectivo{!resumen!.corteExistente && ' (lo que vas escribiendo)'}: {formatoMoneda(efectivoUsado)}</div>
+                  <div>Banco{!resumen!.corteExistente && ' (lo que vas escribiendo)'}: {formatoMoneda(bancoUsado)}</div>
+                  <div>Cartera por cobrar: {formatoMoneda(resumen!.cartera)}</div>
+                  <div>Valor de inventario: {formatoMoneda(resumen!.valorInventario!)}</div>
+                  <div>Cuentas por pagar: {formatoMoneda(resumen!.cuentasPorPagar)}</div>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>
+                    Balanza total de hoy: {formatoMoneda(balanzaHoy)}
+                  </div>
+
+                  {resumen!.balanzaAyer != null && (
+                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
+                      <div style={{ fontSize: 13, color: '#6b7280' }}>
+                        Cuadre: balanza de ayer ({formatoMoneda(resumen!.balanzaAyer)}) + utilidad de hoy − gastos de hoy
+                        = {formatoMoneda(resumen!.balanzaEsperada!)} esperado
+                      </div>
+                      {Math.abs(diferencia ?? 0) < 0.01 ? (
+                        <div style={{ color: '#16a34a', fontWeight: 600 }}>✓ Cuadra</div>
+                      ) : (
+                        <div className="texto-alerta" style={{ fontWeight: 600 }}>
+                          ⚠ No cuadra. Diferencia: {formatoMoneda(diferencia)}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>
