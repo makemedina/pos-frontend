@@ -768,11 +768,11 @@ export async function obtenerCorteDelDia(): Promise<ResumenCorteDia> {
   return res.json();
 }
 
-export async function guardarCorte(efectivoContado: number, saldoBancoContado: number) {
+export async function guardarCorte(efectivoContado: number, saldoBancoContado: number, fecha?: string) {
   const res = await fetch(`${API_URL}/corte/caja`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ efectivoContado, saldoBancoContado }),
+    body: JSON.stringify({ efectivoContado, saldoBancoContado, fecha }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw { ...data, status: res.status };

@@ -11,6 +11,12 @@ interface Props {
 export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
   const [efectivoContado, setEfectivoContado] = useState('');
   const [saldoBancoContado, setSaldoBancoContado] = useState('');
+  const [usarFechaPersonalizada, setUsarFechaPersonalizada] = useState(false);
+  const [fechaPersonalizada, setFechaPersonalizada] = useState(() => {
+    const ayer = new Date();
+    ayer.setDate(ayer.getDate() - 1);
+    return ayer.toISOString().slice(0, 10);
+  });
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [resumen, setResumen] = useState<ResumenCorteDia | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -37,17 +43,18 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await guardarCorte(Number(efectivoContado), Number(saldoBancoContado));
+      await guardarCorte(Number(efectivoContado), Number(saldoBancoContado), usarFechaPersonalizada ? fechaPersonalizada : undefined);
       setMensaje('Corte de caja guardado');
       setEfectivoContado('');
       setSaldoBancoContado('');
+      setUsarFechaPersonalizada(false);
       cargarResumen();
     } catch (err: any) {
       if (err.code === 'CORTE_YA_EXISTE') {
         setMensaje(err.error || 'Ya existe un corte de caja para hoy.');
         cargarResumen();
       } else {
-        setMensaje('No se pudo guardar el corte');
+        setMensaje(err.error || 'No se pudo guardar el corte');
       }
     }
   }
@@ -167,6 +174,29 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                   </p>
                 )}
                 <input value={saldoBancoContado} onChange={(e) => setSaldoBancoContado(e.target.value)} type="number" step="0.01" placeholder="Saldo en banco" required />
+
+                {onVerHistorial && (
+                  <div style={{ fontSize: 12 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <input
+                        type="checkbox"
+                        checked={usarFechaPersonalizada}
+                        onChange={(e) => setUsarFechaPersonalizada(e.target.checked)}
+                        style={{ width: 'auto' }}
+                      />
+                      Capturar con otra fecha (ej. el día de ayer, como punto de partida)
+                    </label>
+                    {usarFechaPersonalizada && (
+                      <input
+                        type="date"
+                        value={fechaPersonalizada}
+                        onChange={(e) => setFechaPersonalizada(e.target.value)}
+                        style={{ marginTop: 6 }}
+                      />
+                    )}
+                  </div>
+                )}
+
                 <button type="submit">Guardar corte</button>
               </form>
             )}
