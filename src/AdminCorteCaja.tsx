@@ -120,6 +120,11 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
               <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Captura del día</h3>
                 <input value={efectivoContado} onChange={(e) => setEfectivoContado(e.target.value)} type="number" step="0.01" placeholder="Efectivo contado" required />
+                {resumen && (
+                  <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                    El sistema lleva ${resumen.saldoBancoSistema.toFixed(2)} en bancos (por transferencias) — compáralo contra tu banco real:
+                  </p>
+                )}
                 <input value={saldoBancoContado} onChange={(e) => setSaldoBancoContado(e.target.value)} type="number" step="0.01" placeholder="Saldo en banco" required />
                 <button type="submit">Guardar corte</button>
               </form>

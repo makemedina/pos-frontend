@@ -11,6 +11,8 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [saldoBancoInput, setSaldoBancoInput] = useState('');
+  const [guardandoSaldo, setGuardandoSaldo] = useState(false);
 
   useEffect(() => {
     cargar();
@@ -21,6 +23,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
     try {
       const data = await obtenerConfiguracion();
       setConfig(data);
+      setSaldoBancoInput(String(data.saldoBancoActual));
     } catch {
       setMensaje('No se pudo cargar la configuración.');
     } finally {
@@ -59,6 +62,21 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
       setMensaje('No se pudo guardar la configuración.');
     } finally {
       setGuardando(false);
+    }
+  }
+
+  async function guardarSaldoBanco() {
+    const valor = Number(saldoBancoInput);
+    if (isNaN(valor)) return;
+    setGuardandoSaldo(true);
+    try {
+      const actualizado = await guardarConfiguracion({ saldoBancoActual: valor });
+      setConfig(actualizado);
+      setMensaje('Saldo en bancos actualizado.');
+    } catch {
+      setMensaje('No se pudo guardar el saldo en bancos.');
+    } finally {
+      setGuardandoSaldo(false);
     }
   }
 
@@ -119,6 +137,27 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
 
               <button onClick={guardar} disabled={guardando}>
                 {guardando ? 'Guardando...' : 'Guardar cambios'}
+              </button>
+            </div>
+
+            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+              <h3>🏦 Saldo en bancos</h3>
+              <p style={{ fontSize: 13, color: '#6b7280' }}>
+                Este número sube solo con cada venta/abono por transferencia, y baja solo con
+                cada gasto, compra o pago a proveedor por transferencia. Solo cámbialo a mano
+                para poner el saldo inicial o para corregirlo si no coincide con el banco real.
+              </p>
+              <label>
+                Saldo actual
+                <input
+                  type="number"
+                  step="0.01"
+                  value={saldoBancoInput}
+                  onChange={(e) => setSaldoBancoInput(e.target.value)}
+                />
+              </label>
+              <button onClick={guardarSaldoBanco} disabled={guardandoSaldo}>
+                {guardandoSaldo ? 'Guardando...' : 'Guardar saldo en bancos'}
               </button>
             </div>
 
