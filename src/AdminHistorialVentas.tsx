@@ -27,6 +27,7 @@ export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
   const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
   const [metodoPago, setMetodoPago] = useState<string>('');
+  const [verCanceladas, setVerCanceladas] = useState(false);
 
   const [busquedaCliente, setBusquedaCliente] = useState('');
   const [resultadosCliente, setResultadosCliente] = useState<Cliente[]>([]);
@@ -42,7 +43,7 @@ export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
   useEffect(() => {
     cargar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [periodo, desde, hasta, metodoPago, clienteElegido]);
+  }, [periodo, desde, hasta, metodoPago, clienteElegido, verCanceladas]);
 
   async function cargar() {
     setCargando(true);
@@ -53,6 +54,7 @@ export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
         hasta: periodo === 'rango' ? hasta : undefined,
         clienteId: clienteElegido?.id,
         metodoPago: metodoPago || undefined,
+        incluirCanceladas: verCanceladas,
       });
       setVentas(data);
       setMensaje(null);
@@ -82,8 +84,8 @@ export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
     setClienteElegido(null);
   }
 
-  const totalPeriodo = ventas.reduce((acc, v) => acc + v.total, 0);
-  const cobradoPeriodo = ventas.reduce((acc, v) => acc + (v.total - v.saldoPendiente), 0);
+  const totalPeriodo = ventas.filter((v) => !v.cancelada).reduce((acc, v) => acc + v.total, 0);
+  const cobradoPeriodo = ventas.filter((v) => !v.cancelada).reduce((acc, v) => acc + (v.total - v.saldoPendiente), 0);
 
   async function exportar() {
     try {
@@ -191,6 +193,16 @@ export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
             )}
           </div>
 
+          <label className="fila-switch" style={{ marginTop: 8 }}>
+            <span>Mostrar ventas canceladas</span>
+            <button
+              type="button"
+              className={`switch ${verCanceladas ? 'on' : ''}`}
+              onClick={() => setVerCanceladas((v) => !v)}
+            >
+              <span className="switch-bola" />
+            </button>
+          </label>
         </div>
 
         {/* Resumen del periodo filtrado */}
@@ -235,9 +247,13 @@ export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div><strong>${v.total.toFixed(2)}</strong></div>
-                    <div style={{ fontSize: 12, color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                      {v.estadoPago === 'pagada' ? 'Pagada' : `Saldo: $${v.saldoPendiente.toFixed(2)}`}
-                    </div>
+                    {v.cancelada ? (
+                      <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>❌ Cancelada</div>
+                    ) : (
+                      <div style={{ fontSize: 12, color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                        {v.estadoPago === 'pagada' ? 'Pagada' : `Saldo: $${v.saldoPendiente.toFixed(2)}`}
+                      </div>
+                    )}
                   </div>
                 </div>
 

@@ -927,6 +927,8 @@ export interface VentaHistorial {
   saldoPendiente: number;
   esCredito: boolean;
   estadoPago: string;
+  cancelada: boolean;
+  canceladaEn: string | null;
   cliente: { id: string; nombre: string; telefono: string };
   vendedor: { id: string; nombre: string };
   metodosPago: string[];
@@ -939,6 +941,7 @@ export interface FiltrosHistorial {
   hasta?: string;
   clienteId?: string;
   metodoPago?: string;
+  incluirCanceladas?: boolean;
 }
 
 export async function obtenerHistorialVentas(filtros: FiltrosHistorial): Promise<VentaHistorial[]> {
@@ -948,6 +951,7 @@ export async function obtenerHistorialVentas(filtros: FiltrosHistorial): Promise
   if (filtros.hasta) params.set('hasta', filtros.hasta);
   if (filtros.clienteId) params.set('clienteId', filtros.clienteId);
   if (filtros.metodoPago) params.set('metodoPago', filtros.metodoPago);
+  if (filtros.incluirCanceladas) params.set('incluirCanceladas', 'true');
 
   const res = await fetch(`${API_URL}/historial/ventas?${params.toString()}`, { headers: headerAuth() });
   if (!res.ok) {
