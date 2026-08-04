@@ -18,6 +18,9 @@ export interface DatosRecibo {
   metodoPago?: string;
   esCredito: boolean;
   saldoPendiente: number;
+  // Saldo total del cliente sumando TODAS sus notas a credito (no solo
+  // esta venta) -- solo se muestra si viene un valor.
+  saldoTotalCliente?: number;
 }
 
 /** Orden del recibo: logo (no aplica en texto) -> encabezado del negocio -> datos del cliente -> cuerpo -> pie. */
@@ -61,7 +64,13 @@ export function construirLineasRecibo(config: Configuracion, datos: DatosRecibo)
   if (datos.metodoPago) lineas.push({ texto: `Metodo de pago: ${datos.metodoPago}` });
   if (datos.esCredito) {
     lineas.push({ texto: 'VENTA A CREDITO', negrita: true });
-    lineas.push({ texto: `Saldo pendiente: $${datos.saldoPendiente.toFixed(2)}` });
+    lineas.push({ texto: `Saldo pendiente (esta nota): $${datos.saldoPendiente.toFixed(2)}` });
+  }
+  if (datos.saldoTotalCliente !== undefined) {
+    lineas.push({
+      texto: lineaDosColumnas('Saldo total del cliente', `$${datos.saldoTotalCliente.toFixed(2)}`, ancho),
+      negrita: true,
+    });
   }
 
   // Pie de recibo

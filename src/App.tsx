@@ -284,6 +284,7 @@ export default function App() {
         metodoPago: datos.metodoPago,
         esCredito: datos.esCredito,
         saldoPendiente: Number(resultado.venta.saldoPendiente ?? 0),
+        saldoTotalCliente: resultado.saldoTotalCliente !== undefined ? Number(resultado.saldoTotalCliente) : undefined,
       });
       setCarrito([]);
       setMostrarCheckout(false);

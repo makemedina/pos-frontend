@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
 import { exportarAExcel } from './exportarExcel';
+import { ComprobantePagoModal, type DatosComprobantePago } from './ComprobantePagoModal';
 import {
   obtenerResumenCartera,
   obtenerNotasCliente,
@@ -21,6 +22,7 @@ export function AdminCartera({ onCerrar }: Props) {
   const [nivel, setNivel] = useState<Nivel>('clientes');
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [busquedaCartera, setBusquedaCartera] = useState('');
+  const [comprobanteActivo, setComprobanteActivo] = useState<DatosComprobantePago | null>(null);
   const [exportando, setExportando] = useState(false);
   const [cargando, setCargando] = useState(true);
 
@@ -121,8 +123,18 @@ export function AdminCartera({ onCerrar }: Props) {
     if (!notaElegida) return;
 
     try {
-      await registrarPagoVenta(notaElegida.id, Number(monto), metodoPago);
+      const resultado = await registrarPagoVenta(notaElegida.id, Number(monto), metodoPago);
       setMensaje(`Pago registrado para la venta #${notaElegida.folio}`);
+      setComprobanteActivo({
+        folioNota: notaElegida.folio,
+        clienteNombre: clienteElegido!.nombre,
+        clienteTelefono: clienteElegido!.telefono,
+        monto: Number(monto),
+        metodoPago,
+        fecha: new Date().toLocaleString(),
+        saldoNotaRestante: Number(resultado.saldoNotaRestante ?? 0),
+        saldoTotalCliente: Number(resultado.saldoTotalCliente ?? 0),
+      });
       setMonto('');
       // Refresca la nota (saldo actualizado) y su historial de pagos.
       const [notaData, pagosData] = await Promise.all([
@@ -350,6 +362,10 @@ export function AdminCartera({ onCerrar }: Props) {
           </>
         )}
       </div>
+
+      {comprobanteActivo && (
+        <ComprobantePagoModal datos={comprobanteActivo} onCerrar={() => setComprobanteActivo(null)} />
+      )}
     </div>
   );
 }

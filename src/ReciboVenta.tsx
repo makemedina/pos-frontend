@@ -76,7 +76,13 @@ export function ReciboVenta({ config, datos, elementId }: Props) {
       {datos.esCredito && (
         <div style={{ marginTop: 4 }}>
           <div style={{ fontWeight: 700 }}>VENTA A CRÉDITO</div>
-          <div>Saldo pendiente: {formatoMoneda(datos.saldoPendiente)}</div>
+          <div>Saldo pendiente (esta nota): {formatoMoneda(datos.saldoPendiente)}</div>
+        </div>
+      )}
+      {datos.saldoTotalCliente !== undefined && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, marginTop: 6, paddingTop: 6, borderTop: '1px dashed #999' }}>
+          <span>Saldo total del cliente</span>
+          <span>{formatoMoneda(datos.saldoTotalCliente)}</span>
         </div>
       )}
 
