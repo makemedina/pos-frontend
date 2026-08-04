@@ -214,9 +214,13 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div><strong>${c.total.toFixed(2)}</strong></div>
-                    <div style={{ fontSize: 12, color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                      {c.estadoPago === 'pagada' ? 'Pagada' : `Saldo: $${c.saldoPendiente.toFixed(2)}`}
-                    </div>
+                    {c.cancelada ? (
+                      <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>❌ Cancelada</div>
+                    ) : (
+                      <div style={{ fontSize: 12, color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                        {c.estadoPago === 'pagada' ? 'Pagada' : `Saldo: $${c.saldoPendiente.toFixed(2)}`}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

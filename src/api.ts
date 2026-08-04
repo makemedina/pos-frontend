@@ -92,7 +92,10 @@ export interface VarianteCatalogo {
 
 export async function obtenerCatalogo(): Promise<VarianteCatalogo[]> {
   const res = await fetch(`${API_URL}/catalogo`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el catalogo');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el catalogo');
+  }
   return res.json();
 }
 
@@ -105,7 +108,10 @@ export interface VarianteBusqueda {
 export async function buscarVariantes(query: string): Promise<VarianteBusqueda[]> {
   if (query.length < 2) return [];
   const res = await fetch(`${API_URL}/catalogo/buscar?q=${encodeURIComponent(query)}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo buscar productos');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo buscar productos');
+  }
   return res.json();
 }
 
@@ -119,7 +125,10 @@ export async function crearVarianteRapida(
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
     body: JSON.stringify({ nombreProducto, marca, precioVenta }),
   });
-  if (!res.ok) throw new Error('No se pudo crear la variante');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo crear la variante');
+  }
   return res.json();
 }
 
@@ -131,7 +140,10 @@ export interface Producto {
 export async function buscarProductos(query: string): Promise<Producto[]> {
   if (query.length < 2) return [];
   const res = await fetch(`${API_URL}/catalogo/productos?q=${encodeURIComponent(query)}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo buscar productos');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo buscar productos');
+  }
   return res.json();
 }
 
@@ -143,7 +155,10 @@ export interface VarianteExistente {
 
 export async function obtenerVariantesDeProducto(productoId: string): Promise<VarianteExistente[]> {
   const res = await fetch(`${API_URL}/catalogo/productos/${productoId}/variantes`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudieron obtener las variantes');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron obtener las variantes');
+  }
   return res.json();
 }
 
@@ -163,7 +178,10 @@ export interface ProductoGestion {
 
 export async function obtenerProductosGestion(): Promise<ProductoGestion[]> {
   const res = await fetch(`${API_URL}/catalogo/gestion`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudieron cargar los productos');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los productos');
+  }
   return res.json();
 }
 
@@ -179,7 +197,10 @@ export interface MovimientoVariante {
 
 export async function obtenerHistorialVariante(varianteId: string): Promise<MovimientoVariante[]> {
   const res = await fetch(`${API_URL}/catalogo/variantes/${varianteId}/historial`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el historial del producto');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el historial del producto');
+  }
   return res.json();
 }
 
@@ -194,7 +215,10 @@ export interface Cliente {
 export async function buscarClientes(query: string): Promise<Cliente[]> {
   if (query.length < 2) return [];
   const res = await fetch(`${API_URL}/clientes?q=${encodeURIComponent(query)}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo buscar clientes');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo buscar clientes');
+  }
   return res.json();
 }
 
@@ -204,7 +228,10 @@ export async function crearClienteRapido(nombre: string, telefono: string): Prom
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
     body: JSON.stringify({ nombre, telefono }),
   });
-  if (!res.ok) throw new Error('No se pudo crear el cliente');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo crear el cliente');
+  }
   return res.json();
 }
 
@@ -219,13 +246,19 @@ export interface ClienteConSaldo {
 
 export async function obtenerClientesConSaldo(filtro: 'todos' | 'conDeuda' | 'sinDeuda'): Promise<ClienteConSaldo[]> {
   const res = await fetch(`${API_URL}/clientes/todos?filtro=${filtro}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudieron cargar los clientes');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los clientes');
+  }
   return res.json();
 }
 
 export async function obtenerClienteDetalle(id: string): Promise<ClienteConSaldo> {
   const res = await fetch(`${API_URL}/clientes/${id}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el cliente');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el cliente');
+  }
   return res.json();
 }
 
@@ -235,7 +268,10 @@ export async function crearClienteCompleto(datos: { nombre: string; telefono: st
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
     body: JSON.stringify(datos),
   });
-  if (!res.ok) throw new Error('No se pudo crear el cliente');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo crear el cliente');
+  }
   return res.json();
 }
 
@@ -248,7 +284,10 @@ export async function actualizarCliente(
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
     body: JSON.stringify(datos),
   });
-  if (!res.ok) throw new Error('No se pudo actualizar el cliente');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo actualizar el cliente');
+  }
   return res.json();
 }
 
@@ -273,7 +312,10 @@ export interface VentaDeCliente {
 
 export async function obtenerVentasDeCliente(clienteId: string): Promise<VentaDeCliente[]> {
   const res = await fetch(`${API_URL}/clientes/${clienteId}/ventas`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudieron cargar las transacciones del cliente');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar las transacciones del cliente');
+  }
   return res.json();
 }
 
@@ -289,7 +331,10 @@ export async function obtenerMovimientosDeCliente(
   clienteId: string
 ): Promise<{ saldoTotal: number; movimientos: MovimientoCliente[] }> {
   const res = await fetch(`${API_URL}/clientes/${clienteId}/movimientos`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudieron cargar los movimientos del cliente');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los movimientos del cliente');
+  }
   return res.json();
 }
 
@@ -319,7 +364,10 @@ export interface VentaDetalle {
 
 export async function obtenerDetalleVenta(ventaId: string): Promise<VentaDetalle> {
   const res = await fetch(`${API_URL}/ventas/${ventaId}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el detalle de la venta');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el detalle de la venta');
+  }
   return res.json();
 }
 
@@ -347,7 +395,10 @@ export interface Proveedor {
 
 export async function buscarProveedores(query: string): Promise<Proveedor[]> {
   const res = await fetch(`${API_URL}/proveedores?q=${encodeURIComponent(query)}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo buscar proveedores');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo buscar proveedores');
+  }
   return res.json();
 }
 
@@ -357,7 +408,10 @@ export async function crearProveedorRapido(nombre: string, telefono?: string): P
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
     body: JSON.stringify({ nombre, telefono }),
   });
-  if (!res.ok) throw new Error('No se pudo crear el proveedor');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo crear el proveedor');
+  }
   return res.json();
 }
 
@@ -384,7 +438,10 @@ export async function registrarCompra(payload: CrearCompraPayload) {
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error('No se pudo registrar la compra');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo registrar la compra');
+  }
   return res.json();
 }
 
@@ -411,7 +468,10 @@ export interface FacturaPendiente {
 
 export async function obtenerFacturasPendientes(): Promise<FacturaPendiente[]> {
   const res = await fetch(`${API_URL}/compras/pendientes`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudieron cargar las facturas pendientes');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar las facturas pendientes');
+  }
   return res.json();
 }
 
@@ -425,7 +485,10 @@ export interface PagoCompraHistorial {
 
 export async function obtenerPagosDeCompra(compraId: string): Promise<PagoCompraHistorial[]> {
   const res = await fetch(`${API_URL}/compras/${compraId}/pagos`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el historial de pagos');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el historial de pagos');
+  }
   return res.json();
 }
 
@@ -441,7 +504,10 @@ export interface LoteInventario {
 
 export async function obtenerLotesDeVariante(varianteId: string): Promise<LoteInventario[]> {
   const res = await fetch(`${API_URL}/inventario/lotes/${varianteId}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudieron obtener los lotes');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron obtener los lotes');
+  }
   return res.json();
 }
 
@@ -517,7 +583,10 @@ export interface Configuracion {
 
 export async function obtenerConfiguracion(): Promise<Configuracion> {
   const res = await fetch(`${API_URL}/configuracion`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar la configuracion');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar la configuracion');
+  }
   return res.json();
 }
 
@@ -527,7 +596,10 @@ export async function guardarConfiguracion(datos: Partial<Configuracion>): Promi
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
     body: JSON.stringify(datos),
   });
-  if (!res.ok) throw new Error('No se pudo guardar la configuracion');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo guardar la configuracion');
+  }
   return res.json();
 }
 
@@ -628,7 +700,10 @@ export interface ResumenCorteDia {
 
 export async function obtenerCorteDelDia(): Promise<ResumenCorteDia> {
   const res = await fetch(`${API_URL}/corte`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el resumen del dia');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el resumen del dia');
+  }
   return res.json();
 }
 
@@ -660,7 +735,10 @@ export interface CorteHistorico {
 
 export async function obtenerHistorialCortes(): Promise<CorteHistorico[]> {
   const res = await fetch(`${API_URL}/corte/historial`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el historico de cortes');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el historico de cortes');
+  }
   return res.json();
 }
 
@@ -670,7 +748,10 @@ export async function actualizarCorte(id: string, efectivoContado: number, saldo
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
     body: JSON.stringify({ efectivoContado, saldoBancoContado }),
   });
-  if (!res.ok) throw new Error('No se pudo actualizar el corte');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo actualizar el corte');
+  }
   return res.json();
 }
 
@@ -713,7 +794,10 @@ export async function cancelarCompra(
 
 export async function obtenerDetalleCompra(compraId: string): Promise<CompraDetalle> {
   const res = await fetch(`${API_URL}/compras/${compraId}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el detalle de la compra');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el detalle de la compra');
+  }
   return res.json();
 }
 
@@ -756,7 +840,10 @@ export async function obtenerHistorialCompras(filtros: FiltrosHistorialCompras):
   if (filtros.estadoPago) params.set('estadoPago', filtros.estadoPago);
 
   const res = await fetch(`${API_URL}/compras/historial?${params.toString()}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el historial de compras');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el historial de compras');
+  }
   return res.json();
 }
 
@@ -801,7 +888,10 @@ export async function obtenerMovimientosInventario(
   if (filtros.productoId) params.set('productoId', filtros.productoId);
 
   const res = await fetch(`${API_URL}/inventario/movimientos?${params.toString()}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el reporte de movimientos');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el reporte de movimientos');
+  }
   return res.json();
 }
 
@@ -848,7 +938,10 @@ export async function obtenerHistorialVentas(filtros: FiltrosHistorial): Promise
   if (filtros.metodoPago) params.set('metodoPago', filtros.metodoPago);
 
   const res = await fetch(`${API_URL}/historial/ventas?${params.toString()}`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el historial de ventas');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el historial de ventas');
+  }
   return res.json();
 }
 
@@ -881,7 +974,10 @@ export interface PagoNota {
 
 export async function obtenerResumenCartera(): Promise<ClienteCartera[]> {
   const res = await fetch(`${API_URL}/cartera/clientes`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar la cartera');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar la cartera');
+  }
   return res.json();
 }
 
@@ -890,13 +986,19 @@ export async function obtenerNotasCliente(clienteId: string, incluirPagadas: boo
     `${API_URL}/cartera/clientes/${clienteId}/notas?incluirPagadas=${incluirPagadas}`,
     { headers: headerAuth() }
   );
-  if (!res.ok) throw new Error('No se pudieron cargar las notas del cliente');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar las notas del cliente');
+  }
   return res.json();
 }
 
 export async function obtenerPagosDeNota(ventaId: string): Promise<PagoNota[]> {
   const res = await fetch(`${API_URL}/ventas/${ventaId}/pagos`, { headers: headerAuth() });
-  if (!res.ok) throw new Error('No se pudo cargar el historial de pagos');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el historial de pagos');
+  }
   return res.json();
 }
 
