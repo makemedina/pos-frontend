@@ -10,6 +10,7 @@ import { AdminCuentasPorPagar } from './AdminCuentasPorPagar';
 import { AdminFacturasPendientes } from './AdminFacturasPendientes';
 import { AdminHistorialCompras } from './AdminHistorialCompras';
 import { AdminUsuarios } from './AdminUsuarios';
+import { AdminHerramientas } from './AdminHerramientas';
 import { AdminGastos } from './AdminGastos';
 import { AdminCorteCaja } from './AdminCorteCaja';
 import { AdminDashboard } from './AdminDashboard';
@@ -62,7 +63,8 @@ type Pantalla =
   | 'clientesMenu'
   | 'inventarioMenu'
   | 'finanzasMenu'
-  | 'configuracionMenu';
+  | 'configuracionMenu'
+  | 'herramientas';
 
 interface OpcionMenu {
   pantalla: Pantalla;
@@ -105,6 +107,7 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
     case 'configuracion':
     case 'configuracionRecibo':
     case 'configuracionImpresora':
+    case 'herramientas':
       return false; // solo administrador
     case 'gastos':
       return true; // cualquiera puede registrar/ver sus propios gastos
@@ -487,6 +490,7 @@ export default function App() {
       return renderSubmenu('Configuración', [
         { pantalla: 'configuracion', icono: '⚙️', titulo: 'Datos del negocio', descripcion: 'Negocio, recibo e impresora', clase: 'boton-flotante-ajuste' },
         { pantalla: 'usuarios', icono: '👤', titulo: 'Usuarios', descripcion: 'Altas, PIN y permisos', clase: 'boton-flotante-usuarios' },
+        { pantalla: 'herramientas', icono: '🛠️', titulo: 'Herramientas', descripcion: 'Carga inicial y reinicio de datos', clase: 'boton-flotante-ajuste' },
       ]);
     }
 
@@ -516,6 +520,9 @@ export default function App() {
     }
     if (pantallaActiva === 'usuarios') {
       return <AdminUsuarios onCerrar={() => abrirPantalla('configuracionMenu')} />;
+    }
+    if (pantallaActiva === 'herramientas') {
+      return <AdminHerramientas onCerrar={() => abrirPantalla('configuracionMenu')} />;
     }
     if (pantallaActiva === 'gastos') {
       return <AdminGastos onCerrar={() => abrirPantalla('finanzasMenu')} />;
