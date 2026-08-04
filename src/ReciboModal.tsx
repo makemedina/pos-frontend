@@ -3,7 +3,7 @@ import { obtenerConfiguracion, type Configuracion } from './api';
 import { obtenerConfiguracionCache } from './offline';
 import { ReciboVenta } from './ReciboVenta';
 import { construirLineasRecibo, type DatosRecibo } from './construirRecibo';
-import { generarImagenRecibo, generarPdfRecibo, compartirArchivo } from './reciboExport';
+import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
 import {
   impresoraConectada,
   nombreImpresoraConectada,
@@ -45,8 +45,10 @@ export function ReciboModal({ datos, onCerrar }: Props) {
     try {
       const blob = await generarImagenRecibo(ELEMENT_ID);
       await compartirArchivo(blob, `recibo-${datos.folio}.png`, 'image/png');
-    } catch {
-      setMensaje('No se pudo generar o compartir la imagen.');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo generar o compartir la imagen.');
+      }
     } finally {
       setOcupado(null);
     }
@@ -58,8 +60,10 @@ export function ReciboModal({ datos, onCerrar }: Props) {
     try {
       const blob = await generarPdfRecibo(ELEMENT_ID);
       await compartirArchivo(blob, `recibo-${datos.folio}.pdf`, 'application/pdf');
-    } catch {
-      setMensaje('No se pudo generar el PDF.');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo generar el PDF.');
+      }
     } finally {
       setOcupado(null);
     }

@@ -32,6 +32,8 @@ export async function generarPdfRecibo(elementId: string): Promise<Blob> {
   return pdf.output('blob');
 }
 
+export class CompartirCanceladoError extends Error {}
+
 /**
  * Comparte un archivo (imagen o PDF) usando el Web Share API -- en
  * Android Chrome esto abre el menu nativo de compartir, donde
@@ -43,7 +45,17 @@ export async function compartirArchivo(blob: Blob, nombreArchivo: string, tipoMi
   const nav = navigator as any;
 
   if (nav.canShare && nav.canShare({ files: [file] })) {
-    await nav.share({ files: [file], title: 'Recibo de venta' });
+    try {
+      await nav.share({ files: [file], title: 'Recibo de venta' });
+    } catch (err: any) {
+      // El usuario cerro el menu de compartir sin elegir nada -- el
+      // navegador reporta esto como error (AbortError), pero no es uno
+      // real, no hay nada que avisarle al usuario.
+      if (err?.name === 'AbortError') {
+        throw new CompartirCanceladoError();
+      }
+      throw err;
+    }
     return;
   }
 

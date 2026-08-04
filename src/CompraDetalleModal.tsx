@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
 import { obtenerDetalleCompra, cancelarCompra, type CompraDetalle } from './api';
-import { generarImagenRecibo, generarPdfRecibo, compartirArchivo } from './reciboExport';
+import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
 
 interface Props {
   compraId: string;
@@ -34,8 +34,10 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
     try {
       const blob = await generarImagenRecibo(ELEMENT_ID);
       await compartirArchivo(blob, `compra-${compra?.numeroFactura || compraId}.png`, 'image/png');
-    } catch {
-      setMensaje('No se pudo generar la imagen.');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo generar la imagen.');
+      }
     } finally {
       setExportando(null);
     }
@@ -46,8 +48,10 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
     try {
       const blob = await generarPdfRecibo(ELEMENT_ID);
       await compartirArchivo(blob, `compra-${compra?.numeroFactura || compraId}.pdf`, 'application/pdf');
-    } catch {
-      setMensaje('No se pudo generar el PDF.');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo generar el PDF.');
+      }
     } finally {
       setExportando(null);
     }

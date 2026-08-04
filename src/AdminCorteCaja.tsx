@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
 import { obtenerCorteDelDia, guardarCorte, type ResumenCorteDia } from './api';
-import { generarImagenRecibo, generarPdfRecibo, compartirArchivo } from './reciboExport';
+import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
 
 interface Props {
   onCerrar: () => void;
@@ -58,8 +58,10 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
     try {
       const blob = await generarImagenRecibo('corte-reporte');
       await compartirArchivo(blob, 'corte-de-caja.png', 'image/png');
-    } catch {
-      setMensaje('No se pudo generar la imagen del corte.');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo generar la imagen del corte.');
+      }
     } finally {
       setExportando(null);
     }
@@ -71,8 +73,10 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
     try {
       const blob = await generarPdfRecibo('corte-reporte');
       await compartirArchivo(blob, 'corte-de-caja.pdf', 'application/pdf');
-    } catch {
-      setMensaje('No se pudo generar el PDF del corte.');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo generar el PDF del corte.');
+      }
     } finally {
       setExportando(null);
     }
