@@ -240,6 +240,7 @@ export interface ClienteConSaldo {
   telefono: string;
   direccion: string | null;
   permiteVentaCredito: boolean;
+  saldoInicial: number;
   saldoTotal: number;
 }
 
@@ -283,6 +284,21 @@ export async function importarClientes(nombres: string[]): Promise<{ creados: nu
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || 'No se pudieron importar los clientes');
+  }
+  return res.json();
+}
+
+export async function cargarSaldosIniciales(
+  filas: { nombre: string; saldo: number }[]
+): Promise<{ actualizados: string[]; noEncontrados: string[] }> {
+  const res = await fetch(`${API_URL}/clientes/saldos-iniciales`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ filas }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los saldos iniciales');
   }
   return res.json();
 }
@@ -969,6 +985,7 @@ export interface ClienteCartera {
   id: string;
   nombre: string;
   telefono: string;
+  saldoInicial: number;
   saldoTotal: number;
   notasConSaldo: number;
 }
