@@ -289,12 +289,13 @@ export async function importarClientes(nombres: string[]): Promise<{ creados: nu
 }
 
 export async function cargarSaldosIniciales(
-  filas: { nombre: string; saldo: number }[]
+  filas: { nombre: string; saldo: number }[],
+  fecha?: string
 ): Promise<{ actualizados: string[]; noEncontrados: string[] }> {
   const res = await fetch(`${API_URL}/clientes/saldos-iniciales`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ filas }),
+    body: JSON.stringify({ filas, fecha }),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -303,13 +304,27 @@ export async function cargarSaldosIniciales(
   return res.json();
 }
 
+export async function migrarSaldoInicialANotas(fecha?: string): Promise<{ migrados: string[] }> {
+  const res = await fetch(`${API_URL}/clientes/migrar-saldo-inicial`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ fecha }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo migrar el saldo inicial');
+  }
+  return res.json();
+}
+
 export async function cargarFacturasIniciales(
-  filas: { proveedor: string; telefono?: string; factura: string; importe: number }[]
+  filas: { proveedor: string; telefono?: string; factura: string; importe: number }[],
+  fecha?: string
 ): Promise<{ creadas: number }> {
   const res = await fetch(`${API_URL}/admin/cargar-facturas-iniciales`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ filas }),
+    body: JSON.stringify({ filas, fecha }),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { API_URL, headerAuth, cargarSaldosIniciales, importarProveedores, cargarFacturasIniciales } from './api';
+import { API_URL, headerAuth, cargarSaldosIniciales, importarProveedores, cargarFacturasIniciales, migrarSaldoInicialANotas } from './api';
 
 interface Props {
   onCerrar: () => void;
@@ -71,6 +71,15 @@ function parsearSaldos(texto: string): { nombre: string; saldo: number }[] {
 export function AdminHerramientas({ onCerrar }: Props) {
   const [mensaje, setMensaje] = useState<string | null>(null);
 
+  // Fecha compartida por las 3 herramientas de carga inicial (clientes,
+  // proveedores/facturas, inventario) -- por default, ayer. Asi ninguna
+  // de estas cargas se ve como "de hoy" en el primer corte de caja.
+  const [fechaCarga, setFechaCarga] = useState(() => {
+    const ayer = new Date();
+    ayer.setDate(ayer.getDate() - 1);
+    return ayer.toISOString().slice(0, 10);
+  });
+
   // ---------- Reset de transacciones ----------
   const [confirmacionReset, setConfirmacionReset] = useState('');
   const [reseteando, setReseteando] = useState(false);
@@ -110,7 +119,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
       const res = await fetch(`${API_URL}/admin/cargar-inventario-inicial`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...headerAuth() },
-        body: JSON.stringify({ filas: filasDetectadas }),
+        body: JSON.stringify({ filas: filasDetectadas, fecha: fechaCarga }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'No se pudo cargar el inventario.');
@@ -133,17 +142,36 @@ export function AdminHerramientas({ onCerrar }: Props) {
     if (saldosDetectados.length === 0) return;
     setCargandoSaldos(true);
     try {
-      const { actualizados, noEncontrados } = await cargarSaldosIniciales(saldosDetectados);
+      const { actualizados, noEncontrados } = await cargarSaldosIniciales(saldosDetectados, fechaCarga);
       setMensaje(
         noEncontrados.length === 0
-          ? `Se pusieron saldos iniciales a ${actualizados.length} clientes.`
-          : `Se actualizaron ${actualizados.length}. No se encontraron: ${noEncontrados.join(', ')}.`
+          ? `Se crearon ${actualizados.length} notas de saldo inicial (se pueden abonar desde Cartera).`
+          : `Se crearon ${actualizados.length} notas. No se encontraron: ${noEncontrados.join(', ')}.`
       );
       setTextoSaldos('');
     } catch (err: any) {
       setMensaje(err.message);
     } finally {
       setCargandoSaldos(false);
+    }
+  }
+
+  // ---------- Migrar saldoInicial viejo (solo si ya usaste la version anterior de esta herramienta) ----------
+  const [migrando, setMigrando] = useState(false);
+
+  async function migrarSaldosViejos() {
+    setMigrando(true);
+    try {
+      const { migrados } = await migrarSaldoInicialANotas(fechaCarga);
+      setMensaje(
+        migrados.length === 0
+          ? 'No había ningún saldo inicial viejo por migrar.'
+          : `Se convirtieron en notas: ${migrados.join(', ')}.`
+      );
+    } catch (err: any) {
+      setMensaje(err.message);
+    } finally {
+      setMigrando(false);
     }
   }
 
@@ -180,7 +208,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
     if (facturasDetectadas.length === 0) return;
     setCargandoFacturas(true);
     try {
-      const { creadas } = await cargarFacturasIniciales(facturasDetectadas);
+      const { creadas } = await cargarFacturasIniciales(facturasDetectadas, fechaCarga);
       setMensaje(`Se cargaron ${creadas} facturas pendientes de proveedores.`);
       setTextoFacturas('');
     } catch (err: any) {
@@ -199,6 +227,17 @@ export function AdminHerramientas({ onCerrar }: Props) {
         </div>
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
+
+        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#eef0f4' }}>
+          <label style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>
+            📅 Fecha para las cargas iniciales (clientes, proveedores, inventario)
+          </label>
+          <input type="date" value={fechaCarga} onChange={(e) => setFechaCarga(e.target.value)} />
+          <p style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>
+            Por default es ayer, para que ninguna de estas cargas cuente como movimiento
+            de "hoy" en tu primer corte de caja.
+          </p>
+        </div>
 
         {/* ---------- Importar lista de proveedores ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
@@ -265,7 +304,9 @@ export function AdminHerramientas({ onCerrar }: Props) {
           <p style={{ fontSize: 13, color: '#6b7280' }}>
             Pega Nombre y Saldo (uno por línea, desde Excel o separado por coma). Busca al
             cliente por su nombre exacto — debe estar ya dado de alta (usa "Importar lista" en
-            Clientes si todavía no). Si un nombre no coincide con nadie, te lo avisa al final.
+            Clientes si todavía no). Cada fila crea una <strong>nota real</strong> que se puede
+            abonar desde Cartera, con su propio folio — no es solo un número suelto. Si un
+            nombre no coincide con nadie, te lo avisa al final.
           </p>
           <textarea
             rows={8}
@@ -275,8 +316,18 @@ export function AdminHerramientas({ onCerrar }: Props) {
             style={{ width: '100%', resize: 'vertical', fontFamily: 'monospace', fontSize: 12 }}
           />
           <button onClick={cargarSaldos} disabled={cargandoSaldos || saldosDetectados.length === 0}>
-            {cargandoSaldos ? 'Cargando...' : `Cargar ${saldosDetectados.length} saldo(s)`}
+            {cargandoSaldos ? 'Cargando...' : `Cargar ${saldosDetectados.length} nota(s)`}
           </button>
+
+          <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e5ea' }}>
+            <p style={{ fontSize: 12, color: '#6b7280' }}>
+              ¿Ya habías cargado saldos con la versión anterior de esta herramienta (donde solo
+              quedaba un número en el cliente, sin nota)? Conviértelos en notas reales:
+            </p>
+            <button onClick={migrarSaldosViejos} disabled={migrando}>
+              {migrando ? 'Migrando...' : 'Migrar saldos antiguos a notas'}
+            </button>
+          </div>
         </div>
 
         {/* ---------- Reset de transacciones (zona de peligro) ---------- */}
