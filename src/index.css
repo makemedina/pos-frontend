@@ -180,6 +180,57 @@ textarea:focus {
   font-weight: 500;
 }
 
+/* Pantalla de Ventas: una fila por producto, en vez de tarjetas en grid */
+.lista-productos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fila-producto {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s var(--spring);
+}
+
+.fila-producto:active {
+  transform: scale(0.98);
+}
+
+.fila-producto.poco-stock {
+  background: #fff2f1;
+}
+
+.fila-producto .nombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ios-label);
+  margin: 0;
+}
+
+.fila-producto .marca {
+  font-size: 12px;
+  color: var(--ios-secondary-label);
+  margin: 0;
+}
+
+.fila-producto .fila-precio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
 .pantalla-centrada {
   display: flex;
   align-items: center;

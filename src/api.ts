@@ -608,6 +608,7 @@ export interface Configuracion {
   anchoPapelMm: number;
   imprimirDosVeces: boolean;
   saldoBancoActual: number;
+  saldoEfectivoActual: number;
 }
 
 export async function obtenerConfiguracion(): Promise<Configuracion> {
@@ -718,6 +719,7 @@ export interface ResumenCorteDia {
   cartera: number;
   cuentasPorPagar: number;
   saldoBancoSistema: number;
+  saldoEfectivoSistema: number;
   canceladas: { ventas: VentaCanceladaCorte[]; compras: CompraCanceladaCorte[] };
   // Solo presentes si el usuario tiene permiso de ver utilidad:
   utilidadDia?: number;

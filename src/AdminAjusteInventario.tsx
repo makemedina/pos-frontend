@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import {
   buscarVariantes,
   obtenerLotesDeVariante,
@@ -187,7 +188,7 @@ export function AdminAjusteInventario({ onCerrar, varianteInicial }: Props) {
                   <div>
                     <p className="item-nombre">{new Date(l.fechaIngreso).toLocaleDateString()}</p>
                     <p className="item-detalle">
-                      Costo ${l.costoUnitario.toFixed(2)}/kg · Disponible {l.cantidadDisponible} kg de {l.cantidadInicial} kg
+                      Costo {formatoMoneda(l.costoUnitario)}/kg · Disponible {l.cantidadDisponible} kg de {l.cantidadInicial} kg
                     </p>
                   </div>
                   {loteElegido?.id === l.id && <span>✓</span>}
@@ -230,7 +231,7 @@ export function AdminAjusteInventario({ onCerrar, varianteInicial }: Props) {
               <div className="linea-resumen">
                 <span>Impacto estimado en utilidad</span>
                 <strong className={impactoEstimado < 0 ? 'texto-alerta' : ''}>
-                  ${impactoEstimado.toFixed(2)}
+                  {formatoMoneda(impactoEstimado)}
                 </strong>
               </div>
             )}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import {
   obtenerMovimientosInventario,
   buscarProductos,
@@ -12,7 +13,7 @@ interface Props {
   onCerrar: () => void;
 }
 
-type Periodo = 'todos' | 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
+type Periodo = 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
 
 const ETIQUETAS_TIPO: Record<MovimientoInventario['tipo'], { texto: string; color: string }> = {
   entrada: { texto: 'Entrada (compra)', color: '#16a34a' },
@@ -30,7 +31,7 @@ function formatDateInput(date: Date) {
 }
 
 export function AdminMovimientosInventario({ onCerrar }: Props) {
-  const [periodo, setPeriodo] = useState<Periodo>('todos');
+  const [periodo, setPeriodo] = useState<Periodo>('mes');
   const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
 
@@ -54,12 +55,11 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
     setCargando(true);
     try {
       const data = await obtenerMovimientosInventario({
-        periodo: periodo === 'todos' ? undefined : periodo,
-         desde: periodo === 'rango' ? desde : undefined,
-         hasta: periodo === 'rango' ? hasta : undefined,
-         productoId: productoElegido?.id,
-});
-
+        periodo,
+        desde: periodo === 'rango' ? desde : undefined,
+        hasta: periodo === 'rango' ? hasta : undefined,
+        productoId: productoElegido?.id,
+      });
       setResumen(data.resumen);
       setMovimientos(data.movimientos);
       setMensaje(null);
@@ -126,12 +126,11 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
             <label style={{ display: 'grid', gap: '0.25rem' }}>
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
-                <option value="todos">Todos</option>
                 <option value="dia">Hoy</option>
-                <option value="semana">Última semana</option>
-                <option value="mes">Mes actual</option>
-                <option value="anio">Año actual</option>
-                <option value="rango">Entre dos fechas</option>
+                <option value="semana">Esta semana</option>
+                <option value="mes">Este mes</option>
+                <option value="anio">Este año</option>
+                <option value="rango">Personalizado</option>
               </select>
             </label>
 
@@ -184,22 +183,22 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Entradas</strong>
                   <div>{resumen.entradasKg.toFixed(1)} kg</div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>${resumen.entradasValor.toFixed(2)}</div>
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.entradasValor)}</div>
                 </div>
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Salidas</strong>
                   <div>{resumen.salidasKg.toFixed(1)} kg</div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>${resumen.salidasValor.toFixed(2)}</div>
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.salidasValor)}</div>
                 </div>
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Merma</strong>
                   <div>{resumen.mermaKg.toFixed(1)} kg</div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>${resumen.mermaValor.toFixed(2)}</div>
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.mermaValor)}</div>
                 </div>
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Corrección neta</strong>
                   <div>{resumen.correccionNetaKg.toFixed(1)} kg</div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>${resumen.correccionNetaValor.toFixed(2)}</div>
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.correccionNetaValor)}</div>
                 </div>
               </div>
             )}
@@ -225,7 +224,7 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
                       <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? '#16a34a' : '#b91c1c' }}>
                         {m.cantidad >= 0 ? '+' : ''}{m.cantidad.toFixed(1)} kg
                       </div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>${m.valor.toFixed(2)}</div>
+                      <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoMoneda(m.valor)}</div>
                     </div>
                   </div>
                 );

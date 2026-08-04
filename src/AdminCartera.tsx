@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import { exportarAExcel } from './exportarExcel';
 import {
   obtenerResumenCartera,
@@ -224,7 +225,7 @@ export function AdminCartera({ onCerrar }: Props) {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 700, color: c.saldoTotal > 0 ? '#b91c1c' : '#16a34a' }}>
-                        ${c.saldoTotal.toFixed(2)}
+                        {formatoMoneda(c.saldoTotal)}
                       </div>
                       <div style={{ fontSize: 12, color: '#6b7280' }}>
                         {c.notasConSaldo} nota{c.notasConSaldo !== 1 ? 's' : ''} pendiente{c.notasConSaldo !== 1 ? 's' : ''}
@@ -247,7 +248,7 @@ export function AdminCartera({ onCerrar }: Props) {
                 }}
               >
                 <span>Total en cartera</span>
-                <span>${totalCartera.toFixed(2)}</span>
+                <span>{formatoMoneda(totalCartera)}</span>
               </div>
             )}
           </>
@@ -277,9 +278,9 @@ export function AdminCartera({ onCerrar }: Props) {
                       <div style={{ fontSize: 13, color: '#6b7280' }}>{new Date(n.fecha).toLocaleDateString()}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div>Total: ${n.total.toFixed(2)}</div>
+                      <div>Total: {formatoMoneda(n.total)}</div>
                       <div style={{ fontSize: 12, color: n.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                        {n.estadoPago === 'pagada' ? 'Pagada' : `Saldo: $${n.saldoPendiente.toFixed(2)}`}
+                        {n.estadoPago === 'pagada' ? 'Pagada' : `Saldo: ${formatoMoneda(n.saldoPendiente)}`}
                       </div>
                     </div>
                   </div>
@@ -297,12 +298,12 @@ export function AdminCartera({ onCerrar }: Props) {
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Total de la nota</span>
-                <strong>${notaElegida.total.toFixed(2)}</strong>
+                <strong>{formatoMoneda(notaElegida.total)}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Saldo pendiente</span>
                 <strong className={notaElegida.saldoPendiente > 0 ? 'texto-alerta' : ''}>
-                  ${notaElegida.saldoPendiente.toFixed(2)}
+                  {formatoMoneda(notaElegida.saldoPendiente)}
                 </strong>
               </div>
             </div>
@@ -317,7 +318,7 @@ export function AdminCartera({ onCerrar }: Props) {
                     <br />
                     <small style={{ color: '#6b7280' }}>Registro: {p.registradoPor.nombre}</small>
                   </span>
-                  <strong>${p.monto.toFixed(2)}</strong>
+                  <strong>{formatoMoneda(p.monto)}</strong>
                 </div>
               ))}
             </div>
@@ -326,7 +327,7 @@ export function AdminCartera({ onCerrar }: Props) {
               <form onSubmit={handlePago} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Registrar nuevo abono</h3>
                 <label>
-                  Monto (saldo pendiente: ${notaElegida.saldoPendiente.toFixed(2)})
+                  Monto (saldo pendiente: {formatoMoneda(notaElegida.saldoPendiente)})
                   <input
                     value={monto}
                     onChange={(e) => setMonto(e.target.value)}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatoMoneda } from './formato';
 import {
   obtenerVentasPendientes,
   quitarVentaDeCola,
@@ -93,7 +94,7 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
                       <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Esperando conexión...</div>
                     )}
                   </div>
-                  <strong>${v.resumen.total.toFixed(2)}</strong>
+                  <strong>{formatoMoneda(v.resumen.total)}</strong>
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                   {v.estado === 'error' && (

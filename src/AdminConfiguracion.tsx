@@ -13,6 +13,8 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [saldoBancoInput, setSaldoBancoInput] = useState('');
   const [guardandoSaldo, setGuardandoSaldo] = useState(false);
+  const [saldoEfectivoInput, setSaldoEfectivoInput] = useState('');
+  const [guardandoEfectivo, setGuardandoEfectivo] = useState(false);
 
   useEffect(() => {
     cargar();
@@ -24,6 +26,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
       const data = await obtenerConfiguracion();
       setConfig(data);
       setSaldoBancoInput(String(data.saldoBancoActual));
+      setSaldoEfectivoInput(String(data.saldoEfectivoActual));
     } catch {
       setMensaje('No se pudo cargar la configuración.');
     } finally {
@@ -77,6 +80,21 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
       setMensaje('No se pudo guardar el saldo en bancos.');
     } finally {
       setGuardandoSaldo(false);
+    }
+  }
+
+  async function guardarSaldoEfectivo() {
+    const valor = Number(saldoEfectivoInput);
+    if (isNaN(valor)) return;
+    setGuardandoEfectivo(true);
+    try {
+      const actualizado = await guardarConfiguracion({ saldoEfectivoActual: valor });
+      setConfig(actualizado);
+      setMensaje('Saldo en efectivo actualizado.');
+    } catch {
+      setMensaje('No se pudo guardar el saldo en efectivo.');
+    } finally {
+      setGuardandoEfectivo(false);
     }
   }
 
@@ -158,6 +176,26 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
               </label>
               <button onClick={guardarSaldoBanco} disabled={guardandoSaldo}>
                 {guardandoSaldo ? 'Guardando...' : 'Guardar saldo en bancos'}
+              </button>
+            </div>
+
+            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+              <h3>💵 Saldo en efectivo</h3>
+              <p style={{ fontSize: 13, color: '#6b7280' }}>
+                Sube solo con cada venta/abono en efectivo, y baja solo con cada gasto, compra o
+                pago a proveedor en efectivo.
+              </p>
+              <label>
+                Saldo actual
+                <input
+                  type="number"
+                  step="0.01"
+                  value={saldoEfectivoInput}
+                  onChange={(e) => setSaldoEfectivoInput(e.target.value)}
+                />
+              </label>
+              <button onClick={guardarSaldoEfectivo} disabled={guardandoEfectivo}>
+                {guardandoEfectivo ? 'Guardando...' : 'Guardar saldo en efectivo'}
               </button>
             </div>
 

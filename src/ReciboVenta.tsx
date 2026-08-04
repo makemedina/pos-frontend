@@ -1,4 +1,5 @@
 import type { Configuracion } from './api';
+import { formatoMoneda } from './formato';
 import type { DatosRecibo } from './construirRecibo';
 
 interface Props {
@@ -61,21 +62,21 @@ export function ReciboVenta({ config, datos, elementId }: Props) {
         <div key={idx} style={{ marginBottom: 6 }}>
           <div>{it.producto} {it.marca}</div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span>{it.cantidad}kg x ${it.precioUnitario.toFixed(2)}</span>
-            <span>${(it.cantidad * it.precioUnitario).toFixed(2)}</span>
+            <span>{it.cantidad}kg x {formatoMoneda(it.precioUnitario)}</span>
+            <span>{formatoMoneda((it.cantidad * it.precioUnitario))}</span>
           </div>
         </div>
       ))}
       <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16 }}>
         <span>TOTAL</span>
-        <span>${datos.total.toFixed(2)}</span>
+        <span>{formatoMoneda(datos.total)}</span>
       </div>
       {datos.metodoPago && <div style={{ marginTop: 4 }}>Método de pago: {datos.metodoPago}</div>}
       {datos.esCredito && (
         <div style={{ marginTop: 4 }}>
           <div style={{ fontWeight: 700 }}>VENTA A CRÉDITO</div>
-          <div>Saldo pendiente: ${datos.saldoPendiente.toFixed(2)}</div>
+          <div>Saldo pendiente: {formatoMoneda(datos.saldoPendiente)}</div>
         </div>
       )}
 

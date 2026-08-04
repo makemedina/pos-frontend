@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatoMoneda } from './formato';
 import type { VarianteCatalogo } from './api';
 import type { ItemCarrito } from './Carrito';
 
@@ -95,7 +96,7 @@ export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, onAgregar,
 
             <div className="subtotal-linea">
               <span>Subtotal</span>
-              <strong>${subtotal.toFixed(2)}</strong>
+              <strong>{formatoMoneda(subtotal)}</strong>
             </div>
 
             <button className="boton-primario" onClick={agregar} disabled={excedeStock || cantidad <= 0}>

@@ -25,6 +25,7 @@ import { ConfiguracionRecibo } from './ConfiguracionRecibo';
 import { ConfiguracionImpresora } from './ConfiguracionImpresora';
 import { ReciboModal } from './ReciboModal';
 import type { DatosRecibo } from './construirRecibo';
+import { formatoMoneda } from './formato';
 import {
   guardarCatalogoCache,
   obtenerCatalogoCache,
@@ -154,6 +155,7 @@ export default function App() {
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [errorVenta, setErrorVenta] = useState<string | null>(null);
   const [reciboActivo, setReciboActivo] = useState<DatosRecibo | null>(null);
+  const [busquedaProducto, setBusquedaProducto] = useState('');
   const [varianteParaAjuste, setVarianteParaAjuste] = useState<{ id: string; producto: string; marca: string } | null>(null);
   const [enLinea, setEnLinea] = useState(navigator.onLine);
   const [ventasPendientesCount, setVentasPendientesCount] = useState(0);
@@ -598,6 +600,12 @@ export default function App() {
     }
 
     if (pantallaActiva === 'catalogo') {
+      const catalogoFiltrado = catalogo.filter((v) => {
+        if (!busquedaProducto.trim()) return true;
+        const q = busquedaProducto.trim().toLowerCase();
+        return v.producto.toLowerCase().includes(q) || v.marca.toLowerCase().includes(q);
+      });
+
       return (
         <>
           <header className="encabezado">
@@ -612,22 +620,34 @@ export default function App() {
             </div>
           )}
 
+          <input
+            className="buscador"
+            placeholder="Buscar producto o marca"
+            value={busquedaProducto}
+            onChange={(e) => setBusquedaProducto(e.target.value)}
+            style={{ marginBottom: 10 }}
+          />
+
           {cargando && catalogo.length === 0 ? (
             <p style={{ textAlign: 'center', color: '#6b7280', marginTop: 24 }}>Cargando catalogo...</p>
+          ) : catalogoFiltrado.length === 0 ? (
+            <p className="sin-resultados">No hay productos que coincidan.</p>
           ) : (
-            <div className="grid-productos">
-              {catalogo.map((v) => (
+            <div className="lista-productos">
+              {catalogoFiltrado.map((v) => (
                 <div
                   key={v.id}
-                  className={`tarjeta-producto ${v.pocoStock ? 'poco-stock' : ''}`}
+                  className={`fila-producto ${v.pocoStock ? 'poco-stock' : ''}`}
                   onClick={() => setVarianteSeleccionada(v)}
                 >
-                  <p className="nombre">{v.producto}</p>
-                  <p className="marca">
-                    {v.marca} {v.pocoStock && '· poco stock'}
-                  </p>
+                  <div>
+                    <p className="nombre">{v.producto}</p>
+                    <p className="marca">
+                      {v.marca} {v.pocoStock && '· poco stock'}
+                    </p>
+                  </div>
                   <div className="fila-precio">
-                    <span>${v.precioVenta}/kg</span>
+                    <span>{formatoMoneda(v.precioVenta)}/kg</span>
                     <span className="stock">{v.stockDisponible} kg</span>
                   </div>
                 </div>

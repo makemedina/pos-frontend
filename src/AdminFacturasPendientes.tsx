@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import { obtenerFacturasPendientes, type FacturaPendiente } from './api';
 import { exportarAExcel } from './exportarExcel';
 
@@ -97,8 +98,8 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div>Total: ${f.total.toFixed(2)}</div>
-                      <div style={{ fontWeight: 700, color: '#b91c1c' }}>Saldo: ${f.saldoPendiente.toFixed(2)}</div>
+                      <div>Total: {formatoMoneda(f.total)}</div>
+                      <div style={{ fontWeight: 700, color: '#b91c1c' }}>Saldo: {formatoMoneda(f.saldoPendiente)}</div>
                     </div>
                   </div>
                 </div>
@@ -116,7 +117,7 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
               }}
             >
               <span>Total pendiente a proveedores</span>
-              <span>${totalPendiente.toFixed(2)}</span>
+              <span>{formatoMoneda(totalPendiente)}</span>
             </div>
           </>
         )}

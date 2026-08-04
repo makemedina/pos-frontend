@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import { headerAuth, API_URL, buscarProveedores, crearProveedorRapido, type Proveedor } from './api';
 import { exportarAExcel } from './exportarExcel';
 
@@ -344,7 +345,7 @@ export function AdminGastos({ onCerrar }: Props) {
                       {gasto.proveedor && <div style={{ fontSize: 12, color: '#6b7280' }}>Proveedor: {gasto.proveedor.nombre}</div>}
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div>${Number(gasto.monto).toFixed(2)}</div>
+                      <div>{formatoMoneda(Number(gasto.monto))}</div>
                       <small>{gasto.registradoPor.nombre}</small>
                     </div>
                   </div>

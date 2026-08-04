@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import { exportarAExcel } from './exportarExcel';
 import { VentaDetalleModal } from './VentaDetalleModal';
 import {
@@ -13,7 +14,7 @@ interface Props {
   esAdmin: boolean;
 }
 
-type Periodo = 'todos' | 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
+type Periodo = 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
 
 function formatDateInput(date: Date) {
   const year = date.getFullYear();
@@ -23,7 +24,7 @@ function formatDateInput(date: Date) {
 }
 
 export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
-  const [periodo, setPeriodo] = useState<Periodo>('todos');
+  const [periodo, setPeriodo] = useState<Periodo>('mes');
   const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
   const [metodoPago, setMetodoPago] = useState<string>('');
@@ -137,12 +138,11 @@ export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
             <label style={{ display: 'grid', gap: '0.25rem' }}>
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
-                <option value="todos">Todas</option>
                 <option value="dia">Hoy</option>
-                <option value="semana">Ultima semana</option>
-                <option value="mes">Mes actual</option>
-                <option value="anio">Ano actual</option>
-                <option value="rango">Entre dos fechas</option>
+                <option value="semana">Esta semana</option>
+                <option value="mes">Este mes</option>
+                <option value="anio">Este año</option>
+                <option value="rango">Personalizado</option>
               </select>
             </label>
 
@@ -212,10 +212,10 @@ export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
               <strong>{ventas.length}</strong> venta{ventas.length !== 1 ? 's' : ''}
             </div>
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
-              Total: <strong>${totalPeriodo.toFixed(2)}</strong>
+              Total: <strong>{formatoMoneda(totalPeriodo)}</strong>
             </div>
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
-              Cobrado: <strong>${cobradoPeriodo.toFixed(2)}</strong>
+              Cobrado: <strong>{formatoMoneda(cobradoPeriodo)}</strong>
             </div>
           </div>
         )}
@@ -246,12 +246,12 @@ export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div><strong>${v.total.toFixed(2)}</strong></div>
+                    <div><strong>{formatoMoneda(v.total)}</strong></div>
                     {v.cancelada ? (
                       <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>❌ Cancelada</div>
                     ) : (
                       <div style={{ fontSize: 12, color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                        {v.estadoPago === 'pagada' ? 'Pagada' : `Saldo: $${v.saldoPendiente.toFixed(2)}`}
+                        {v.estadoPago === 'pagada' ? 'Pagada' : `Saldo: ${formatoMoneda(v.saldoPendiente)}`}
                       </div>
                     )}
                   </div>
@@ -261,7 +261,7 @@ export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
                   {v.items.map((it, idx) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>{it.producto} {it.marca} · {it.cantidad} kg</span>
-                      <span>${(it.cantidad * it.precioUnitario).toFixed(2)}</span>
+                      <span>{formatoMoneda((it.cantidad * it.precioUnitario))}</span>
                     </div>
                   ))}
                 </div>

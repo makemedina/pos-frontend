@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import {
   obtenerProductosGestion,
   obtenerHistorialVariante,
@@ -149,7 +150,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
             <div style={{ display: 'flex', justifyContent: 'space-between', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
               <div>
                 <div>Stock disponible: <strong>{productoElegido.stockDisponible.toFixed(1)} kg</strong></div>
-                <div style={{ fontSize: 13, color: '#6b7280' }}>Precio de venta: ${productoElegido.precioVenta.toFixed(2)}/kg</div>
+                <div style={{ fontSize: 13, color: '#6b7280' }}>Precio de venta: {formatoMoneda(productoElegido.precioVenta)}/kg</div>
               </div>
               <button
                 onClick={() =>

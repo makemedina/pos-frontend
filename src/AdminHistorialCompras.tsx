@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import {
   obtenerHistorialCompras,
   buscarProveedores,
@@ -12,7 +13,7 @@ interface Props {
   onCerrar: () => void;
 }
 
-type Periodo = 'todos' | 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
+type Periodo = 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
 
 function formatDateInput(date: Date) {
   const year = date.getFullYear();
@@ -24,7 +25,7 @@ function formatDateInput(date: Date) {
 const CARD = { border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 };
 
 export function AdminHistorialCompras({ onCerrar }: Props) {
-  const [periodo, setPeriodo] = useState<Periodo>('todos');
+  const [periodo, setPeriodo] = useState<Periodo>('mes');
   const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
   const [estadoPago, setEstadoPago] = useState('');
@@ -122,12 +123,11 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
             <label style={{ display: 'grid', gap: '0.25rem' }}>
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
-                <option value="todos">Todas</option>
                 <option value="dia">Hoy</option>
-                <option value="semana">Última semana</option>
-                <option value="mes">Mes actual</option>
-                <option value="anio">Año actual</option>
-                <option value="rango">Entre dos fechas</option>
+                <option value="semana">Esta semana</option>
+                <option value="mes">Este mes</option>
+                <option value="anio">Este año</option>
+                <option value="rango">Personalizado</option>
               </select>
             </label>
 
@@ -186,10 +186,10 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
               <strong>{compras.length}</strong> compra{compras.length !== 1 ? 's' : ''}
             </div>
             <div style={{ ...CARD, flex: 1 }}>
-              Total: <strong>${totalPeriodo.toFixed(2)}</strong>
+              Total: <strong>{formatoMoneda(totalPeriodo)}</strong>
             </div>
             <div style={{ ...CARD, flex: 1 }}>
-              Pendiente: <strong>${pendientePeriodo.toFixed(2)}</strong>
+              Pendiente: <strong>{formatoMoneda(pendientePeriodo)}</strong>
             </div>
           </div>
         )}
@@ -213,12 +213,12 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div><strong>${c.total.toFixed(2)}</strong></div>
+                    <div><strong>{formatoMoneda(c.total)}</strong></div>
                     {c.cancelada ? (
                       <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>❌ Cancelada</div>
                     ) : (
                       <div style={{ fontSize: 12, color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                        {c.estadoPago === 'pagada' ? 'Pagada' : `Saldo: $${c.saldoPendiente.toFixed(2)}`}
+                        {c.estadoPago === 'pagada' ? 'Pagada' : `Saldo: ${formatoMoneda(c.saldoPendiente)}`}
                       </div>
                     )}
                   </div>

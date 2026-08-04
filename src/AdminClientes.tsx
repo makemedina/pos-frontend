@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import {
   obtenerClientesConSaldo,
   obtenerClienteDetalle,
@@ -318,7 +319,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                       <div style={{ fontSize: 13, color: '#6b7280' }}>{c.telefono}</div>
                     </div>
                     <div style={{ textAlign: 'right', fontWeight: 700, color: c.saldoTotal > 0 ? '#b91c1c' : '#16a34a' }}>
-                      ${c.saldoTotal.toFixed(2)}
+                      {formatoMoneda(c.saldoTotal)}
                     </div>
                   </div>
                 ))}
@@ -333,7 +334,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 14, color: '#6b7280' }}>Saldo</span>
               <strong style={{ fontSize: 18, color: cliente.saldoTotal > 0 ? '#b91c1c' : '#16a34a' }}>
-                ${cliente.saldoTotal.toFixed(2)}
+                {formatoMoneda(cliente.saldoTotal)}
               </strong>
             </div>
 
@@ -414,9 +415,9 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                           <div style={{ fontSize: 12, color: '#6b7280' }}>{new Date(v.fecha).toLocaleDateString()}</div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div>${v.total.toFixed(2)}</div>
+                          <div>{formatoMoneda(v.total)}</div>
                           <div style={{ fontSize: 12, color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                            {v.estadoPago === 'pagada' ? 'Pagada' : `Saldo: $${v.saldoPendiente.toFixed(2)}`}
+                            {v.estadoPago === 'pagada' ? 'Pagada' : `Saldo: ${formatoMoneda(v.saldoPendiente)}`}
                           </div>
                         </div>
                       </div>
@@ -444,7 +445,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                         <small style={{ color: '#6b7280' }}>{new Date(m.fecha).toLocaleString()}</small>
                       </span>
                       <strong style={{ color: m.tipo === 'venta' ? '#b91c1c' : '#16a34a' }}>
-                        {m.tipo === 'venta' ? '+' : '-'}${m.monto.toFixed(2)}
+                        {m.tipo === 'venta' ? '+' : '-'}{formatoMoneda(m.monto)}
                       </strong>
                     </div>
                   ))

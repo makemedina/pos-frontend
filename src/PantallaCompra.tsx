@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatoMoneda } from './formato';
 import {
   buscarProveedores,
   crearProveedorRapido,
@@ -80,7 +81,7 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
       pagoInicial: pagoInicial || undefined,
     });
 
-    onCompletada(`Compra registrada por $${total.toFixed(2)}`);
+    onCompletada(`Compra registrada por ${formatoMoneda(total)}`);
   }
 
   return (
@@ -168,7 +169,7 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
                 </p>
               </div>
               <div className="item-derecha">
-                <span>${(item.cantidad * item.costoUnitario).toFixed(2)}</span>
+                <span>{formatoMoneda((item.cantidad * item.costoUnitario))}</span>
                 <button onClick={() => quitarItem(idx)}>X</button>
               </div>
             </div>
@@ -193,11 +194,11 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
             <p>Total de la compra</p>
             {saldoPendiente > 0 && (
               <p className="texto-alerta" style={{ fontSize: 12 }}>
-                Queda pendiente: ${saldoPendiente.toFixed(2)}
+                Queda pendiente: {formatoMoneda(saldoPendiente)}
               </p>
             )}
           </div>
-          <strong>${total.toFixed(2)}</strong>
+          <strong>{formatoMoneda(total)}</strong>
         </div>
 
         <button

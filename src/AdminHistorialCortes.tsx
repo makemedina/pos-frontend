@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import { obtenerHistorialCortes, actualizarCorte, type CorteHistorico } from './api';
 
 interface Props {
@@ -71,19 +72,19 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                   <div>
                     <strong>{new Date(c.fecha).toLocaleDateString()}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>Registró: {c.registradoPor}</div>
-                    <div>Efectivo: ${c.efectivoContado.toFixed(2)}</div>
-                    <div>Banco: ${c.saldoBancoContado.toFixed(2)}</div>
+                    <div>Efectivo: {formatoMoneda(c.efectivoContado)}</div>
+                    <div>Banco: {formatoMoneda(c.saldoBancoContado)}</div>
                     {c.utilidadDia !== undefined && (
                       <>
-                        <div style={{ marginTop: 4 }}>Utilidad del día: ${c.utilidadDia.toFixed(2)}</div>
-                        <div>Valor de inventario: ${c.valorInventario!.toFixed(2)}</div>
-                        <div>Balanza total: <strong>${c.balanzaTotal!.toFixed(2)}</strong></div>
+                        <div style={{ marginTop: 4 }}>Utilidad del día: {formatoMoneda(c.utilidadDia)}</div>
+                        <div>Valor de inventario: {formatoMoneda(c.valorInventario!)}</div>
+                        <div>Balanza total: <strong>{formatoMoneda(c.balanzaTotal!)}</strong></div>
                         {c.diferenciaCuadre != null && (
                           Math.abs(c.diferenciaCuadre) < 0.01 ? (
                             <div style={{ color: '#16a34a', fontSize: 12 }}>✓ Cuadra con el día anterior</div>
                           ) : (
                             <div className="texto-alerta" style={{ fontSize: 12 }}>
-                              ⚠ No cuadra: diferencia de ${c.diferenciaCuadre.toFixed(2)}
+                              ⚠ No cuadra: diferencia de {formatoMoneda(c.diferenciaCuadre)}
                             </div>
                           )
                         )}

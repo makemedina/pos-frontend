@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import {
   obtenerFacturasPendientes,
   obtenerPagosDeCompra,
@@ -132,7 +133,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div>Saldo: ${f.saldoPendiente.toFixed(2)}</div>
+                    <div>Saldo: {formatoMoneda(f.saldoPendiente)}</div>
                     <small>{f.proveedor.telefono || ''}</small>
                   </div>
                 </div>
@@ -149,12 +150,12 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Total de la factura</span>
-                <strong>${facturaElegida.total.toFixed(2)}</strong>
+                <strong>{formatoMoneda(facturaElegida.total)}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Saldo pendiente</span>
                 <strong className={facturaElegida.saldoPendiente > 0 ? 'texto-alerta' : ''}>
-                  ${facturaElegida.saldoPendiente.toFixed(2)}
+                  {formatoMoneda(facturaElegida.saldoPendiente)}
                 </strong>
               </div>
             </div>
@@ -169,7 +170,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     <br />
                     <small style={{ color: '#6b7280' }}>Registró: {p.registradoPor.nombre}</small>
                   </span>
-                  <strong>${p.monto.toFixed(2)}</strong>
+                  <strong>{formatoMoneda(p.monto)}</strong>
                 </div>
               ))}
             </div>
@@ -178,7 +179,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
               <form onSubmit={handlePago} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Registrar nuevo abono</h3>
                 <label>
-                  Monto (saldo pendiente: ${facturaElegida.saldoPendiente.toFixed(2)})
+                  Monto (saldo pendiente: {formatoMoneda(facturaElegida.saldoPendiente)})
                   <input
                     value={monto}
                     onChange={(e) => setMonto(e.target.value)}

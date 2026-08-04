@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { formatoMoneda } from './formato';
 import { headerAuth, API_URL } from './api';
 import { exportarVariasHojas } from './exportarExcel';
 
@@ -25,13 +26,12 @@ function formatDateInput(date: Date) {
 export function AdminDashboard({ onCerrar }: Props) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
-  const [periodo, setPeriodo] = useState('todos');
+  const [periodo, setPeriodo] = useState('mes');
   const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
 
   const filtroLabel = useMemo(() => {
     switch (periodo) {
-      case 'todos': return 'Todo el historial';
       case 'dia': return 'Hoy';
       case 'semana': return 'Última semana';
       case 'mes': return 'Mes actual';
@@ -116,12 +116,11 @@ export function AdminDashboard({ onCerrar }: Props) {
             <label style={{ display: 'grid', gap: '0.25rem' }}>
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
-                <option value="todos">Todo el historial</option>
-                <option value="dia">Día</option>
-                <option value="semana">Semana</option>
-                <option value="mes">Mes</option>
-                <option value="anio">Año</option>
-                <option value="rango">Entre dos fechas</option>
+                <option value="dia">Hoy</option>
+                <option value="semana">Esta semana</option>
+                <option value="mes">Este mes</option>
+                <option value="anio">Este año</option>
+                <option value="rango">Personalizado</option>
               </select>
             </label>
 
@@ -148,19 +147,19 @@ export function AdminDashboard({ onCerrar }: Props) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                 <strong>Total ventas</strong>
-                <div>${data.totalVentas.toFixed(2)}</div>
+                <div>{formatoMoneda(data.totalVentas)}</div>
               </div>
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                 <strong>Total cobrado</strong>
-                <div>${data.totalCobrado.toFixed(2)}</div>
+                <div>{formatoMoneda(data.totalCobrado)}</div>
               </div>
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                 <strong>Utilidad bruta</strong>
-                <div>${data.utilidadBruta.toFixed(2)}</div>
+                <div>{formatoMoneda(data.utilidadBruta)}</div>
               </div>
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                 <strong>Utilidad neta</strong>
-                <div>${data.utilidadNeta.toFixed(2)}</div>
+                <div>{formatoMoneda(data.utilidadNeta)}</div>
               </div>
             </div>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import { buscarClientes, crearClienteRapido, type Cliente } from './api';
 import { obtenerClientesCache } from './offline';
 import type { ItemCarrito } from './Carrito';
@@ -125,12 +126,12 @@ export function Checkout({ items, onConfirmar, onCerrar, errorServidor }: Props)
           {items.map((i, idx) => (
             <div key={idx} className="linea-resumen">
               <span>{i.producto} {i.marca} · {i.cantidad} kg</span>
-              <span>${(i.cantidad * i.precioUnitario).toFixed(2)}</span>
+              <span>{formatoMoneda((i.cantidad * i.precioUnitario))}</span>
             </div>
           ))}
           <div className="linea-resumen total">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{formatoMoneda(total)}</span>
           </div>
         </div>
 
@@ -216,7 +217,7 @@ export function Checkout({ items, onConfirmar, onCerrar, errorServidor }: Props)
               </div>
               <div className="linea-resumen">
                 <span>Saldo pendiente</span>
-                <strong className="texto-alerta">${saldoPendiente.toFixed(2)}</strong>
+                <strong className="texto-alerta">{formatoMoneda(saldoPendiente)}</strong>
               </div>
             </>
           )}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import { obtenerDetalleCompra, cancelarCompra, type CompraDetalle } from './api';
 import { generarImagenRecibo, generarPdfRecibo, compartirArchivo } from './reciboExport';
 
@@ -109,12 +110,12 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
               {compra.items.map((it, idx) => (
                 <div key={idx} className="linea-resumen">
                   <span>{it.producto} {it.marca} · {it.cantidad} kg</span>
-                  <span>${it.subtotal.toFixed(2)}</span>
+                  <span>{formatoMoneda(it.subtotal)}</span>
                 </div>
               ))}
               <div className="linea-resumen total">
                 <span>Total</span>
-                <span>${compra.total.toFixed(2)}</span>
+                <span>{formatoMoneda(compra.total)}</span>
               </div>
             </div>
 
@@ -125,7 +126,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
             <div className="linea-resumen">
               <span>Estado</span>
               <span className={compra.estadoPago === 'pagada' ? '' : 'texto-alerta'}>
-                {compra.estadoPago === 'pagada' ? 'Pagada' : `Saldo: $${compra.saldoPendiente.toFixed(2)}`}
+                {compra.estadoPago === 'pagada' ? 'Pagada' : `Saldo: ${formatoMoneda(compra.saldoPendiente)}`}
               </span>
             </div>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoMoneda } from './formato';
 import { obtenerCorteDelDia, guardarCorte, type ResumenCorteDia } from './api';
 import { generarImagenRecibo, generarPdfRecibo, compartirArchivo } from './reciboExport';
 
@@ -107,9 +108,9 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#f0fdf4' }}>
                 <strong>El corte de hoy ya se realizó.</strong>
                 <div style={{ marginTop: 6 }}>
-                  Efectivo contado: ${resumen.corteExistente?.efectivoContado.toFixed(2)}
+                  Efectivo contado: {formatoMoneda(resumen.corteExistente?.efectivoContado)}
                 </div>
-                <div>Saldo en banco: ${resumen.corteExistente?.saldoBancoContado.toFixed(2)}</div>
+                <div>Saldo en banco: {formatoMoneda(resumen.corteExistente?.saldoBancoContado)}</div>
                 {onVerHistorial && (
                   <p style={{ fontSize: 13, color: '#6b7280', marginTop: 8 }}>
                     Si te equivocaste al capturarlo, corrígelo desde el botón "Histórico".
@@ -119,10 +120,15 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
             ) : (
               <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Captura del día</h3>
+                {resumen && (
+                  <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                    El sistema lleva {formatoMoneda(resumen.saldoEfectivoSistema)} en efectivo — compáralo contra lo que cuentes:
+                  </p>
+                )}
                 <input value={efectivoContado} onChange={(e) => setEfectivoContado(e.target.value)} type="number" step="0.01" placeholder="Efectivo contado" required />
                 {resumen && (
                   <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
-                    El sistema lleva ${resumen.saldoBancoSistema.toFixed(2)} en bancos (por transferencias) — compáralo contra tu banco real:
+                    El sistema lleva {formatoMoneda(resumen.saldoBancoSistema)} en bancos (por transferencias) — compáralo contra tu banco real:
                   </p>
                 )}
                 <input value={saldoBancoContado} onChange={(e) => setSaldoBancoContado(e.target.value)} type="number" step="0.01" placeholder="Saldo en banco" required />
@@ -133,12 +139,12 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
             {resumen && (
               <div style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Resumen del día</h3>
-                <div>Ventas: ${Number(resumen.ventas?.total ?? 0).toFixed(2)}</div>
-                <div>Cobrado (de ventas de hoy): ${Number(resumen.ventas?.cobrado ?? 0).toFixed(2)}</div>
-                <div>Compras: ${Number(resumen.compras?.total ?? 0).toFixed(2)}</div>
-                <div>Gastos: ${Number(resumen.gastos?.total ?? 0).toFixed(2)}</div>
-                <div>Cartera: ${Number(resumen.cartera ?? 0).toFixed(2)}</div>
-                <div>Cuentas por pagar: ${Number(resumen.cuentasPorPagar ?? 0).toFixed(2)}</div>
+                <div>Ventas: {formatoMoneda(Number(resumen.ventas?.total ?? 0))}</div>
+                <div>Cobrado (de ventas de hoy): {formatoMoneda(Number(resumen.ventas?.cobrado ?? 0))}</div>
+                <div>Compras: {formatoMoneda(Number(resumen.compras?.total ?? 0))}</div>
+                <div>Gastos: {formatoMoneda(Number(resumen.gastos?.total ?? 0))}</div>
+                <div>Cartera: {formatoMoneda(Number(resumen.cartera ?? 0))}</div>
+                <div>Cuentas por pagar: {formatoMoneda(Number(resumen.cuentasPorPagar ?? 0))}</div>
               </div>
             )}
 
@@ -149,9 +155,9 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                   <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
                     <span>#{v.folio} · {v.cliente} · {v.vendedor}</span>
                     <span>
-                      ${v.total.toFixed(2)}{' '}
+                      {formatoMoneda(v.total)}{' '}
                       <small style={{ color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                        ({v.estadoPago === 'pagada' ? 'pagada' : `saldo $${v.saldoPendiente.toFixed(2)}`})
+                        ({v.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(v.saldoPendiente)}`})
                       </small>
                     </span>
                   </div>
@@ -166,9 +172,9 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                   <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
                     <span>{c.proveedor} · {c.numeroFactura || 'sin factura'}</span>
                     <span>
-                      ${c.total.toFixed(2)}{' '}
+                      {formatoMoneda(c.total)}{' '}
                       <small style={{ color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                        ({c.estadoPago === 'pagada' ? 'pagada' : `saldo $${c.saldoPendiente.toFixed(2)}`})
+                        ({c.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(c.saldoPendiente)}`})
                       </small>
                     </span>
                   </div>
@@ -183,7 +189,7 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                   <div key={v.id} style={{ fontSize: 13, borderBottom: '1px solid #fecaca', paddingBottom: 4 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>Venta #{v.folio} · {v.cliente}</span>
-                      <strong>${v.total.toFixed(2)}</strong>
+                      <strong>{formatoMoneda(v.total)}</strong>
                     </div>
                     <small style={{ color: '#6b7280' }}>
                       Original: {new Date(v.fechaOriginal).toLocaleDateString()} · Cancelada por {v.canceladaPor} el {new Date(v.canceladaEn).toLocaleString()}
@@ -194,7 +200,7 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                   <div key={c.id} style={{ fontSize: 13, borderBottom: '1px solid #fecaca', paddingBottom: 4 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>Compra {c.numeroFactura || 'sin factura'} · {c.proveedor}</span>
-                      <strong>${c.total.toFixed(2)}</strong>
+                      <strong>{formatoMoneda(c.total)}</strong>
                     </div>
                     <small style={{ color: '#6b7280' }}>
                       Original: {new Date(c.fechaOriginal).toLocaleDateString()} · Cancelada por {c.canceladaPor} el {new Date(c.canceladaEn).toLocaleString()}
@@ -210,9 +216,9 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                 <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
                   Incluye el pago inicial de ventas de hoy y abonos a notas de días anteriores.
                 </p>
-                <div>Total: <strong>${Number(resumen.pagosClientes.total ?? 0).toFixed(2)}</strong></div>
-                <div>Efectivo: ${Number(resumen.pagosClientes.efectivo ?? 0).toFixed(2)}</div>
-                <div>Transferencia: ${Number(resumen.pagosClientes.transferencia ?? 0).toFixed(2)}</div>
+                <div>Total: <strong>{formatoMoneda(Number(resumen.pagosClientes.total ?? 0))}</strong></div>
+                <div>Efectivo: {formatoMoneda(Number(resumen.pagosClientes.efectivo ?? 0))}</div>
+                <div>Transferencia: {formatoMoneda(Number(resumen.pagosClientes.transferencia ?? 0))}</div>
 
                 {resumen.pagosClientes.detalle.length > 0 && (
                   <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
@@ -226,7 +232,7 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                             {new Date(p.fecha).toLocaleTimeString()} · registró: {p.registradoPor}
                           </small>
                         </span>
-                        <strong>${p.monto.toFixed(2)}</strong>
+                        <strong>{formatoMoneda(p.monto)}</strong>
                       </div>
                     ))}
                   </div>
@@ -240,9 +246,9 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
             {resumen?.pagosProveedores && (
               <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Pagos a proveedores hechos hoy</h3>
-                <div>Total: <strong>${Number(resumen.pagosProveedores.total ?? 0).toFixed(2)}</strong></div>
-                <div>Efectivo: ${Number(resumen.pagosProveedores.efectivo ?? 0).toFixed(2)}</div>
-                <div>Transferencia: ${Number(resumen.pagosProveedores.transferencia ?? 0).toFixed(2)}</div>
+                <div>Total: <strong>{formatoMoneda(Number(resumen.pagosProveedores.total ?? 0))}</strong></div>
+                <div>Efectivo: {formatoMoneda(Number(resumen.pagosProveedores.efectivo ?? 0))}</div>
+                <div>Transferencia: {formatoMoneda(Number(resumen.pagosProveedores.transferencia ?? 0))}</div>
 
                 {resumen.pagosProveedores.detalle.length > 0 && (
                   <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
@@ -256,7 +262,7 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                             {new Date(p.fecha).toLocaleTimeString()} · registró: {p.registradoPor}
                           </small>
                         </span>
-                        <strong>${p.monto.toFixed(2)}</strong>
+                        <strong>{formatoMoneda(p.monto)}</strong>
                       </div>
                     ))}
                   </div>
@@ -270,28 +276,28 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
             {tieneUtilidad && (
               <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fefce8' }}>
                 <h3>Utilidad y balanza (solo visible para administración)</h3>
-                <div>Utilidad del día: <strong>${resumen!.utilidadDia!.toFixed(2)}</strong></div>
+                <div>Utilidad del día: <strong>{formatoMoneda(resumen!.utilidadDia!)}</strong></div>
                 <div style={{ fontSize: 13, color: '#6b7280' }}>
                   Balanza = cartera por cobrar + valor de inventario − cuentas por pagar
                 </div>
-                <div>Cartera por cobrar: ${resumen!.cartera.toFixed(2)}</div>
-                <div>Valor de inventario: ${resumen!.valorInventario!.toFixed(2)}</div>
-                <div>Cuentas por pagar: ${resumen!.cuentasPorPagar.toFixed(2)}</div>
+                <div>Cartera por cobrar: {formatoMoneda(resumen!.cartera)}</div>
+                <div>Valor de inventario: {formatoMoneda(resumen!.valorInventario!)}</div>
+                <div>Cuentas por pagar: {formatoMoneda(resumen!.cuentasPorPagar)}</div>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>
-                  Balanza total: ${resumen!.balanzaTotal!.toFixed(2)}
+                  Balanza total: {formatoMoneda(resumen!.balanzaTotal!)}
                 </div>
 
                 {resumen?.balanzaAyer != null && (
                   <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>
-                      Cuadre: balanza de ayer (${resumen.balanzaAyer.toFixed(2)}) + utilidad de hoy − gastos de hoy
-                      = ${resumen.balanzaEsperada!.toFixed(2)} esperado
+                      Cuadre: balanza de ayer ({formatoMoneda(resumen.balanzaAyer)}) + utilidad de hoy − gastos de hoy
+                      = {formatoMoneda(resumen.balanzaEsperada!)} esperado
                     </div>
                     {Math.abs(resumen.diferenciaCuadre ?? 0) < 0.01 ? (
                       <div style={{ color: '#16a34a', fontWeight: 600 }}>✓ Cuadra</div>
                     ) : (
                       <div className="texto-alerta" style={{ fontWeight: 600 }}>
-                        ⚠ No cuadra. Diferencia: ${resumen.diferenciaCuadre!.toFixed(2)}
+                        ⚠ No cuadra. Diferencia: {formatoMoneda(resumen.diferenciaCuadre!)}
                       </div>
                     )}
                   </div>
