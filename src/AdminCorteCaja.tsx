@@ -15,6 +15,8 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
   const [resumen, setResumen] = useState<ResumenCorteDia | null>(null);
   const [cargando, setCargando] = useState(true);
   const [exportando, setExportando] = useState<'imagen' | 'pdf' | null>(null);
+  const [imagenBlob, setImagenBlob] = useState<Blob | null>(null);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
 
   useEffect(() => {
     cargarResumen();
@@ -52,33 +54,54 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
 
   const tieneUtilidad = resumen?.utilidadDia !== undefined;
 
-  async function descargarImagen() {
+  // Generar y compartir van separados a proposito: si se comparte justo
+  // despues de generar (que tarda un momento en el celular), el
+  // navegador ya no lo reconoce como accion directa del usuario.
+  async function generarImagen() {
     setExportando('imagen');
     setMensaje(null);
     try {
       const blob = await generarImagenRecibo('corte-reporte');
-      await compartirArchivo(blob, 'corte-de-caja.png', 'image/png');
+      setImagenBlob(blob);
     } catch (err: any) {
-      if (!(err instanceof CompartirCanceladoError)) {
-        setMensaje(err?.message || 'No se pudo generar la imagen del corte.');
-      }
+      setMensaje(err?.message || 'No se pudo generar la imagen del corte.');
     } finally {
       setExportando(null);
     }
   }
 
-  async function descargarPdf() {
+  async function compartirImagenLista() {
+    if (!imagenBlob) return;
+    try {
+      await compartirArchivo(imagenBlob, 'corte-de-caja.png', 'image/png');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo compartir la imagen.');
+      }
+    }
+  }
+
+  async function generarPdf() {
     setExportando('pdf');
     setMensaje(null);
     try {
       const blob = await generarPdfRecibo('corte-reporte');
-      await compartirArchivo(blob, 'corte-de-caja.pdf', 'application/pdf');
+      setPdfBlob(blob);
     } catch (err: any) {
-      if (!(err instanceof CompartirCanceladoError)) {
-        setMensaje(err?.message || 'No se pudo generar el PDF del corte.');
-      }
+      setMensaje(err?.message || 'No se pudo generar el PDF del corte.');
     } finally {
       setExportando(null);
+    }
+  }
+
+  async function compartirPdfListo() {
+    if (!pdfBlob) return;
+    try {
+      await compartirArchivo(pdfBlob, 'corte-de-caja.pdf', 'application/pdf');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo compartir el PDF.');
+      }
     }
   }
 
@@ -90,12 +113,20 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {resumen && !cargando && (
               <>
-                <button onClick={descargarImagen} disabled={!!exportando}>
-                  {exportando === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
-                </button>
-                <button onClick={descargarPdf} disabled={!!exportando}>
-                  {exportando === 'pdf' ? 'Generando...' : '📄 PDF'}
-                </button>
+                {!imagenBlob ? (
+                  <button onClick={generarImagen} disabled={!!exportando}>
+                    {exportando === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
+                  </button>
+                ) : (
+                  <button onClick={compartirImagenLista}>📤 Compartir imagen</button>
+                )}
+                {!pdfBlob ? (
+                  <button onClick={generarPdf} disabled={!!exportando}>
+                    {exportando === 'pdf' ? 'Generando...' : '📄 PDF'}
+                  </button>
+                ) : (
+                  <button onClick={compartirPdfListo}>📤 Compartir PDF</button>
+                )}
               </>
             )}
             {onVerHistorial && <button onClick={onVerHistorial}>Histórico</button>}

@@ -16,6 +16,8 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [exportando, setExportando] = useState<'imagen' | 'pdf' | null>(null);
+  const [imagenBlob, setImagenBlob] = useState<Blob | null>(null);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [confirmandoCancelacion, setConfirmandoCancelacion] = useState(false);
   const [necesitaAutorizacion, setNecesitaAutorizacion] = useState(false);
   const [autorizadoPorTelefono, setAutorizadoPorTelefono] = useState('');
@@ -29,31 +31,53 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
       .finally(() => setCargando(false));
   }, [compraId]);
 
-  async function descargarImagen() {
+  // Generar y compartir van separados a proposito: en el celular, si se
+  // llama a compartir() justo despues de generar la imagen (que tarda un
+  // momento), el navegador ya no lo reconoce como accion directa del
+  // usuario y lo bloquea.
+  async function generarImagen() {
     setExportando('imagen');
     try {
       const blob = await generarImagenRecibo(ELEMENT_ID);
-      await compartirArchivo(blob, `compra-${compra?.numeroFactura || compraId}.png`, 'image/png');
+      setImagenBlob(blob);
     } catch (err: any) {
-      if (!(err instanceof CompartirCanceladoError)) {
-        setMensaje(err?.message || 'No se pudo generar la imagen.');
-      }
+      setMensaje(err?.message || 'No se pudo generar la imagen.');
     } finally {
       setExportando(null);
     }
   }
 
-  async function descargarPdf() {
+  async function compartirImagenLista() {
+    if (!imagenBlob) return;
+    try {
+      await compartirArchivo(imagenBlob, `compra-${compra?.numeroFactura || compraId}.png`, 'image/png');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo compartir la imagen.');
+      }
+    }
+  }
+
+  async function generarPdf() {
     setExportando('pdf');
     try {
       const blob = await generarPdfRecibo(ELEMENT_ID);
-      await compartirArchivo(blob, `compra-${compra?.numeroFactura || compraId}.pdf`, 'application/pdf');
+      setPdfBlob(blob);
     } catch (err: any) {
-      if (!(err instanceof CompartirCanceladoError)) {
-        setMensaje(err?.message || 'No se pudo generar el PDF.');
-      }
+      setMensaje(err?.message || 'No se pudo generar el PDF.');
     } finally {
       setExportando(null);
+    }
+  }
+
+  async function compartirPdfListo() {
+    if (!pdfBlob) return;
+    try {
+      await compartirArchivo(pdfBlob, `compra-${compra?.numeroFactura || compraId}.pdf`, 'application/pdf');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo compartir el PDF.');
+      }
     }
   }
 
@@ -142,12 +166,20 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
             )}
 
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button onClick={descargarImagen} disabled={!!exportando} style={{ flex: 1 }}>
-                {exportando === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
-              </button>
-              <button onClick={descargarPdf} disabled={!!exportando} style={{ flex: 1 }}>
-                {exportando === 'pdf' ? 'Generando...' : '📄 PDF'}
-              </button>
+              {!imagenBlob ? (
+                <button onClick={generarImagen} disabled={!!exportando} style={{ flex: 1 }}>
+                  {exportando === 'imagen' ? 'Generando...' : '🖼️ Generar imagen'}
+                </button>
+              ) : (
+                <button onClick={compartirImagenLista} style={{ flex: 1 }}>📤 Compartir imagen</button>
+              )}
+              {!pdfBlob ? (
+                <button onClick={generarPdf} disabled={!!exportando} style={{ flex: 1 }}>
+                  {exportando === 'pdf' ? 'Generando...' : '📄 Generar PDF'}
+                </button>
+              ) : (
+                <button onClick={compartirPdfListo} style={{ flex: 1 }}>📤 Compartir PDF</button>
+              )}
             </div>
 
             {!compra.cancelada && !confirmandoCancelacion && (

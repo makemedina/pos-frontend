@@ -23,6 +23,8 @@ export function ReciboModal({ datos, onCerrar }: Props) {
   const [cargando, setCargando] = useState(true);
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [imagenBlob, setImagenBlob] = useState<Blob | null>(null);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
 
   useEffect(() => {
     obtenerConfiguracion()
@@ -39,33 +41,59 @@ export function ReciboModal({ datos, onCerrar }: Props) {
       .finally(() => setCargando(false));
   }, []);
 
-  async function compartirImagen() {
+  // Generar el archivo y compartirlo son DOS pasos separados a proposito:
+  // en el celular, generar la imagen con html2canvas toma un momento, y
+  // si se llama a compartir() justo despues (dentro del mismo async), el
+  // navegador ya no lo reconoce como una accion directa del usuario y lo
+  // bloquea ("The request is not allowed..."). Por eso el boton de
+  // compartir solo aparece DESPUES de que el archivo ya esta listo -- ese
+  // click es una accion nueva y directa, sin ningun await antes.
+
+  async function generarImagen() {
     setOcupado('imagen');
     setMensaje(null);
     try {
       const blob = await generarImagenRecibo(ELEMENT_ID);
-      await compartirArchivo(blob, `recibo-${datos.folio}.png`, 'image/png');
+      setImagenBlob(blob);
     } catch (err: any) {
-      if (!(err instanceof CompartirCanceladoError)) {
-        setMensaje(err?.message || 'No se pudo generar o compartir la imagen.');
-      }
+      setMensaje(err?.message || 'No se pudo generar la imagen.');
     } finally {
       setOcupado(null);
     }
   }
 
-  async function descargarPdf() {
+  async function compartirImagenLista() {
+    if (!imagenBlob) return;
+    try {
+      await compartirArchivo(imagenBlob, `recibo-${datos.folio}.png`, 'image/png');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo compartir la imagen.');
+      }
+    }
+  }
+
+  async function generarPdf() {
     setOcupado('pdf');
     setMensaje(null);
     try {
       const blob = await generarPdfRecibo(ELEMENT_ID);
-      await compartirArchivo(blob, `recibo-${datos.folio}.pdf`, 'application/pdf');
+      setPdfBlob(blob);
     } catch (err: any) {
-      if (!(err instanceof CompartirCanceladoError)) {
-        setMensaje(err?.message || 'No se pudo generar el PDF.');
-      }
+      setMensaje(err?.message || 'No se pudo generar el PDF.');
     } finally {
       setOcupado(null);
+    }
+  }
+
+  async function compartirPdfListo() {
+    if (!pdfBlob) return;
+    try {
+      await compartirArchivo(pdfBlob, `recibo-${datos.folio}.pdf`, 'application/pdf');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo compartir el PDF.');
+      }
     }
   }
 
@@ -107,12 +135,26 @@ export function ReciboModal({ datos, onCerrar }: Props) {
             </div>
 
             <div style={{ display: 'grid', gap: 8 }}>
-              <button className="boton-primario" disabled={!!ocupado} onClick={compartirImagen}>
-                {ocupado === 'imagen' ? 'Generando...' : '📤 Compartir imagen (WhatsApp)'}
-              </button>
-              <button className="boton-secundario" disabled={!!ocupado} onClick={descargarPdf} style={{ width: '100%', marginTop: 0 }}>
-                {ocupado === 'pdf' ? 'Generando...' : '📄 Descargar PDF'}
-              </button>
+              {!imagenBlob ? (
+                <button className="boton-primario" disabled={!!ocupado} onClick={generarImagen}>
+                  {ocupado === 'imagen' ? 'Generando...' : '🖼️ Generar imagen (WhatsApp)'}
+                </button>
+              ) : (
+                <button className="boton-primario" onClick={compartirImagenLista}>
+                  📤 Compartir imagen
+                </button>
+              )}
+
+              {!pdfBlob ? (
+                <button className="boton-secundario" disabled={!!ocupado} onClick={generarPdf} style={{ width: '100%', marginTop: 0 }}>
+                  {ocupado === 'pdf' ? 'Generando...' : '📄 Generar PDF'}
+                </button>
+              ) : (
+                <button className="boton-secundario" onClick={compartirPdfListo} style={{ width: '100%', marginTop: 0 }}>
+                  📤 Compartir PDF
+                </button>
+              )}
+
               <button className="boton-secundario" disabled={!!ocupado} onClick={imprimir} style={{ width: '100%', marginTop: 0 }}>
                 {ocupado === 'imprimir'
                   ? 'Imprimiendo...'
