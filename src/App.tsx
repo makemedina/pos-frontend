@@ -110,10 +110,11 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
     case 'usuarios':
       return false; // solo administrador
     case 'configuracion':
-    case 'configuracionRecibo':
-    case 'configuracionImpresora':
     case 'herramientas':
       return false; // solo administrador
+    case 'configuracionRecibo':
+    case 'configuracionImpresora':
+      return true; // cualquiera puede configurar el recibo/impresora (lo usan al vender)
     case 'gastos':
       return true; // cualquiera puede registrar/ver sus propios gastos
     case 'corte':
@@ -141,7 +142,7 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
     case 'finanzasMenu':
       return puedeVer('gastos', usuario) || puedeVer('corte', usuario) || puedeVer('dashboard', usuario);
     case 'configuracionMenu':
-      return puedeVer('configuracion', usuario) || puedeVer('usuarios', usuario);
+      return puedeVer('configuracion', usuario) || puedeVer('usuarios', usuario) || puedeVer('configuracionRecibo', usuario);
     default:
       return true;
   }
@@ -495,6 +496,7 @@ export default function App() {
     if (pantallaActiva === 'configuracionMenu') {
       return renderSubmenu('Configuración', [
         { pantalla: 'configuracion', icono: '⚙️', titulo: 'Datos del negocio', descripcion: 'Negocio, recibo e impresora', clase: 'boton-flotante-ajuste' },
+        { pantalla: 'configuracionRecibo', icono: '🧾', titulo: 'Recibo e impresora', descripcion: 'Encabezado, pie de página y conectar impresora', clase: 'boton-flotante-ajuste' },
         { pantalla: 'usuarios', icono: '👤', titulo: 'Usuarios', descripcion: 'Altas, PIN y permisos', clase: 'boton-flotante-usuarios' },
         { pantalla: 'herramientas', icono: '🛠️', titulo: 'Herramientas', descripcion: 'Carga inicial y reinicio de datos', clase: 'boton-flotante-ajuste' },
       ]);
@@ -551,7 +553,7 @@ export default function App() {
     if (pantallaActiva === 'configuracionRecibo') {
       return (
         <ConfiguracionRecibo
-          onCerrar={() => abrirPantalla('configuracion')}
+          onCerrar={() => abrirPantalla('configuracionMenu')}
           onIrAImpresora={() => abrirPantalla('configuracionImpresora')}
         />
       );
