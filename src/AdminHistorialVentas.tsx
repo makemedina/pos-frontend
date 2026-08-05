@@ -144,11 +144,14 @@ export function AdminHistorialVentas({
             <button onClick={onAbrirMenu} style={{ width: 'auto', padding: '0 14px' }} aria-label="Menú">☰</button>
             <h2 style={{ margin: 0 }}>Ventas</h2>
             <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={exportar} style={{ width: 'auto', padding: '0 12px' }} aria-label="Exportar a Excel">
+                📊
+              </button>
               <button onClick={onVerSinSincronizar} style={{ width: 'auto', padding: '0 12px' }} aria-label="Sincronizar">
                 🔄{ventasPendientesCount > 0 ? ` ${ventasPendientesCount}` : ''}
               </button>
               <button className="boton-primario" onClick={onNuevaVenta} style={{ width: 'auto', padding: '0 16px' }} aria-label="Nueva venta">
-                ＋
+                Nuevo
               </button>
             </div>
           </div>
@@ -176,12 +179,6 @@ export function AdminHistorialVentas({
           >
             📴 Tienes {ventasPendientesCount} venta{ventasPendientesCount !== 1 ? 's' : ''} sin sincronizar — toca para verlas
           </div>
-        )}
-
-        {esInicio && (
-          <button onClick={exportar} className="boton-secundario" style={{ width: '100%', marginTop: 0 }}>
-            📊 Exportar Excel
-          </button>
         )}
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
