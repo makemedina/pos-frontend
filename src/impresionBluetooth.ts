@@ -20,6 +20,22 @@ export function nombreImpresoraConectada(): string | null {
   return dispositivo?.name ?? null;
 }
 
+function conTiempoLimite<T>(promesa: Promise<T>, ms: number, mensajeError: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const temporizador = setTimeout(() => reject(new Error(mensajeError)), ms);
+    promesa.then(
+      (valor) => {
+        clearTimeout(temporizador);
+        resolve(valor);
+      },
+      (err) => {
+        clearTimeout(temporizador);
+        reject(err);
+      }
+    );
+  });
+}
+
 export async function conectarImpresora(): Promise<string> {
   const bt = (navigator as any).bluetooth;
   if (!bt) {
@@ -30,9 +46,26 @@ export async function conectarImpresora(): Promise<string> {
     acceptAllDevices: true,
     optionalServices: [SERVICE_UUID],
   });
-  const server = await dev.gatt.connect();
-  const service = await server.getPrimaryService(SERVICE_UUID);
-  const char = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+  // gatt.connect() a veces se queda colgado sin fallar ni conectar --
+  // sobre todo en Android, si la impresora esta apagada, lejos, o no
+  // soporta bien BLE. Sin este limite, el boton de "conectar" se queda
+  // pegado para siempre sin ningun aviso.
+  const server = await conTiempoLimite<any>(
+    dev.gatt.connect(),
+    15000,
+    'La conexión tardó demasiado. Verifica que la impresora esté encendida y cerca, y vuelve a intentar.'
+  );
+  const service = await conTiempoLimite<any>(
+    server.getPrimaryService(SERVICE_UUID),
+    10000,
+    'No se encontró el servicio Bluetooth esperado en esta impresora.'
+  );
+  const char = await conTiempoLimite<any>(
+    service.getCharacteristic(CHARACTERISTIC_UUID),
+    10000,
+    'No se encontró la característica Bluetooth esperada en esta impresora.'
+  );
 
   dispositivo = dev;
   caracteristica = char;
