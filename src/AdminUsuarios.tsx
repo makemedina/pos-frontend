@@ -28,6 +28,8 @@ export function AdminUsuarios({ onCerrar }: Props) {
   const [telefono, setTelefono] = useState('');
   const [pin, setPin] = useState('');
   const [pinUsuario, setPinUsuario] = useState('');
+  const [nombreEdicion, setNombreEdicion] = useState('');
+  const [telefonoEdicion, setTelefonoEdicion] = useState('');
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<UsuarioAdmin | null>(null);
   const [permisos, setPermisos] = useState({
     puedeVerCostos: false,
@@ -96,6 +98,24 @@ export function AdminUsuarios({ onCerrar }: Props) {
     }
   }
 
+  async function guardarDatos(e: React.FormEvent) {
+    e.preventDefault();
+    if (!usuarioSeleccionado) return;
+    try {
+      const res = await fetch(`${API_URL}/usuarios/${usuarioSeleccionado.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...headerAuth() },
+        body: JSON.stringify({ nombre: nombreEdicion, telefono: telefonoEdicion }),
+      });
+      if (!res.ok) throw new Error('No se pudo actualizar');
+      setMensaje('Datos actualizados correctamente');
+      setUsuarioSeleccionado(null);
+      cargar();
+    } catch {
+      setMensaje('No se pudo actualizar el nombre/teléfono');
+    }
+  }
+
   async function guardarPermisos(e: React.FormEvent) {
     e.preventDefault();
     if (!usuarioSeleccionado) return;
@@ -148,6 +168,8 @@ export function AdminUsuarios({ onCerrar }: Props) {
                 </div>
                 <button onClick={() => {
                   setUsuarioSeleccionado(usuario);
+                  setNombreEdicion(usuario.nombre);
+                  setTelefonoEdicion(usuario.telefono);
                   setPermisos({
                     puedeVerCostos: usuario.permisos?.puedeVerCostos ?? false,
                     puedeRegistrarCompras: usuario.permisos?.puedeRegistrarCompras ?? false,
@@ -165,6 +187,13 @@ export function AdminUsuarios({ onCerrar }: Props) {
 
         {usuarioSeleccionado && (
           <div style={{ display: 'grid', gap: '1rem' }}>
+            <form onSubmit={guardarDatos} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <h3>Datos de {usuarioSeleccionado.nombre}</h3>
+              <input value={nombreEdicion} onChange={(e) => setNombreEdicion(e.target.value)} placeholder="Nombre" required />
+              <input value={telefonoEdicion} onChange={(e) => setTelefonoEdicion(e.target.value)} placeholder="Teléfono" required />
+              <button type="submit">Guardar datos</button>
+            </form>
+
             <form onSubmit={cambiarPin} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
               <h3>Cambiar PIN de {usuarioSeleccionado.nombre}</h3>
               <input value={pinUsuario} onChange={(e) => setPinUsuario(e.target.value)} placeholder="Nuevo PIN" required />
