@@ -17,6 +17,7 @@ import { AdminDashboard } from './AdminDashboard';
 import { AdminAjusteInventario } from './AdminAjusteInventario';
 import { AdminProductos } from './AdminProductos';
 import { AdminClientes } from './AdminClientes';
+import { AdminProveedores } from './AdminProveedores';
 import { AdminMovimientosInventario } from './AdminMovimientosInventario';
 import { AdminHistorialVentas } from './AdminHistorialVentas';
 import { AdminHistorialCortes } from './AdminHistorialCortes';
@@ -51,7 +52,6 @@ type Pantalla =
   | 'clientes'
   | 'movimientosInventario'
   | 'productos'
-  | 'historial'
   | 'historialCortes'
   | 'comprasMenu'
   | 'facturasPendientes'
@@ -60,8 +60,10 @@ type Pantalla =
   | 'configuracion'
   | 'configuracionRecibo'
   | 'configuracionImpresora'
-  | 'ventasMenu'
   | 'clientesMenu'
+  | 'cuentasPorCobrarMenu'
+  | 'cuentasPorPagarMenu'
+  | 'proveedores'
   | 'inventarioMenu'
   | 'finanzasMenu'
   | 'configuracionMenu'
@@ -75,17 +77,17 @@ interface OpcionMenu {
   clase: string;
 }
 
-// El menu principal (pantalla "inicio") ofrece estas opciones. Cada una
-// se filtra segun los permisos reales del usuario -- el backend ya
-// rechaza estas rutas si no corresponde, pero mostrar una opcion que
-// va a fallar es mala experiencia.
+// Estas opciones ahora alimentan el menu desplegable (☰) de la pantalla
+// de inicio -- Ventas ya no es un grupo aparte, es la pantalla de inicio
+// misma. Cada una se filtra segun los permisos reales del usuario.
 const OPCIONES_MENU: OpcionMenu[] = [
-  { pantalla: 'ventasMenu', icono: '🛒', titulo: 'Ventas', descripcion: 'Vender y ver el historial', clase: 'boton-flotante-ventas' },
-  { pantalla: 'comprasMenu', icono: '📦', titulo: 'Compras', descripcion: 'Registrar compra, pagos y facturas pendientes', clase: '' },
-  { pantalla: 'clientesMenu', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Datos, transacciones y cartera', clase: 'boton-flotante-cartera' },
+  { pantalla: 'comprasMenu', icono: '📦', titulo: 'Compras', descripcion: 'Registrar compra e historial', clase: '' },
+  { pantalla: 'clientesMenu', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Datos, altas y edición', clase: 'boton-flotante-cartera' },
+  { pantalla: 'cuentasPorCobrarMenu', icono: '💵', titulo: 'Cuentas por Cobrar', descripcion: 'Cartera de clientes', clase: 'boton-flotante-cartera' },
+  { pantalla: 'cuentasPorPagarMenu', icono: '💳', titulo: 'Cuentas por Pagar', descripcion: 'Pagos, facturas y proveedores', clase: 'boton-flotante-cuentas' },
   { pantalla: 'inventarioMenu', icono: '🥩', titulo: 'Inventario', descripcion: 'Productos, stock y movimientos', clase: 'boton-flotante-ajuste' },
-  { pantalla: 'finanzasMenu', icono: '💸', titulo: 'Finanzas', descripcion: 'Gastos, corte de caja y dashboard', clase: 'boton-flotante-gastos' },
-  { pantalla: 'configuracionMenu', icono: '⚙️', titulo: 'Configuración', descripcion: 'Negocio, usuarios y recibo', clase: 'boton-flotante-ajuste' },
+  { pantalla: 'finanzasMenu', icono: '💸', titulo: 'Finanzas', descripcion: 'Corte, gastos y estadísticas', clase: 'boton-flotante-gastos' },
+  { pantalla: 'configuracionMenu', icono: '⚙️', titulo: 'Configuración', descripcion: 'Negocio, usuarios y herramientas', clase: 'boton-flotante-ajuste' },
 ];
 
 function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
@@ -97,12 +99,14 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
     case 'cuentas':
     case 'facturasPendientes':
       return !!usuario.permisos?.puedeVerCarteraGeneral;
+    case 'proveedores':
+      return !!usuario.permisos?.puedeRegistrarCompras || !!usuario.permisos?.puedeVerCarteraGeneral;
     case 'historialCompras':
       return !!usuario.permisos?.puedeVerCostos;
     case 'ventasOffline':
       return true; // cualquiera puede ver y reintentar sus ventas guardadas sin conexion
     case 'comprasMenu':
-      return !!usuario.permisos?.puedeRegistrarCompras || !!usuario.permisos?.puedeVerCarteraGeneral;
+      return !!usuario.permisos?.puedeRegistrarCompras;
     case 'usuarios':
       return false; // solo administrador
     case 'configuracion':
@@ -124,14 +128,14 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
       return !!usuario.permisos?.puedeVerCostos;
     case 'productos':
       return !!usuario.permisos?.puedeVerCostos;
-    case 'historial':
-      return true; // cualquiera ve su historial; el backend filtra a "solo mias" salvo permiso
     case 'historialCortes':
       return false; // solo administrador puede editar cortes pasados
-    case 'ventasMenu':
-      return puedeVer('catalogo', usuario) || puedeVer('historial', usuario);
     case 'clientesMenu':
-      return puedeVer('clientes', usuario) || puedeVer('cartera', usuario);
+      return puedeVer('clientes', usuario);
+    case 'cuentasPorCobrarMenu':
+      return puedeVer('cartera', usuario);
+    case 'cuentasPorPagarMenu':
+      return puedeVer('cuentas', usuario) || puedeVer('facturasPendientes', usuario) || puedeVer('proveedores', usuario);
     case 'inventarioMenu':
       return puedeVer('productos', usuario) || puedeVer('movimientosInventario', usuario);
     case 'finanzasMenu':
@@ -160,6 +164,7 @@ export default function App() {
   const [enLinea, setEnLinea] = useState(navigator.onLine);
   const [ventasPendientesCount, setVentasPendientesCount] = useState(0);
   const [usuario, setUsuario] = useState<UsuarioSesion | null>(null);
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   useEffect(() => {
     if (usuario) {
@@ -457,23 +462,21 @@ export default function App() {
       return null;
     }
 
-    if (pantallaActiva === 'ventasMenu') {
-      return renderSubmenu('Ventas', [
-        { pantalla: 'catalogo', icono: '🛒', titulo: 'Nueva venta', descripcion: 'Vender productos del catálogo', clase: 'boton-flotante-ventas' },
-        { pantalla: 'historial', icono: '📜', titulo: 'Historial de ventas', descripcion: 'Ver ventas por periodo, cliente o pago', clase: 'boton-flotante-historial' },
-        {
-          pantalla: 'ventasOffline',
-          icono: '📴',
-          titulo: 'Ventas sin sincronizar',
-          descripcion: ventasPendientesCount > 0 ? `${ventasPendientesCount} por subir` : 'Todo sincronizado',
-          clase: ventasPendientesCount > 0 ? 'boton-flotante-gastos' : 'boton-flotante-historial',
-        },
-      ]);
-    }
     if (pantallaActiva === 'clientesMenu') {
       return renderSubmenu('Clientes', [
-        { pantalla: 'clientes', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Datos, transacciones y saldo', clase: 'boton-flotante-cartera' },
+        { pantalla: 'clientes', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Alta, edición y datos', clase: 'boton-flotante-cartera' },
+      ]);
+    }
+    if (pantallaActiva === 'cuentasPorCobrarMenu') {
+      return renderSubmenu('Cuentas por Cobrar', [
         { pantalla: 'cartera', icono: '💵', titulo: 'Cartera', descripcion: 'Clientes con saldo pendiente', clase: 'boton-flotante-cartera' },
+      ]);
+    }
+    if (pantallaActiva === 'cuentasPorPagarMenu') {
+      return renderSubmenu('Cuentas por Pagar', [
+        { pantalla: 'cuentas', icono: '💳', titulo: 'Registrar pago a factura', descripcion: 'Abonar una factura pendiente', clase: 'boton-flotante-cuentas' },
+        { pantalla: 'facturasPendientes', icono: '📋', titulo: 'Facturas por pagar', descripcion: 'Solo ver el listado', clase: 'boton-flotante-historial' },
+        { pantalla: 'proveedores', icono: '🚚', titulo: 'Proveedores', descripcion: 'Alta y edición de proveedores', clase: '' },
       ]);
     }
     if (pantallaActiva === 'inventarioMenu') {
@@ -484,9 +487,9 @@ export default function App() {
     }
     if (pantallaActiva === 'finanzasMenu') {
       return renderSubmenu('Finanzas', [
-        { pantalla: 'gastos', icono: '💸', titulo: 'Gastos', descripcion: 'Registrar y ver gastos operativos', clase: 'boton-flotante-gastos' },
         { pantalla: 'corte', icono: '🗒️', titulo: 'Corte de caja', descripcion: 'Cierre diario de efectivo y banco', clase: 'boton-flotante-corte' },
-        { pantalla: 'dashboard', icono: '📊', titulo: 'Dashboard', descripcion: 'Ventas, utilidad y mas vendidos', clase: 'boton-flotante-dashboard' },
+        { pantalla: 'gastos', icono: '💸', titulo: 'Gastos', descripcion: 'Registrar y ver gastos operativos', clase: 'boton-flotante-gastos' },
+        { pantalla: 'dashboard', icono: '📊', titulo: 'Estadísticas', descripcion: 'Ventas, utilidad y mas vendidos', clase: 'boton-flotante-dashboard' },
       ]);
     }
     if (pantallaActiva === 'configuracionMenu') {
@@ -500,8 +503,6 @@ export default function App() {
     if (pantallaActiva === 'comprasMenu') {
       return renderSubmenu('Compras', [
         { pantalla: 'compra', icono: '📦', titulo: 'Registrar compra', descripcion: 'Nueva compra a proveedor', clase: '' },
-        { pantalla: 'cuentas', icono: '💳', titulo: 'Registrar pago', descripcion: 'Abonar una factura pendiente', clase: 'boton-flotante-cuentas' },
-        { pantalla: 'facturasPendientes', icono: '📋', titulo: 'Facturas pendientes', descripcion: 'Solo ver el listado', clase: 'boton-flotante-historial' },
         { pantalla: 'historialCompras', icono: '📜', titulo: 'Historial de compras', descripcion: 'Todas, pagadas y pendientes', clase: 'boton-flotante-historial' },
       ]);
     }
@@ -510,13 +511,16 @@ export default function App() {
       return <PantallaCompra onCompletada={compraCompletada} onCerrar={() => abrirPantalla('comprasMenu')} />;
     }
     if (pantallaActiva === 'cartera') {
-      return <AdminCartera onCerrar={() => abrirPantalla('clientesMenu')} />;
+      return <AdminCartera onCerrar={() => abrirPantalla('cuentasPorCobrarMenu')} />;
     }
     if (pantallaActiva === 'cuentas') {
-      return <AdminCuentasPorPagar onCerrar={() => abrirPantalla('comprasMenu')} />;
+      return <AdminCuentasPorPagar onCerrar={() => abrirPantalla('cuentasPorPagarMenu')} />;
     }
     if (pantallaActiva === 'facturasPendientes') {
-      return <AdminFacturasPendientes onCerrar={() => abrirPantalla('comprasMenu')} />;
+      return <AdminFacturasPendientes onCerrar={() => abrirPantalla('cuentasPorPagarMenu')} />;
+    }
+    if (pantallaActiva === 'proveedores') {
+      return <AdminProveedores onCerrar={() => abrirPantalla('cuentasPorPagarMenu')} />;
     }
     if (pantallaActiva === 'historialCompras') {
       return <AdminHistorialCompras onCerrar={() => abrirPantalla('comprasMenu')} />;
@@ -588,13 +592,10 @@ export default function App() {
     if (pantallaActiva === 'movimientosInventario') {
       return <AdminMovimientosInventario onCerrar={() => abrirPantalla('inventarioMenu')} />;
     }
-    if (pantallaActiva === 'historial') {
-      return <AdminHistorialVentas onCerrar={() => abrirPantalla('ventasMenu')} esAdmin={usuario.rolBase === 'administrador'} />;
-    }
     if (pantallaActiva === 'ventasOffline') {
       return (
         <VentasOffline
-          onCerrar={() => abrirPantalla('ventasMenu')}
+          onCerrar={() => abrirPantalla('inicio')}
           onCambio={() => setVentasPendientesCount(contarVentasPendientes())}
         />
       );
@@ -659,42 +660,20 @@ export default function App() {
       );
     }
 
-    // Pantalla de inicio: menu principal con todas las opciones disponibles
-    // para este usuario segun sus permisos.
-    const opciones = OPCIONES_MENU.filter((o) => puedeVer(o.pantalla, usuario));
-
+    // Pantalla de inicio: ahora es directamente el listado de ventas
+    // (antes era una cuadrícula de 6 tarjetas). El menú de grupos (☰) y
+    // "Salir" viven en el panel desplegable que se abre desde ahí.
     return (
-      <>
-        <header className="encabezado">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-            <strong>{usuario.nombre}</strong>
-            <small>{usuario.rolBase}</small>
-          </div>
-          <button className="boton-secundario" onClick={handleLogout} style={{ height: 40, width: 'auto', marginTop: 0, padding: '0 16px' }}>
-            Salir
-          </button>
-        </header>
-
-        {mensaje && (
-          <div className="banner-mensaje" onClick={() => setMensaje(null)}>
-            {mensaje}
-          </div>
-        )}
-
-        <div className="grid-menu">
-          {opciones.map((o) => (
-            <div
-              key={o.pantalla}
-              className="tarjeta-menu"
-              onClick={() => abrirPantalla(o.pantalla)}
-            >
-              <div className={`icono-menu ${o.clase}`}>{o.icono}</div>
-              <p className="titulo-menu">{o.titulo}</p>
-              <p className="descripcion-menu">{o.descripcion}</p>
-            </div>
-          ))}
-        </div>
-      </>
+      <AdminHistorialVentas
+        esAdmin={usuario.rolBase === 'administrador'}
+        esInicio
+        onAbrirMenu={() => setMenuAbierto(true)}
+        onNuevaVenta={() => abrirPantalla('catalogo')}
+        onVerSinSincronizar={() => abrirPantalla('ventasOffline')}
+        ventasPendientesCount={ventasPendientesCount}
+        mensajeGlobal={mensaje}
+        onCerrarMensajeGlobal={() => setMensaje(null)}
+      />
     );
   }
 
@@ -750,6 +729,75 @@ export default function App() {
 
       {pantallaActiva === 'catalogo' && (
         <Carrito items={carrito} onCobrar={() => setMostrarCheckout(true)} onEliminar={eliminarDelCarrito} />
+      )}
+
+      {menuAbierto && (
+        <div
+          onClick={() => setMenuAbierto(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.35)',
+            zIndex: 45,
+            display: 'flex',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'white',
+              width: 280,
+              maxWidth: '80vw',
+              height: '100%',
+              padding: '1rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              boxShadow: '2px 0 12px rgba(0,0,0,0.15)',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 8 }}>
+              <strong>{usuario.nombre}</strong>
+              <small style={{ color: '#6b7280' }}>{usuario.rolBase}</small>
+            </div>
+
+            {OPCIONES_MENU.filter((o) => puedeVer(o.pantalla, usuario)).map((o) => (
+              <div
+                key={o.pantalla}
+                onClick={() => {
+                  abrirPantalla(o.pantalla);
+                  setMenuAbierto(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 8px',
+                  borderRadius: 10,
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{ fontSize: 20 }}>{o.icono}</span>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 14 }}>{o.titulo}</div>
+                  <div style={{ fontSize: 12, color: '#6b7280' }}>{o.descripcion}</div>
+                </div>
+              </div>
+            ))}
+
+            <div style={{ flex: 1 }} />
+            <button
+              className="boton-secundario"
+              onClick={() => {
+                setMenuAbierto(false);
+                handleLogout();
+              }}
+              style={{ width: '100%' }}
+            >
+              Salir
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

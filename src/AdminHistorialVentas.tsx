@@ -10,8 +10,15 @@ import {
 } from './api';
 
 interface Props {
-  onCerrar: () => void;
+  onCerrar?: () => void;
   esAdmin: boolean;
+  esInicio?: boolean;
+  onAbrirMenu?: () => void;
+  onNuevaVenta?: () => void;
+  onVerSinSincronizar?: () => void;
+  ventasPendientesCount?: number;
+  mensajeGlobal?: string | null;
+  onCerrarMensajeGlobal?: () => void;
 }
 
 type Periodo = 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
@@ -23,7 +30,17 @@ function formatDateInput(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
+export function AdminHistorialVentas({
+  onCerrar,
+  esAdmin,
+  esInicio,
+  onAbrirMenu,
+  onNuevaVenta,
+  onVerSinSincronizar,
+  ventasPendientesCount = 0,
+  mensajeGlobal,
+  onCerrarMensajeGlobal,
+}: Props) {
   const [periodo, setPeriodo] = useState<Periodo>('mes');
   const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
@@ -122,13 +139,50 @@ export function AdminHistorialVentas({ onCerrar, esAdmin }: Props) {
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>Historial de ventas</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={exportar}>📊 Exportar Excel</button>
-            <button onClick={onCerrar}>Cerrar</button>
+        {esInicio ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button onClick={onAbrirMenu} style={{ width: 'auto', padding: '0 14px' }} aria-label="Menú">☰</button>
+            <h2 style={{ margin: 0 }}>Ventas</h2>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={onVerSinSincronizar} style={{ width: 'auto', padding: '0 12px' }} aria-label="Sincronizar">
+                🔄{ventasPendientesCount > 0 ? ` ${ventasPendientesCount}` : ''}
+              </button>
+              <button className="boton-primario" onClick={onNuevaVenta} style={{ width: 'auto', padding: '0 16px' }} aria-label="Nueva venta">
+                ＋
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2>Historial de ventas</h2>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={exportar}>📊 Exportar Excel</button>
+              <button onClick={onCerrar}>Cerrar</button>
+            </div>
+          </div>
+        )}
+
+        {mensajeGlobal && (
+          <div className="banner-mensaje" onClick={onCerrarMensajeGlobal}>
+            {mensajeGlobal}
+          </div>
+        )}
+
+        {esInicio && ventasPendientesCount > 0 && (
+          <div
+            className="banner-mensaje"
+            onClick={onVerSinSincronizar}
+            style={{ background: '#fff7e6', color: '#92400e', cursor: 'pointer' }}
+          >
+            📴 Tienes {ventasPendientesCount} venta{ventasPendientesCount !== 1 ? 's' : ''} sin sincronizar — toca para verlas
+          </div>
+        )}
+
+        {esInicio && (
+          <button onClick={exportar} className="boton-secundario" style={{ width: '100%', marginTop: 0 }}>
+            📊 Exportar Excel
+          </button>
+        )}
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 

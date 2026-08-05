@@ -473,6 +473,31 @@ export async function crearProveedorRapido(nombre: string, telefono?: string): P
   return res.json();
 }
 
+export async function obtenerProveedoresTodos(): Promise<Proveedor[]> {
+  const res = await fetch(`${API_URL}/proveedores/todos`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los proveedores');
+  }
+  return res.json();
+}
+
+export async function actualizarProveedor(
+  id: string,
+  datos: { nombre?: string; telefono?: string }
+): Promise<Proveedor> {
+  const res = await fetch(`${API_URL}/proveedores/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(datos),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo actualizar el proveedor');
+  }
+  return res.json();
+}
+
 export async function importarProveedores(nombres: string[]): Promise<{ creados: number }> {
   const res = await fetch(`${API_URL}/proveedores/importar`, {
     method: 'POST',
