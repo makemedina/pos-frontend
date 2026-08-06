@@ -7,6 +7,7 @@ import {
   obtenerNotasCliente,
   obtenerPagosDeNota,
   registrarPagoVenta,
+  registrarPagoMultiNota,
   type ClienteCartera,
   type NotaCartera,
   type PagoNota,
@@ -33,6 +34,12 @@ export function AdminCartera({ onCerrar }: Props) {
   const [clienteElegido, setClienteElegido] = useState<ClienteCartera | null>(null);
   const [notas, setNotas] = useState<NotaCartera[]>([]);
   const [verPagadas, setVerPagadas] = useState(false);
+
+  // Pago repartido entre varias notas (desde el nivel de notas)
+  const [mostrarPagoMultiple, setMostrarPagoMultiple] = useState(false);
+  const [metodoPagoMultiple, setMetodoPagoMultiple] = useState('efectivo');
+  const [asignacionesPago, setAsignacionesPago] = useState<Record<string, string>>({});
+  const [guardandoPagoMultiple, setGuardandoPagoMultiple] = useState(false);
 
   // Nivel 3: pagos de una nota + formulario de abono
   const [notaElegida, setNotaElegida] = useState<NotaCartera | null>(null);
@@ -64,6 +71,8 @@ export function AdminCartera({ onCerrar }: Props) {
   async function abrirCliente(c: ClienteCartera) {
     setClienteElegido(c);
     setVerPagadas(false);
+    setMostrarPagoMultiple(false);
+    setAsignacionesPago({});
     setNivel('notas');
     setCargando(true);
     try {
@@ -92,6 +101,7 @@ export function AdminCartera({ onCerrar }: Props) {
   async function abrirNota(n: NotaCartera) {
     setNotaElegida(n);
     setMonto('');
+    setMostrarPagoMultiple(false);
     setNivel('pagos');
     setCargando(true);
     try {
@@ -108,7 +118,63 @@ export function AdminCartera({ onCerrar }: Props) {
     setNivel('clientes');
     setClienteElegido(null);
     setNotas([]);
+    setMostrarPagoMultiple(false);
+    setAsignacionesPago({});
     cargarClientes();
+  }
+
+  function abrirPagoMultiple() {
+    setAsignacionesPago({});
+    setMetodoPagoMultiple('efectivo');
+    setMostrarPagoMultiple(true);
+  }
+
+  function cerrarPagoMultiple() {
+    setMostrarPagoMultiple(false);
+    setAsignacionesPago({});
+  }
+
+  function actualizarAsignacion(notaId: string, valor: string) {
+    setAsignacionesPago((prev) => ({ ...prev, [notaId]: valor }));
+  }
+
+  const notasPendientesPago = notas.filter((n) => n.saldoPendiente > 0);
+  const totalAsignadoPago = notasPendientesPago.reduce(
+    (acc, n) => acc + (Number(asignacionesPago[n.id]) || 0),
+    0
+  );
+
+  async function handlePagoMultiple(e: React.FormEvent) {
+    e.preventDefault();
+    if (!clienteElegido) return;
+
+    const asignaciones = notasPendientesPago
+      .map((n) => ({ ventaId: n.id, monto: Number(asignacionesPago[n.id]) || 0 }))
+      .filter((a) => a.monto > 0);
+
+    if (asignaciones.length === 0) {
+      setMensaje('Asigna un monto mayor a cero a al menos una nota.');
+      return;
+    }
+
+    setGuardandoPagoMultiple(true);
+    try {
+      const resultado = await registrarPagoMultiNota(clienteElegido.id, asignaciones, metodoPagoMultiple);
+      const detalleTexto = resultado.detalle
+        .map((d) => `#${d.folio}: ${formatoMoneda(d.monto)}`)
+        .join(', ');
+      setMensaje(`Pago de ${formatoMoneda(resultado.totalPagado)} repartido en notas ${detalleTexto}.`);
+      cerrarPagoMultiple();
+      await cargarNotas();
+    } catch (err: any) {
+      if (err.code === 'MONTO_INVALIDO') {
+        setMensaje(err.error || 'El monto del pago no es valido.');
+      } else {
+        setMensaje('No se pudo registrar el pago.');
+      }
+    } finally {
+      setGuardandoPagoMultiple(false);
+    }
   }
 
   function volverANotas() {
@@ -270,6 +336,71 @@ export function AdminCartera({ onCerrar }: Props) {
         {!cargando && nivel === 'notas' && (
           <>
             <button onClick={volverAClientes} style={{ justifySelf: 'start' }}>← Todos los clientes</button>
+
+            {!mostrarPagoMultiple && notasPendientesPago.length > 0 && (
+              <button onClick={abrirPagoMultiple} style={{ justifySelf: 'start' }}>
+                + Agregar pago
+              </button>
+            )}
+
+            {mostrarPagoMultiple && (
+              <form
+                onSubmit={handlePagoMultiple}
+                style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h3 style={{ margin: 0 }}>Agregar pago de {clienteElegido?.nombre}</h3>
+                  <button type="button" onClick={cerrarPagoMultiple}>Cancelar</button>
+                </div>
+
+                <label>
+                  Metodo de pago
+                  <select value={metodoPagoMultiple} onChange={(e) => setMetodoPagoMultiple(e.target.value)}>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="transferencia">Transferencia</option>
+                  </select>
+                </label>
+
+                <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+                  Asigna cuanto de lo que te dio el cliente se abona a cada nota.
+                </p>
+
+                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                  {notasPendientesPago.map((n) => (
+                    <div
+                      key={n.id}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}
+                    >
+                      <div>
+                        <strong>Venta #{n.folio}</strong>
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                          Saldo: {formatoMoneda(n.saldoPendiente)}
+                        </div>
+                      </div>
+                      <input
+                        value={asignacionesPago[n.id] ?? ''}
+                        onChange={(e) => actualizarAsignacion(n.id, e.target.value)}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max={n.saldoPendiente}
+                        placeholder="0.00"
+                        style={{ width: 110, textAlign: 'right' }}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, paddingTop: 4 }}>
+                  <span>Total a registrar</span>
+                  <span>{formatoMoneda(totalAsignadoPago)}</span>
+                </div>
+
+                <button type="submit" disabled={totalAsignadoPago <= 0 || guardandoPagoMultiple}>
+                  {guardandoPagoMultiple ? 'Guardando...' : 'Registrar pago'}
+                </button>
+              </form>
+            )}
 
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
               <input type="checkbox" checked={verPagadas} onChange={(e) => setVerPagadas(e.target.checked)} />

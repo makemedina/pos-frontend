@@ -1129,3 +1129,36 @@ export async function registrarPagoVenta(ventaId: string, monto: number, metodoP
   if (!res.ok) throw { ...data, status: res.status };
   return data;
 }
+
+export interface AsignacionPagoMultiple {
+  ventaId: string;
+  monto: number;
+}
+
+export interface DetallePagoMultiNota {
+  ventaId: string;
+  folio: number;
+  monto: number;
+  saldoNotaRestante: number;
+}
+
+export interface ResultadoPagoMultiNota {
+  detalle: DetallePagoMultiNota[];
+  totalPagado: number;
+  saldoTotalCliente: number;
+}
+
+export async function registrarPagoMultiNota(
+  clienteId: string,
+  asignaciones: AsignacionPagoMultiple[],
+  metodoPago: string
+): Promise<ResultadoPagoMultiNota> {
+  const res = await fetch(`${API_URL}/cartera/clientes/${clienteId}/pagos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ asignaciones, metodoPago }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}
