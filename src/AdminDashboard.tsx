@@ -9,7 +9,13 @@ interface DashboardData {
   utilidadBruta: number;
   totalGastos: number;
   utilidadNeta: number;
+  ventasCantidad: number;
+  ticketMedio: number;
+  porcentajeEfectivo: number;
   productosMasVendidos: Array<[string, number]>;
+  productosMasVendidosPorValor: Array<[string, number]>;
+  mejoresClientesPorValor: Array<[string, number]>;
+  ventasPorVendedor: Array<[string, number]>;
 }
 
 interface Props {
@@ -74,19 +80,36 @@ export function AdminDashboard({ onCerrar }: Props) {
             filas: [
               {
                 Periodo: filtroLabel,
-                'Total ventas': data.totalVentas,
+                Facturación: data.totalVentas,
+                Ventas: data.ventasCantidad,
+                'Ticket medio': data.ticketMedio,
+                Ganancia: data.utilidadBruta,
                 'Total cobrado': data.totalCobrado,
-                'Utilidad bruta': data.utilidadBruta,
                 'Total gastos': data.totalGastos,
                 'Utilidad neta': data.utilidadNeta,
+                '% pagos en efectivo': data.porcentajeEfectivo,
               },
             ],
           },
           {
-            nombre: 'Productos mas vendidos',
-            filas: data.productosMasVendidos.map(([nombre, cantidad]) => ({
+            nombre: 'Productos mas vendidos (valor)',
+            filas: data.productosMasVendidosPorValor.map(([nombre, valor]) => ({
               Producto: nombre,
-              'Cantidad (kg)': cantidad,
+              Valor: valor,
+            })),
+          },
+          {
+            nombre: 'Mejores clientes (valor)',
+            filas: data.mejoresClientesPorValor.map(([nombre, valor]) => ({
+              Cliente: nombre,
+              Valor: valor,
+            })),
+          },
+          {
+            nombre: 'Ventas por vendedor',
+            filas: data.ventasPorVendedor.map(([nombre, valor]) => ({
+              Vendedor: nombre,
+              Valor: valor,
             })),
           },
         ],
@@ -146,30 +169,73 @@ export function AdminDashboard({ onCerrar }: Props) {
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-                <strong>Total ventas</strong>
+                <strong>Facturación</strong>
                 <div>{formatoMoneda(data.totalVentas)}</div>
               </div>
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <strong>Ventas</strong>
+                <div>{data.ventasCantidad}</div>
+              </div>
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <strong>Ticket medio</strong>
+                <div>{formatoMoneda(data.ticketMedio)}</div>
+              </div>
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <strong>Ganancia</strong>
+                <div>{formatoMoneda(data.utilidadBruta)}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                 <strong>Total cobrado</strong>
                 <div>{formatoMoneda(data.totalCobrado)}</div>
               </div>
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-                <strong>Utilidad bruta</strong>
-                <div>{formatoMoneda(data.utilidadBruta)}</div>
-              </div>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                 <strong>Utilidad neta</strong>
                 <div>{formatoMoneda(data.utilidadNeta)}</div>
+              </div>
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <strong>Medio de pago</strong>
+                <div>{data.porcentajeEfectivo.toFixed(1)}% efectivo</div>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>{(100 - data.porcentajeEfectivo).toFixed(1)}% transferencia</div>
               </div>
             </div>
 
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-              <h3>Productos más vendidos</h3>
+              <h3>Productos más vendidos por valor</h3>
               <div style={{ display: 'grid', gap: '0.5rem' }}>
-                {data.productosMasVendidos.map(([nombre, cantidad]) => (
+                {data.productosMasVendidosPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                {data.productosMasVendidosPorValor.map(([nombre, valor]) => (
                   <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>{nombre}</span>
-                    <strong>{cantidad.toFixed(1)} kg</strong>
+                    <strong>{formatoMoneda(valor)}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <h3>Mejores clientes por valor</h3>
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {data.mejoresClientesPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                {data.mejoresClientesPorValor.map(([nombre, valor]) => (
+                  <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{nombre}</span>
+                    <strong>{formatoMoneda(valor)}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <h3>Ventas por vendedor</h3>
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {data.ventasPorVendedor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                {data.ventasPorVendedor.map(([nombre, valor]) => (
+                  <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{nombre}</span>
+                    <strong>{formatoMoneda(valor)}</strong>
                   </div>
                 ))}
               </div>
