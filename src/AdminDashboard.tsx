@@ -33,7 +33,7 @@ export function AdminDashboard({ onCerrar }: Props) {
   const filtroLabel = useMemo(() => {
     switch (periodo) {
       case 'dia': return 'Hoy';
-      case 'semana': return 'Última semana';
+      case 'semana': return 'Esta semana (lun-dom)';
       case 'mes': return 'Mes actual';
       case 'anio': return 'Año actual';
       case 'rango': return `Rango ${desde || '—'} / ${hasta || '—'}`;
