@@ -3,6 +3,17 @@ import { formatoMoneda } from './formato';
 import { headerAuth, API_URL } from './api';
 import { exportarVariasHojas } from './exportarExcel';
 
+interface DiaResumen {
+  fecha: string;
+  facturacion: number;
+  ventasCantidad: number;
+  ticketMedio: number;
+  ganancia: number;
+  totalCobrado: number;
+  utilidadNeta: number;
+  porcentajeEfectivo: number;
+}
+
 interface DashboardData {
   totalVentas: number;
   totalCobrado: number;
@@ -16,10 +27,31 @@ interface DashboardData {
   productosMasVendidosPorValor: Array<[string, number]>;
   mejoresClientesPorValor: Array<[string, number]>;
   ventasPorVendedor: Array<[string, number]>;
+  detallePorDia: DiaResumen[];
 }
 
 interface Props {
   onCerrar: () => void;
+}
+
+type MetricaClave = 'facturacion' | 'ventas' | 'ticketMedio' | 'ganancia' | 'totalCobrado' | 'utilidadNeta' | 'medioDePago';
+
+const METRICAS_INFO: Record<MetricaClave, { titulo: string; obtenerValor: (d: DiaResumen) => string }> = {
+  facturacion: { titulo: 'Facturación por día', obtenerValor: (d) => formatoMoneda(d.facturacion) },
+  ventas: { titulo: 'Ventas por día', obtenerValor: (d) => String(d.ventasCantidad) },
+  ticketMedio: { titulo: 'Ticket medio por día', obtenerValor: (d) => formatoMoneda(d.ticketMedio) },
+  ganancia: { titulo: 'Ganancia por día', obtenerValor: (d) => formatoMoneda(d.ganancia) },
+  totalCobrado: { titulo: 'Total cobrado por día', obtenerValor: (d) => formatoMoneda(d.totalCobrado) },
+  utilidadNeta: { titulo: 'Utilidad neta por día', obtenerValor: (d) => formatoMoneda(d.utilidadNeta) },
+  medioDePago: { titulo: 'Medio de pago por día', obtenerValor: (d) => `${d.porcentajeEfectivo.toFixed(1)}% efectivo` },
+};
+
+function formatearFechaDia(fecha: string) {
+  return new Date(`${fecha}T00:00:00`).toLocaleDateString('es-MX', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
 }
 
 function formatDateInput(date: Date) {
@@ -35,6 +67,7 @@ export function AdminDashboard({ onCerrar }: Props) {
   const [periodo, setPeriodo] = useState('mes');
   const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
+  const [metricaExpandida, setMetricaExpandida] = useState<MetricaClave | null>(null);
 
   const filtroLabel = useMemo(() => {
     switch (periodo) {
@@ -168,34 +201,55 @@ export function AdminDashboard({ onCerrar }: Props) {
         {data && (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+              <div
+                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                onClick={() => setMetricaExpandida('facturacion')}
+              >
                 <strong>Facturación</strong>
                 <div>{formatoMoneda(data.totalVentas)}</div>
               </div>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+              <div
+                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                onClick={() => setMetricaExpandida('ventas')}
+              >
                 <strong>Ventas</strong>
                 <div>{data.ventasCantidad}</div>
               </div>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+              <div
+                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                onClick={() => setMetricaExpandida('ticketMedio')}
+              >
                 <strong>Ticket medio</strong>
                 <div>{formatoMoneda(data.ticketMedio)}</div>
               </div>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+              <div
+                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                onClick={() => setMetricaExpandida('ganancia')}
+              >
                 <strong>Ganancia</strong>
                 <div>{formatoMoneda(data.utilidadBruta)}</div>
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+              <div
+                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                onClick={() => setMetricaExpandida('totalCobrado')}
+              >
                 <strong>Total cobrado</strong>
                 <div>{formatoMoneda(data.totalCobrado)}</div>
               </div>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+              <div
+                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                onClick={() => setMetricaExpandida('utilidadNeta')}
+              >
                 <strong>Utilidad neta</strong>
                 <div>{formatoMoneda(data.utilidadNeta)}</div>
               </div>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+              <div
+                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                onClick={() => setMetricaExpandida('medioDePago')}
+              >
                 <strong>Medio de pago</strong>
                 <div>{data.porcentajeEfectivo.toFixed(1)}% efectivo</div>
                 <div style={{ fontSize: 12, color: '#6b7280' }}>{(100 - data.porcentajeEfectivo).toFixed(1)}% transferencia</div>
@@ -243,6 +297,29 @@ export function AdminDashboard({ onCerrar }: Props) {
           </>
         )}
       </div>
+
+      {metricaExpandida && data && (
+        <div className="modal-fondo" onClick={() => setMetricaExpandida(null)}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <p className="titulo">{METRICAS_INFO[metricaExpandida].titulo}</p>
+              <button className="boton-cerrar" onClick={() => setMetricaExpandida(null)}>✕</button>
+            </div>
+            {data.detallePorDia.length === 0 ? (
+              <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>
+            ) : (
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {data.detallePorDia.map((d) => (
+                  <div key={d.fecha} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                    <span style={{ textTransform: 'capitalize' }}>{formatearFechaDia(d.fecha)}</span>
+                    <strong>{METRICAS_INFO[metricaExpandida].obtenerValor(d)}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
