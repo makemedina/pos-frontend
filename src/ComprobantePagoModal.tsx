@@ -13,6 +13,9 @@ export interface DatosComprobantePago {
   fecha: string;
   saldoNotaRestante: number;
   saldoTotalCliente: number;
+  // Cuando el pago se repartio entre varias notas, se muestra el
+  // desglose por nota en vez del renglon unico de "saldo restante".
+  detalleNotas?: { folio: number; monto: number; saldoRestante: number }[];
 }
 
 interface Props {
@@ -132,7 +135,7 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
               <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
 
               <div style={{ textAlign: 'center', fontWeight: 700 }}>COMPROBANTE DE PAGO</div>
-              <div>Nota #{datos.folioNota}</div>
+              <div>{datos.detalleNotas ? `Notas #${datos.folioNota}` : `Nota #${datos.folioNota}`}</div>
               <div>{datos.fecha}</div>
 
               <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
@@ -147,10 +150,22 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
               <div style={{ marginTop: 4 }}>Método de pago: {datos.metodoPago}</div>
 
               <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Saldo restante de esta nota</span>
-                <span>{formatoMoneda(datos.saldoNotaRestante)}</span>
-              </div>
+              {datos.detalleNotas ? (
+                <>
+                  <div style={{ fontWeight: 700, marginBottom: 4 }}>Desglose por nota</div>
+                  {datos.detalleNotas.map((d) => (
+                    <div key={d.folio} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Nota #{d.folio} (abonado {formatoMoneda(d.monto)})</span>
+                      <span>Saldo: {formatoMoneda(d.saldoRestante)}</span>
+                    </div>
+                  ))}
+                </>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Saldo restante de esta nota</span>
+                  <span>{formatoMoneda(datos.saldoNotaRestante)}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, marginTop: 4 }}>
                 <span>Saldo total del cliente</span>
                 <span>{formatoMoneda(datos.saldoTotalCliente)}</span>

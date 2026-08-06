@@ -160,10 +160,21 @@ export function AdminCartera({ onCerrar }: Props) {
     setGuardandoPagoMultiple(true);
     try {
       const resultado = await registrarPagoMultiNota(clienteElegido.id, asignaciones, metodoPagoMultiple);
-      const detalleTexto = resultado.detalle
-        .map((d) => `#${d.folio}: ${formatoMoneda(d.monto)}`)
-        .join(', ');
-      setMensaje(`Pago de ${formatoMoneda(resultado.totalPagado)} repartido en notas ${detalleTexto}.`);
+      setComprobanteActivo({
+        folioNota: resultado.detalle.map((d) => d.folio).join(', '),
+        clienteNombre: clienteElegido.nombre,
+        clienteTelefono: clienteElegido.telefono,
+        monto: resultado.totalPagado,
+        metodoPago: metodoPagoMultiple,
+        fecha: new Date().toLocaleString(),
+        saldoNotaRestante: 0,
+        saldoTotalCliente: resultado.saldoTotalCliente,
+        detalleNotas: resultado.detalle.map((d) => ({
+          folio: d.folio,
+          monto: d.monto,
+          saldoRestante: d.saldoNotaRestante,
+        })),
+      });
       cerrarPagoMultiple();
       await cargarNotas();
     } catch (err: any) {
