@@ -216,9 +216,14 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
             {resumen && resumen.ventas.detalle.length > 0 && (
               <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Ventas del día ({resumen.ventas.detalle.length})</h3>
+                <div style={{ fontSize: 13 }}>
+                  <div>Efectivo: {formatoMoneda(resumen.ventas.subtotalesPorMetodo.efectivo)}</div>
+                  <div>Transferencia: {formatoMoneda(resumen.ventas.subtotalesPorMetodo.transferencia)}</div>
+                  <div>Crédito (sin abono hoy): {formatoMoneda(resumen.ventas.subtotalesPorMetodo.credito)}</div>
+                </div>
                 {resumen.ventas.detalle.map((v) => (
                   <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-                    <span>#{v.folio} · {v.cliente} · {v.vendedor}</span>
+                    <span>#{v.folio} · {v.cliente} · {v.vendedor} · {v.metodoPago ?? 'crédito'}</span>
                     <span>
                       {formatoMoneda(v.total)}{' '}
                       <small style={{ color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
@@ -233,9 +238,14 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
             {resumen && resumen.compras.detalle.length > 0 && (
               <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Compras del día ({resumen.compras.detalle.length})</h3>
+                <div style={{ fontSize: 13 }}>
+                  <div>Efectivo: {formatoMoneda(resumen.compras.subtotalesPorMetodo.efectivo)}</div>
+                  <div>Transferencia: {formatoMoneda(resumen.compras.subtotalesPorMetodo.transferencia)}</div>
+                  <div>Crédito (sin abono hoy): {formatoMoneda(resumen.compras.subtotalesPorMetodo.credito)}</div>
+                </div>
                 {resumen.compras.detalle.map((c) => (
                   <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-                    <span>{c.proveedor} · {c.numeroFactura || 'sin factura'}</span>
+                    <span>{c.proveedor} · {c.numeroFactura || 'sin factura'} · {c.metodoPago ?? 'crédito'}</span>
                     <span>
                       {formatoMoneda(c.total)}{' '}
                       <small style={{ color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>

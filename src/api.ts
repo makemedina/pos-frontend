@@ -731,6 +731,7 @@ export interface VentaDetalleCorte {
   total: number;
   saldoPendiente: number;
   estadoPago: string;
+  metodoPago: string | null;
   fecha: string;
 }
 
@@ -741,7 +742,14 @@ export interface CompraDetalleCorte {
   total: number;
   saldoPendiente: number;
   estadoPago: string;
+  metodoPago: string | null;
   fecha: string;
+}
+
+export interface SubtotalesPorMetodo {
+  efectivo: number;
+  transferencia: number;
+  credito: number;
 }
 
 export interface VentaCanceladaCorte {
@@ -767,8 +775,19 @@ export interface CompraCanceladaCorte {
 export interface ResumenCorteDia {
   yaExisteCorteHoy: boolean;
   corteExistente: { id: string; efectivoContado: number; saldoBancoContado: number } | null;
-  ventas: { total: number; cobrado: number; cantidad: number; detalle: VentaDetalleCorte[] };
-  compras: { total: number; cantidad: number; detalle: CompraDetalleCorte[] };
+  ventas: {
+    total: number;
+    cobrado: number;
+    cantidad: number;
+    subtotalesPorMetodo: SubtotalesPorMetodo;
+    detalle: VentaDetalleCorte[];
+  };
+  compras: {
+    total: number;
+    cantidad: number;
+    subtotalesPorMetodo: SubtotalesPorMetodo;
+    detalle: CompraDetalleCorte[];
+  };
   gastos: { total: number; cantidad: number };
   pagosClientes: {
     total: number;
