@@ -723,6 +723,14 @@ export interface PagoProveedorDetalleCorte {
   registradoPor: string;
 }
 
+export interface DepositoDetalleCorte {
+  id: string;
+  monto: number;
+  notas: string | null;
+  fecha: string;
+  registradoPor: string;
+}
+
 export interface VentaDetalleCorte {
   id: string;
   folio: number;
@@ -802,6 +810,11 @@ export interface ResumenCorteDia {
     transferencia: number;
     cantidad: number;
     detalle: PagoProveedorDetalleCorte[];
+  };
+  depositosBanco: {
+    total: number;
+    cantidad: number;
+    detalle: DepositoDetalleCorte[];
   };
   cartera: number;
   cuentasPorPagar: number;

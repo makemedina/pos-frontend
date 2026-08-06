@@ -348,6 +348,37 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
               </div>
             )}
 
+            {resumen?.depositosBanco && (
+              <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+                <h3>Depósitos a banco hoy</h3>
+                <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                  Traspaso interno (efectivo → banco): ya está reflejado en los saldos del sistema, no es un gasto ni afecta la utilidad.
+                </p>
+                <div>Total: <strong>{formatoMoneda(Number(resumen.depositosBanco.total ?? 0))}</strong></div>
+
+                {resumen.depositosBanco.detalle.length > 0 && (
+                  <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
+                    <strong style={{ fontSize: 13 }}>Detalle</strong>
+                    {resumen.depositosBanco.detalle.map((d) => (
+                      <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                        <span>
+                          {d.notas || 'Depósito a banco'}
+                          <br />
+                          <small style={{ color: '#6b7280' }}>
+                            {new Date(d.fecha).toLocaleTimeString()} · registró: {d.registradoPor}
+                          </small>
+                        </span>
+                        <strong>{formatoMoneda(d.monto)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {resumen.depositosBanco.detalle.length === 0 && (
+                  <p style={{ fontSize: 13, color: '#6b7280' }}>Sin depósitos a banco hoy.</p>
+                )}
+              </div>
+            )}
+
             {tieneUtilidad && (() => {
               // Mientras no se guarde el corte de hoy, se usa lo que el
               // usuario vaya escribiendo en el formulario; si ya se

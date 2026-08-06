@@ -12,6 +12,7 @@ import { AdminHistorialCompras } from './AdminHistorialCompras';
 import { AdminUsuarios } from './AdminUsuarios';
 import { AdminHerramientas } from './AdminHerramientas';
 import { AdminGastos } from './AdminGastos';
+import { AdminDepositos } from './AdminDepositos';
 import { AdminCorteCaja } from './AdminCorteCaja';
 import { AdminDashboard } from './AdminDashboard';
 import { AdminAjusteInventario } from './AdminAjusteInventario';
@@ -46,6 +47,7 @@ type Pantalla =
   | 'cuentas'
   | 'usuarios'
   | 'gastos'
+  | 'depositos'
   | 'corte'
   | 'dashboard'
   | 'ajuste'
@@ -117,6 +119,8 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
       return true; // cualquiera puede configurar el recibo/impresora (lo usan al vender)
     case 'gastos':
       return true; // cualquiera puede registrar/ver sus propios gastos
+    case 'depositos':
+      return true; // cualquiera puede registrar/ver sus propios depositos a banco
     case 'corte':
       return true; // cualquiera captura su conteo diario; utilidad/balanza se ocultan sin permiso
     case 'dashboard':
@@ -140,7 +144,12 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
     case 'inventarioMenu':
       return puedeVer('productos', usuario) || puedeVer('movimientosInventario', usuario);
     case 'finanzasMenu':
-      return puedeVer('gastos', usuario) || puedeVer('corte', usuario) || puedeVer('dashboard', usuario);
+      return (
+        puedeVer('gastos', usuario) ||
+        puedeVer('depositos', usuario) ||
+        puedeVer('corte', usuario) ||
+        puedeVer('dashboard', usuario)
+      );
     case 'configuracionMenu':
       return puedeVer('configuracion', usuario) || puedeVer('usuarios', usuario) || puedeVer('configuracionRecibo', usuario);
     default:
@@ -491,6 +500,7 @@ export default function App() {
       return renderSubmenu('Finanzas', [
         { pantalla: 'corte', icono: '🗒️', titulo: 'Corte de caja', descripcion: 'Cierre diario de efectivo y banco', clase: 'boton-flotante-corte' },
         { pantalla: 'gastos', icono: '💸', titulo: 'Gastos', descripcion: 'Registrar y ver gastos operativos', clase: 'boton-flotante-gastos' },
+        { pantalla: 'depositos', icono: '🏦', titulo: 'Depósitos a banco', descripcion: 'Traspasar efectivo a banco', clase: 'boton-flotante-gastos' },
         { pantalla: 'dashboard', icono: '📊', titulo: 'Estadísticas', descripcion: 'Ventas, utilidad y mas vendidos', clase: 'boton-flotante-dashboard' },
       ]);
     }
@@ -537,6 +547,9 @@ export default function App() {
     }
     if (pantallaActiva === 'gastos') {
       return <AdminGastos onCerrar={() => abrirPantalla('finanzasMenu')} />;
+    }
+    if (pantallaActiva === 'depositos') {
+      return <AdminDepositos onCerrar={() => abrirPantalla('finanzasMenu')} />;
     }
     if (pantallaActiva === 'corte') {
       return (
