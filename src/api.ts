@@ -163,6 +163,12 @@ export async function obtenerVariantesDeProducto(productoId: string): Promise<Va
 
 // ---------- GESTION DE PRODUCTOS (pantalla Productos) ----------
 
+export interface LoteStockGestion {
+  cantidadDisponible: number;
+  costoUnitario: number;
+  fechaIngreso: string;
+}
+
 export interface ProductoGestion {
   id: string;
   producto: string;
@@ -170,7 +176,7 @@ export interface ProductoGestion {
   marca: string;
   categoria: string | null;
   precioVenta: number;
-  costoPromedio: number | null;
+  lotes: LoteStockGestion[];
   stockMinimo: number;
   stockDisponible: number;
   pocoStock: boolean;
