@@ -100,7 +100,7 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
     case 'facturasPendientes':
       return !!usuario.permisos?.puedeVerCarteraGeneral;
     case 'proveedores':
-      return !!usuario.permisos?.puedeRegistrarCompras || !!usuario.permisos?.puedeVerCarteraGeneral;
+      return !!usuario.permisos?.puedeRegistrarCompras;
     case 'historialCompras':
       return !!usuario.permisos?.puedeVerCostos;
     case 'ventasOffline':
@@ -136,7 +136,7 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
     case 'cuentasPorCobrarMenu':
       return puedeVer('cartera', usuario);
     case 'cuentasPorPagarMenu':
-      return puedeVer('cuentas', usuario) || puedeVer('facturasPendientes', usuario) || puedeVer('proveedores', usuario);
+      return puedeVer('cuentas', usuario) || puedeVer('facturasPendientes', usuario);
     case 'inventarioMenu':
       return puedeVer('productos', usuario) || puedeVer('movimientosInventario', usuario);
     case 'finanzasMenu':
@@ -443,8 +443,10 @@ export default function App() {
           {visibles.map((o) => (
             <div key={o.pantalla} className="tarjeta-menu" onClick={() => abrirPantalla(o.pantalla)}>
               <div className={`icono-menu ${o.clase}`}>{o.icono}</div>
-              <p className="titulo-menu">{o.titulo}</p>
-              <p className="descripcion-menu">{o.descripcion}</p>
+              <div>
+                <p className="titulo-menu">{o.titulo}</p>
+                <p className="descripcion-menu">{o.descripcion}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -477,7 +479,6 @@ export default function App() {
       return renderSubmenu('Cuentas por Pagar', [
         { pantalla: 'cuentas', icono: '💳', titulo: 'Registrar pago a factura', descripcion: 'Abonar una factura pendiente', clase: 'boton-flotante-cuentas' },
         { pantalla: 'facturasPendientes', icono: '📋', titulo: 'Facturas por pagar', descripcion: 'Solo ver el listado', clase: 'boton-flotante-historial' },
-        { pantalla: 'proveedores', icono: '🚚', titulo: 'Proveedores', descripcion: 'Alta y edición de proveedores', clase: '' },
       ]);
     }
     if (pantallaActiva === 'inventarioMenu') {
@@ -506,6 +507,7 @@ export default function App() {
       return renderSubmenu('Compras', [
         { pantalla: 'compra', icono: '📦', titulo: 'Registrar compra', descripcion: 'Nueva compra a proveedor', clase: '' },
         { pantalla: 'historialCompras', icono: '📜', titulo: 'Historial de compras', descripcion: 'Todas, pagadas y pendientes', clase: 'boton-flotante-historial' },
+        { pantalla: 'proveedores', icono: '🚚', titulo: 'Proveedores', descripcion: 'Alta y edición de proveedores', clase: '' },
       ]);
     }
 
@@ -522,7 +524,7 @@ export default function App() {
       return <AdminFacturasPendientes onCerrar={() => abrirPantalla('cuentasPorPagarMenu')} />;
     }
     if (pantallaActiva === 'proveedores') {
-      return <AdminProveedores onCerrar={() => abrirPantalla('cuentasPorPagarMenu')} />;
+      return <AdminProveedores onCerrar={() => abrirPantalla('comprasMenu')} />;
     }
     if (pantallaActiva === 'historialCompras') {
       return <AdminHistorialCompras onCerrar={() => abrirPantalla('comprasMenu')} />;
