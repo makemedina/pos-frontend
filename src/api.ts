@@ -170,6 +170,7 @@ export interface ProductoGestion {
   marca: string;
   categoria: string | null;
   precioVenta: number;
+  costoPromedio: number | null;
   stockMinimo: number;
   stockDisponible: number;
   pocoStock: boolean;

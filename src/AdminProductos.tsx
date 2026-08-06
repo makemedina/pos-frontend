@@ -135,6 +135,9 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                     <div>
                       <strong>{p.producto}</strong> {p.marca}
                       {p.pocoStock && <span style={{ color: '#b91c1c', fontSize: 12 }}> · poco stock</span>}
+                      {p.costoPromedio !== null && (
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>Costo: {formatoMoneda(p.costoPromedio)}/kg</div>
+                      )}
                     </div>
                     <div style={{ fontWeight: 700 }}>{p.stockDisponible.toFixed(1)} kg</div>
                   </div>
@@ -151,6 +154,9 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
               <div>
                 <div>Stock disponible: <strong>{productoElegido.stockDisponible.toFixed(1)} kg</strong></div>
                 <div style={{ fontSize: 13, color: '#6b7280' }}>Precio de venta: {formatoMoneda(productoElegido.precioVenta)}/kg</div>
+                {productoElegido.costoPromedio !== null && (
+                  <div style={{ fontSize: 13, color: '#6b7280' }}>Costo (compra): {formatoMoneda(productoElegido.costoPromedio)}/kg</div>
+                )}
               </div>
               <button
                 onClick={() =>
