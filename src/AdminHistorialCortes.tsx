@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
 import { obtenerHistorialCortes, actualizarCorte, eliminarCorte, type CorteHistorico } from './api';
+import { CorteHistoricoModal } from './CorteHistoricoModal';
 
 interface Props {
   onCerrar: () => void;
@@ -16,6 +17,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
   const [saldoBancoContado, setSaldoBancoContado] = useState('');
   const [confirmandoEliminarId, setConfirmandoEliminarId] = useState<string | null>(null);
   const [eliminando, setEliminando] = useState(false);
+  const [fechaAImprimir, setFechaAImprimir] = useState<string | null>(null);
 
   useEffect(() => {
     cargar();
@@ -108,6 +110,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                     )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <button onClick={() => setFechaAImprimir(c.fecha.slice(0, 10))}>🖨️ Imprimir</button>
                     <button onClick={() => empezarEdicion(c)}>Editar</button>
                     <button
                       onClick={() => setConfirmandoEliminarId(c.id)}
@@ -161,6 +164,10 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
           </form>
         )}
       </div>
+
+      {fechaAImprimir && (
+        <CorteHistoricoModal fecha={fechaAImprimir} onCerrar={() => setFechaAImprimir(null)} />
+      )}
     </div>
   );
 }

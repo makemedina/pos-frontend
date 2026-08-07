@@ -889,7 +889,15 @@ export interface CompraCanceladaCorte {
 
 export interface ResumenCorteDia {
   yaExisteCorteHoy: boolean;
-  corteExistente: { id: string; efectivoContado: number; saldoBancoContado: number } | null;
+  corteExistente: {
+    id: string;
+    efectivoContado: number;
+    saldoBancoContado: number;
+    // Tal como quedaron capturados ESE dia (no se recalculan con datos de hoy).
+    utilidadDia: number;
+    valorInventario: number;
+    balanzaTotal: number;
+  } | null;
   ventas: {
     total: number;
     cobrado: number;
@@ -938,8 +946,9 @@ export interface ResumenCorteDia {
   balanzaEsperada?: number | null;
 }
 
-export async function obtenerCorteDelDia(): Promise<ResumenCorteDia> {
-  const res = await fetch(`${API_URL}/corte`, { headers: headerAuth() });
+export async function obtenerCorteDelDia(fecha?: string): Promise<ResumenCorteDia> {
+  const url = fecha ? `${API_URL}/corte?fecha=${fecha}` : `${API_URL}/corte`;
+  const res = await fetch(url, { headers: headerAuth() });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || 'No se pudo cargar el resumen del dia');
