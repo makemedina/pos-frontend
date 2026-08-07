@@ -6,14 +6,15 @@ import type { ItemCarrito } from './Carrito';
 interface Props {
   variante: VarianteCatalogo;
   cantidadYaEnCarrito: number;
+  ultimoPrecio?: { precioUnitario: number; fecha: string } | null;
   onAgregar: (item: ItemCarrito) => void;
   onCerrar: () => void;
 }
 
-export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, onAgregar, onCerrar }: Props) {
+export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, ultimoPrecio, onAgregar, onCerrar }: Props) {
   const disponibleReal = Math.max(0, variante.stockDisponible - cantidadYaEnCarrito);
   const [cantidad, setCantidad] = useState(Math.min(1, disponibleReal || 1));
-  const [precio, setPrecio] = useState(variante.precioVenta);
+  const [precio, setPrecio] = useState(ultimoPrecio?.precioUnitario ?? variante.precioVenta);
 
   const bajoCosto =
     variante.costoLoteMasViejo !== null && precio < variante.costoLoteMasViejo;
@@ -92,6 +93,14 @@ export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, onAgregar,
                 necesitara autorizacion de un administrador para completar esta
                 venta.
               </div>
+            )}
+
+            {ultimoPrecio && (
+              <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                Último precio a este cliente: {formatoMoneda(ultimoPrecio.precioUnitario)}/kg
+                ({new Date(ultimoPrecio.fecha).toLocaleDateString()}) — precio de lista:{' '}
+                {formatoMoneda(variante.precioVenta)}/kg
+              </p>
             )}
 
             <div className="subtotal-linea">

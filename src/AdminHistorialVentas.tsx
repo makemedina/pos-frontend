@@ -17,6 +17,8 @@ interface Props {
   onNuevaVenta?: () => void;
   onVerSinSincronizar?: () => void;
   ventasPendientesCount?: number;
+  onVerCotizaciones?: () => void;
+  cotizacionesPendientesCount?: number;
   mensajeGlobal?: string | null;
   onCerrarMensajeGlobal?: () => void;
 }
@@ -38,6 +40,8 @@ export function AdminHistorialVentas({
   onNuevaVenta,
   onVerSinSincronizar,
   ventasPendientesCount = 0,
+  onVerCotizaciones,
+  cotizacionesPendientesCount = 0,
   mensajeGlobal,
   onCerrarMensajeGlobal,
 }: Props) {
@@ -149,6 +153,9 @@ export function AdminHistorialVentas({
               </button>
               <button onClick={onVerSinSincronizar} style={{ width: 'auto', padding: '0 12px' }} aria-label="Sincronizar">
                 🔄{ventasPendientesCount > 0 ? ` ${ventasPendientesCount}` : ''}
+              </button>
+              <button onClick={onVerCotizaciones} style={{ width: 'auto', padding: '0 12px' }} aria-label="Cotizaciones pendientes">
+                📋{cotizacionesPendientesCount > 0 ? ` ${cotizacionesPendientesCount}` : ''}
               </button>
               <button className="boton-primario" onClick={onNuevaVenta} style={{ width: 'auto', padding: '0 16px' }} aria-label="Nueva venta">
                 Nuevo

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
-import { buscarClientes, crearClienteRapido, type Cliente } from './api';
-import { obtenerClientesCache } from './offline';
+import type { Cliente } from './api';
 import type { ItemCarrito } from './Carrito';
 
 interface Props {
   items: ItemCarrito[];
+  cliente: Cliente;
+  onCambiarCliente: () => void;
   onConfirmar: (datos: {
     clienteId: string;
     clienteNombre: string;
@@ -17,6 +18,10 @@ interface Props {
     autorizadoPin?: string;
     motivoAutorizacion?: string;
   }) => void;
+  onEnviarCotizacion: () => void;
+  enviandoCotizacion?: boolean;
+  cotizacionEnviada?: boolean;
+  mensajeCotizacion?: string | null;
   onCerrar: () => void;
   // Error que vino del backend al intentar confirmar (stock insuficiente,
   // autorizacion invalida, etc). Se muestra aqui mismo, dentro del modal,
@@ -24,15 +29,19 @@ interface Props {
   errorServidor?: string | null;
 }
 
-export function Checkout({ items, onConfirmar, onCerrar, errorServidor }: Props) {
+export function Checkout({
+  items,
+  cliente,
+  onCambiarCliente,
+  onConfirmar,
+  onEnviarCotizacion,
+  enviandoCotizacion,
+  cotizacionEnviada,
+  mensajeCotizacion,
+  onCerrar,
+  errorServidor,
+}: Props) {
   const total = items.reduce((acc, i) => acc + i.cantidad * i.precioUnitario, 0);
-
-  const [busqueda, setBusqueda] = useState('');
-  const [resultados, setResultados] = useState<Cliente[]>([]);
-  const [clienteSeleccionado, setClienteSeleccionado] = useState<Cliente | null>(null);
-  const [mostrarAltaRapida, setMostrarAltaRapida] = useState(false);
-  const [nombreNuevo, setNombreNuevo] = useState('');
-  const [telefonoNuevo, setTelefonoNuevo] = useState('');
 
   const [esCredito, setEsCredito] = useState(false);
   const [montoPagado, setMontoPagado] = useState(total);
@@ -47,38 +56,6 @@ export function Checkout({ items, onConfirmar, onCerrar, errorServidor }: Props)
     (item) => item.costoLote !== null && item.precioUnitario < item.costoLote
   );
 
-  async function buscar(valor: string) {
-    setBusqueda(valor);
-    if (valor.length < 2) {
-      setResultados([]);
-      return;
-    }
-    try {
-      const data = await buscarClientes(valor);
-      setResultados(data);
-    } catch {
-      // Sin conexion: se busca en la copia local guardada la ultima vez que hubo internet.
-      const q = valor.toLowerCase();
-      const enCache = obtenerClientesCache().filter(
-        (c) => c.nombre.toLowerCase().includes(q) || c.telefono.includes(valor)
-      );
-      setResultados(enCache);
-    }
-  }
-
-  function seleccionarCliente(c: Cliente) {
-    setClienteSeleccionado(c);
-    setResultados([]);
-    setBusqueda('');
-  }
-
-  async function guardarClienteNuevo() {
-    if (!nombreNuevo || !telefonoNuevo) return;
-    const cliente = await crearClienteRapido(nombreNuevo, telefonoNuevo);
-    setClienteSeleccionado(cliente);
-    setMostrarAltaRapida(false);
-  }
-
   useEffect(() => {
     if (!esCredito) {
       setMontoPagado(total);
@@ -92,7 +69,6 @@ export function Checkout({ items, onConfirmar, onCerrar, errorServidor }: Props)
   }
 
   function confirmar() {
-    if (!clienteSeleccionado) return;
     if (
       requiereAutorizacion &&
       (!autorizadoPorTelefono.trim() || !autorizadoPin.trim() || !motivoAutorizacion.trim())
@@ -102,9 +78,9 @@ export function Checkout({ items, onConfirmar, onCerrar, errorServidor }: Props)
     }
 
     onConfirmar({
-      clienteId: clienteSeleccionado.id,
-      clienteNombre: clienteSeleccionado.nombre,
-      clienteTelefono: clienteSeleccionado.telefono,
+      clienteId: cliente.id,
+      clienteNombre: cliente.nombre,
+      clienteTelefono: cliente.telefono,
       esCredito,
       montoPagadoAhora: montoPagado,
       metodoPago,
@@ -136,49 +112,10 @@ export function Checkout({ items, onConfirmar, onCerrar, errorServidor }: Props)
         </div>
 
         <label className="etiqueta">Cliente</label>
-        {clienteSeleccionado ? (
-          <div className="cliente-chip">
-            <span>{clienteSeleccionado.nombre}</span>
-            <button onClick={() => setClienteSeleccionado(null)}>Cambiar</button>
-          </div>
-        ) : (
-          <>
-            <input
-              className="buscador"
-              placeholder="Buscar cliente por nombre o telefono"
-              value={busqueda}
-              onChange={(e) => buscar(e.target.value)}
-            />
-            {resultados.map((c) => (
-              <div key={c.id} className="resultado-cliente" onClick={() => seleccionarCliente(c)}>
-                {c.nombre} · {c.telefono}
-              </div>
-            ))}
-            {busqueda.length >= 2 && resultados.length === 0 && (
-              <button className="boton-secundario" onClick={() => setMostrarAltaRapida(true)}>
-                + Crear cliente nuevo
-              </button>
-            )}
-          </>
-        )}
-
-        {mostrarAltaRapida && (
-          <div className="alta-rapida">
-            <input
-              placeholder="Nombre del cliente"
-              value={nombreNuevo}
-              onChange={(e) => setNombreNuevo(e.target.value)}
-            />
-            <input
-              placeholder="Telefono (10 digitos)"
-              value={telefonoNuevo}
-              onChange={(e) => setTelefonoNuevo(e.target.value)}
-            />
-            <button className="boton-primario" onClick={guardarClienteNuevo}>
-              Guardar cliente
-            </button>
-          </div>
-        )}
+        <div className="cliente-chip">
+          <span>{cliente.nombre}</span>
+          <button onClick={onCambiarCliente}>Cambiar</button>
+        </div>
 
         <label className="etiqueta">Metodo de pago</label>
         <div className="opciones-metodo">
@@ -261,6 +198,12 @@ export function Checkout({ items, onConfirmar, onCerrar, errorServidor }: Props)
           </div>
         )}
 
+        {mensajeCotizacion && (
+          <div className="banner-mensaje" style={{ marginTop: 12 }}>
+            {mensajeCotizacion}
+          </div>
+        )}
+
         {errorServidor && (
           <div className="aviso-alerta" style={{ marginTop: 12 }}>
             {errorServidor}
@@ -268,11 +211,20 @@ export function Checkout({ items, onConfirmar, onCerrar, errorServidor }: Props)
         )}
 
         <button
-          className="boton-primario"
-          disabled={!clienteSeleccionado}
-          onClick={confirmar}
+          className="boton-secundario"
+          disabled={!!enviandoCotizacion || !!cotizacionEnviada}
+          onClick={onEnviarCotizacion}
+          style={{ width: '100%', marginTop: 12 }}
         >
-          Confirmar venta
+          {cotizacionEnviada
+            ? '✅ Cotización enviada'
+            : enviandoCotizacion
+              ? 'Guardando...'
+              : '📤 Enviar cotización'}
+        </button>
+
+        <button className="boton-primario" onClick={confirmar}>
+          ✅ Confirmar venta
         </button>
       </div>
     </div>

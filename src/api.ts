@@ -668,6 +668,98 @@ export async function registrarVenta(payload: CrearVentaPayload) {
   return manejarRespuesta(res);
 }
 
+export async function obtenerUltimosPreciosCliente(
+  clienteId: string
+): Promise<Record<string, { precioUnitario: number; fecha: string }>> {
+  const res = await fetch(`${API_URL}/clientes/${clienteId}/ultimos-precios`, { headers: headerAuth() });
+  if (!res.ok) return {};
+  return res.json();
+}
+
+// ---------- COTIZACIONES ----------
+// Carrito + cliente guardado para compartir con el cliente ANTES de
+// confirmar la venta. No toca inventario ni saldos hasta que se confirma.
+
+export interface ItemCotizacionPayload {
+  varianteId: string;
+  cantidad: number;
+  precioUnitario: number;
+}
+
+export interface CotizacionItemDetalle {
+  id: string;
+  varianteId: string;
+  producto: string;
+  marca: string;
+  cantidad: number;
+  precioUnitario: number;
+}
+
+export interface CotizacionResumen {
+  id: string;
+  folio: number;
+  fecha: string;
+  total: number;
+  estado: string;
+  cliente: { id: string; nombre: string; telefono: string };
+  vendedor: { nombre: string };
+  items: { varianteId: string; cantidad: number; precioUnitario: number }[];
+}
+
+export interface CotizacionDetalle extends Omit<CotizacionResumen, 'items'> {
+  items: CotizacionItemDetalle[];
+}
+
+export async function crearCotizacion(payload: {
+  clienteId: string;
+  items: ItemCotizacionPayload[];
+}): Promise<CotizacionResumen> {
+  const res = await fetch(`${API_URL}/cotizaciones`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(payload),
+  });
+  return manejarRespuesta(res);
+}
+
+export async function obtenerCotizacionesPendientes(): Promise<CotizacionResumen[]> {
+  const res = await fetch(`${API_URL}/cotizaciones`, { headers: headerAuth() });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function obtenerCotizacion(id: string): Promise<CotizacionDetalle> {
+  const res = await fetch(`${API_URL}/cotizaciones/${id}`, { headers: headerAuth() });
+  return manejarRespuesta(res);
+}
+
+export async function confirmarCotizacion(
+  id: string,
+  datos: {
+    esCredito: boolean;
+    montoPagadoAhora: number;
+    metodoPago: string;
+    autorizadoPorTelefono?: string;
+    autorizadoPin?: string;
+    motivoAutorizacion?: string;
+  }
+) {
+  const res = await fetch(`${API_URL}/cotizaciones/${id}/confirmar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(datos),
+  });
+  return manejarRespuesta(res);
+}
+
+export async function cancelarCotizacion(id: string) {
+  const res = await fetch(`${API_URL}/cotizaciones/${id}/cancelar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+  });
+  return manejarRespuesta(res);
+}
+
 // ---------- CONFIGURACION (negocio, recibo, impresora) ----------
 
 export interface Configuracion {

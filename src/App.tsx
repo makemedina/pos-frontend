@@ -1,8 +1,23 @@
 import { useEffect, useState } from 'react';
-import { obtenerCatalogo, registrarVenta, logout, type VarianteCatalogo, type UsuarioSesion } from './api';
+import {
+  obtenerCatalogo,
+  registrarVenta,
+  logout,
+  obtenerUltimosPreciosCliente,
+  crearCotizacion,
+  obtenerCotizacionesPendientes,
+  confirmarCotizacion,
+  type VarianteCatalogo,
+  type UsuarioSesion,
+  type Cliente,
+} from './api';
 import { Carrito, type ItemCarrito } from './Carrito';
 import { ModalAgregarProducto } from './ModalAgregarProducto';
 import { Checkout } from './Checkout';
+import { SeleccionarClienteVenta } from './SeleccionarClienteVenta';
+import { CotizacionModal } from './CotizacionModal';
+import type { DatosCotizacion } from './construirCotizacion';
+import { CotizacionesPendientes } from './CotizacionesPendientes';
 import { PantallaCompra } from './PantallaCompra';
 import { Login } from './Login';
 import { AdminCartera } from './AdminCartera';
@@ -41,7 +56,9 @@ import { VentasOffline } from './VentasOffline';
 
 type Pantalla =
   | 'inicio'
+  | 'seleccionarClienteVenta'
   | 'catalogo'
+  | 'cotizacionesPendientes'
   | 'compra'
   | 'cartera'
   | 'cuentas'
@@ -176,10 +193,25 @@ export default function App() {
   const [usuario, setUsuario] = useState<UsuarioSesion | null>(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
 
+  // Cliente elegido ANTES de armar el carrito (ver SeleccionarClienteVenta),
+  // para poder sugerir el ultimo precio que se le dio en cada producto.
+  const [clienteVenta, setClienteVenta] = useState<Cliente | null>(null);
+  const [ultimosPrecios, setUltimosPrecios] = useState<Record<string, { precioUnitario: number; fecha: string }>>({});
+
+  // Cotizaciones: si se envio una para el carrito actual, se guarda su id
+  // para que "Confirmar venta" la convierta en vez de crear una venta
+  // suelta y dejar la cotizacion pendiente duplicada.
+  const [cotizacionActivaId, setCotizacionActivaId] = useState<string | null>(null);
+  const [enviandoCotizacion, setEnviandoCotizacion] = useState(false);
+  const [mensajeCotizacion, setMensajeCotizacion] = useState<string | null>(null);
+  const [cotizacionParaCompartir, setCotizacionParaCompartir] = useState<DatosCotizacion | null>(null);
+  const [cotizacionesPendientesCount, setCotizacionesPendientesCount] = useState(0);
+
   useEffect(() => {
     if (usuario) {
       cargarCatalogo();
       refrescarCacheOffline();
+      cargarCotizacionesPendientesCount();
     }
   }, [usuario]);
 
@@ -244,6 +276,78 @@ export default function App() {
     setCarrito((prev) => prev.filter((_, i) => i !== index));
   }
 
+  async function cargarCotizacionesPendientesCount() {
+    try {
+      const pendientes = await obtenerCotizacionesPendientes();
+      setCotizacionesPendientesCount(pendientes.length);
+    } catch {
+      // Sin conexion: se deja el contador como estaba, no es critico.
+    }
+  }
+
+  // Punto de entrada de "Nueva venta": ahora primero se elige el cliente
+  // (SeleccionarClienteVenta), y solo despues se arma el carrito -- para
+  // poder sugerir el ultimo precio que se le dio a ESE cliente en cada
+  // producto.
+  function iniciarNuevaVenta() {
+    setCarrito([]);
+    setClienteVenta(null);
+    setUltimosPrecios({});
+    setCotizacionActivaId(null);
+    setMensajeCotizacion(null);
+    abrirPantalla('seleccionarClienteVenta');
+  }
+
+  async function seleccionarClienteParaVenta(cliente: Cliente) {
+    setClienteVenta(cliente);
+    setUltimosPrecios(await obtenerUltimosPreciosCliente(cliente.id));
+    abrirPantalla('catalogo');
+  }
+
+  function cambiarClienteVenta() {
+    // El carrito se conserva -- solo se vuelve a elegir cliente. Los
+    // productos ya agregados NO recalculan su precio sugerido, solo los
+    // que se agreguen de aqui en adelante usaran los precios del cliente nuevo.
+    setMostrarCheckout(false);
+    abrirPantalla('seleccionarClienteVenta');
+  }
+
+  async function enviarCotizacion() {
+    if (!clienteVenta || carrito.length === 0) return;
+    setEnviandoCotizacion(true);
+    setMensajeCotizacion(null);
+    try {
+      const cotizacion = await crearCotizacion({
+        clienteId: clienteVenta.id,
+        items: carrito.map((i) => ({
+          varianteId: i.varianteId,
+          cantidad: i.cantidad,
+          precioUnitario: i.precioUnitario,
+        })),
+      });
+      setCotizacionActivaId(cotizacion.id);
+      setMensajeCotizacion(`Cotización #${cotizacion.folio} guardada.`);
+      setCotizacionParaCompartir({
+        folio: cotizacion.folio,
+        fecha: new Date(cotizacion.fecha).toLocaleString(),
+        vendedor: usuario!.nombre,
+        cliente: { nombre: clienteVenta.nombre, telefono: clienteVenta.telefono },
+        items: carrito.map((i) => ({
+          producto: i.producto,
+          marca: i.marca,
+          cantidad: i.cantidad,
+          precioUnitario: i.precioUnitario,
+        })),
+        total: Number(cotizacion.total),
+      });
+      cargarCotizacionesPendientesCount();
+    } catch {
+      setMensajeCotizacion('No se pudo guardar la cotización. Revisa tu conexión e intenta de nuevo.');
+    } finally {
+      setEnviandoCotizacion(false);
+    }
+  }
+
   async function confirmarVenta(datos: {
     clienteId: string;
     clienteNombre: string;
@@ -260,30 +364,45 @@ export default function App() {
       (i) => i.costoLote !== null && i.precioUnitario < i.costoLote
     );
     try {
-      const resultado = await registrarVenta({
-        clienteId: datos.clienteId,
-        items: carrito.map((i) => {
-          const requiereAutorizacion = i.costoLote !== null && i.precioUnitario < i.costoLote;
-          return {
-            varianteId: i.varianteId,
-            cantidad: i.cantidad,
-            precioUnitario: i.precioUnitario,
-            // Solo se manda la autorizacion en las lineas que realmente
-            // la necesitan, no a toda la nota.
-            ...(requiereAutorizacion
-              ? {
-                  autorizadoPorTelefono: datos.autorizadoPorTelefono,
-                  autorizadoPin: datos.autorizadoPin,
-                  motivoAutorizacion: datos.motivoAutorizacion,
-                }
-              : {}),
-          };
-        }),
-        esCredito: datos.esCredito,
-        montoPagadoAhora: datos.montoPagadoAhora,
-        metodoPago: datos.metodoPago,
-      });
+      // Si ya se envio una cotizacion para este carrito, confirmarla la
+      // convierte en venta real (mismo FIFO/autorizacion que una venta
+      // normal) en vez de crear una venta suelta y dejarla pendiente.
+      const resultado = cotizacionActivaId
+        ? await confirmarCotizacion(cotizacionActivaId, {
+            esCredito: datos.esCredito,
+            montoPagadoAhora: datos.montoPagadoAhora,
+            metodoPago: datos.metodoPago,
+            autorizadoPorTelefono: datos.autorizadoPorTelefono,
+            autorizadoPin: datos.autorizadoPin,
+            motivoAutorizacion: datos.motivoAutorizacion,
+          })
+        : await registrarVenta({
+            clienteId: datos.clienteId,
+            items: carrito.map((i) => {
+              const requiereAutorizacion = i.costoLote !== null && i.precioUnitario < i.costoLote;
+              return {
+                varianteId: i.varianteId,
+                cantidad: i.cantidad,
+                precioUnitario: i.precioUnitario,
+                // Solo se manda la autorizacion en las lineas que realmente
+                // la necesitan, no a toda la nota.
+                ...(requiereAutorizacion
+                  ? {
+                      autorizadoPorTelefono: datos.autorizadoPorTelefono,
+                      autorizadoPin: datos.autorizadoPin,
+                      motivoAutorizacion: datos.motivoAutorizacion,
+                    }
+                  : {}),
+              };
+            }),
+            esCredito: datos.esCredito,
+            montoPagadoAhora: datos.montoPagadoAhora,
+            metodoPago: datos.metodoPago,
+          });
       setMensaje(`Venta #${resultado.venta.folio} registrada. Total: $${resultado.venta.total}`);
+      setCotizacionActivaId(null);
+      setMensajeCotizacion(null);
+      if (cotizacionesPendientesCount > 0) cargarCotizacionesPendientesCount();
       setReciboActivo({
         folio: resultado.venta.folio,
         fecha: new Date(resultado.venta.fecha ?? Date.now()).toLocaleString(),
@@ -306,6 +425,13 @@ export default function App() {
       cargarCatalogo();
     } catch (err: any) {
       const esFalloDeRed = !err?.status && !err?.code;
+
+      if (esFalloDeRed && cotizacionActivaId) {
+        // Confirmar una cotizacion necesita conexion -- no participa del
+        // flujo offline (la cotizacion vive solo en el servidor).
+        setErrorVenta('No se pudo confirmar la cotización sin conexión. Intenta de nuevo cuando vuelva internet.');
+        return;
+      }
 
       if (esFalloDeRed && algunaLineaRequiereAutorizacion) {
         // Sin conexion no se puede validar el PIN de autorizacion contra
@@ -391,6 +517,9 @@ export default function App() {
         setErrorVenta('El telefono, PIN o motivo de autorizacion no son validos. Verifica con el administrador.');
       } else if (err.code === 'CLIENTE_SIN_CREDITO') {
         setErrorVenta('Este cliente no tiene autorizado comprar a credito.');
+      } else if (err.code === 'COTIZACION_YA_RESUELTA') {
+        setErrorVenta('Esta cotización ya se confirmó o canceló desde otro lado.');
+        setCotizacionActivaId(null);
       } else {
         setErrorVenta('Ocurrio un error al registrar la venta.');
       }
@@ -406,6 +535,9 @@ export default function App() {
     // para no depender de que cada pantalla se acuerde de hacerlo.
     if (pantalla === 'catalogo' || pantalla === 'inicio') {
       cargarCatalogo();
+    }
+    if (pantalla === 'inicio') {
+      cargarCotizacionesPendientesCount();
     }
   }
 
@@ -423,6 +555,9 @@ export default function App() {
     setUsuario(null);
     setCarrito([]);
     setCatalogo([]);
+    setClienteVenta(null);
+    setUltimosPrecios({});
+    setCotizacionActivaId(null);
     setPantallaActiva('inicio');
   }
 
@@ -618,7 +753,27 @@ export default function App() {
       );
     }
 
-    if (pantallaActiva === 'catalogo') {
+    if (pantallaActiva === 'seleccionarClienteVenta') {
+      return (
+        <SeleccionarClienteVenta
+          onSeleccionar={seleccionarClienteParaVenta}
+          onCerrar={() => abrirPantalla('inicio')}
+        />
+      );
+    }
+
+    if (pantallaActiva === 'cotizacionesPendientes') {
+      return (
+        <CotizacionesPendientes
+          vendedorNombre={usuario.nombre}
+          onCerrar={() => abrirPantalla('inicio')}
+          onCambio={cargarCotizacionesPendientesCount}
+          onVentaConfirmada={(recibo) => setReciboActivo(recibo)}
+        />
+      );
+    }
+
+    if (pantallaActiva === 'catalogo' && clienteVenta) {
       const catalogoFiltrado = catalogo.filter((v) => {
         if (!busquedaProducto.trim()) return true;
         const q = busquedaProducto.trim().toLowerCase();
@@ -632,6 +787,13 @@ export default function App() {
               ← Inicio
             </button>
           </header>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, marginBottom: 4 }}>
+            <span>Cliente: <strong>{clienteVenta.nombre}</strong></span>
+            <button className="boton-secundario" onClick={cambiarClienteVenta} style={{ height: 32, width: 'auto', marginTop: 0, padding: '0 12px', fontSize: 12 }}>
+              Cambiar
+            </button>
+          </div>
 
           {mensaje && (
             <div className="banner-mensaje" onClick={() => setMensaje(null)}>
@@ -685,9 +847,11 @@ export default function App() {
         esAdmin={usuario.rolBase === 'administrador'}
         esInicio
         onAbrirMenu={() => setMenuAbierto(true)}
-        onNuevaVenta={() => abrirPantalla('catalogo')}
+        onNuevaVenta={iniciarNuevaVenta}
         onVerSinSincronizar={() => abrirPantalla('ventasOffline')}
         ventasPendientesCount={ventasPendientesCount}
+        onVerCotizaciones={() => abrirPantalla('cotizacionesPendientes')}
+        cotizacionesPendientesCount={cotizacionesPendientesCount}
         mensajeGlobal={mensaje}
         onCerrarMensajeGlobal={() => setMensaje(null)}
       />
@@ -723,15 +887,22 @@ export default function App() {
           cantidadYaEnCarrito={carrito
             .filter((i) => i.varianteId === varianteSeleccionada.id)
             .reduce((acc, i) => acc + i.cantidad, 0)}
+          ultimoPrecio={ultimosPrecios[varianteSeleccionada.id] ?? null}
           onAgregar={agregarAlCarrito}
           onCerrar={() => setVarianteSeleccionada(null)}
         />
       )}
 
-      {pantallaActiva === 'catalogo' && mostrarCheckout && (
+      {pantallaActiva === 'catalogo' && mostrarCheckout && clienteVenta && (
         <Checkout
           items={carrito}
+          cliente={clienteVenta}
+          onCambiarCliente={cambiarClienteVenta}
           onConfirmar={confirmarVenta}
+          onEnviarCotizacion={enviarCotizacion}
+          enviandoCotizacion={enviandoCotizacion}
+          cotizacionEnviada={cotizacionActivaId !== null}
+          mensajeCotizacion={mensajeCotizacion}
           errorServidor={errorVenta}
           onCerrar={() => {
             setMostrarCheckout(false);
@@ -742,6 +913,10 @@ export default function App() {
 
       {reciboActivo && (
         <ReciboModal datos={reciboActivo} onCerrar={() => setReciboActivo(null)} />
+      )}
+
+      {cotizacionParaCompartir && (
+        <CotizacionModal datos={cotizacionParaCompartir} onCerrar={() => setCotizacionParaCompartir(null)} />
       )}
 
       {pantallaActiva === 'catalogo' && (
