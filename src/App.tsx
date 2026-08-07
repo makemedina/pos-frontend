@@ -353,8 +353,7 @@ export default function App() {
     clienteNombre: string;
     clienteTelefono: string;
     esCredito: boolean;
-    montoPagadoAhora: number;
-    metodoPago: string;
+    pagos: { monto: number; metodoPago: string }[];
     autorizadoPorTelefono?: string;
     autorizadoPin?: string;
     motivoAutorizacion?: string;
@@ -363,6 +362,7 @@ export default function App() {
     const algunaLineaRequiereAutorizacion = carrito.some(
       (i) => i.costoLote !== null && i.precioUnitario < i.costoLote
     );
+    const montoPagadoAhora = datos.pagos.reduce((acc, p) => acc + p.monto, 0);
     try {
       // Si ya se envio una cotizacion para este carrito, confirmarla la
       // convierte en venta real (mismo FIFO/autorizacion que una venta
@@ -370,8 +370,7 @@ export default function App() {
       const resultado = cotizacionActivaId
         ? await confirmarCotizacion(cotizacionActivaId, {
             esCredito: datos.esCredito,
-            montoPagadoAhora: datos.montoPagadoAhora,
-            metodoPago: datos.metodoPago,
+            pagos: datos.pagos,
             autorizadoPorTelefono: datos.autorizadoPorTelefono,
             autorizadoPin: datos.autorizadoPin,
             motivoAutorizacion: datos.motivoAutorizacion,
@@ -396,8 +395,7 @@ export default function App() {
               };
             }),
             esCredito: datos.esCredito,
-            montoPagadoAhora: datos.montoPagadoAhora,
-            metodoPago: datos.metodoPago,
+            pagos: datos.pagos,
           });
       setMensaje(`Venta #${resultado.venta.folio} registrada. Total: $${resultado.venta.total}`);
       setCotizacionActivaId(null);
@@ -415,7 +413,7 @@ export default function App() {
           precioUnitario: i.precioUnitario,
         })),
         total: Number(resultado.venta.total),
-        metodoPago: datos.metodoPago,
+        pagos: datos.pagos,
         esCredito: datos.esCredito,
         saldoPendiente: Number(resultado.venta.saldoPendiente ?? 0),
         saldoTotalCliente: resultado.saldoTotalCliente !== undefined ? Number(resultado.saldoTotalCliente) : undefined,
@@ -473,8 +471,7 @@ export default function App() {
               precioUnitario: i.precioUnitario,
             })),
             esCredito: datos.esCredito,
-            montoPagadoAhora: datos.montoPagadoAhora,
-            metodoPago: datos.metodoPago,
+            pagos: datos.pagos,
           },
           {
             clienteNombre: datos.clienteNombre,
@@ -499,9 +496,9 @@ export default function App() {
             precioUnitario: i.precioUnitario,
           })),
           total,
-          metodoPago: datos.metodoPago,
+          pagos: datos.pagos,
           esCredito: datos.esCredito,
-          saldoPendiente: datos.esCredito ? total - datos.montoPagadoAhora : 0,
+          saldoPendiente: datos.esCredito ? total - montoPagadoAhora : 0,
         });
         setCarrito([]);
         setMostrarCheckout(false);

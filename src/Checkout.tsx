@@ -12,8 +12,7 @@ interface Props {
     clienteNombre: string;
     clienteTelefono: string;
     esCredito: boolean;
-    montoPagadoAhora: number;
-    metodoPago: string;
+    pagos: { monto: number; metodoPago: string }[];
     autorizadoPorTelefono?: string;
     autorizadoPin?: string;
     motivoAutorizacion?: string;
@@ -44,31 +43,57 @@ export function Checkout({
   const total = items.reduce((acc, i) => acc + i.cantidad * i.precioUnitario, 0);
 
   const [esCredito, setEsCredito] = useState(false);
-  const [montoPagado, setMontoPagado] = useState(total);
-  const [metodoPago, setMetodoPago] = useState('efectivo');
+  // El pago se puede repartir entre efectivo y transferencia -- ej. el
+  // cliente da $500 en efectivo y paga $300 con tarjeta/transferencia.
+  const [montoEfectivo, setMontoEfectivo] = useState(total);
+  const [montoTransferencia, setMontoTransferencia] = useState(0);
   const [autorizadoPorTelefono, setAutorizadoPorTelefono] = useState('');
   const [autorizadoPin, setAutorizadoPin] = useState('');
   const [motivoAutorizacion, setMotivoAutorizacion] = useState('');
   const [errorAutorizacion, setErrorAutorizacion] = useState<string | null>(null);
+  const [errorMontos, setErrorMontos] = useState<string | null>(null);
 
+  const montoPagado = montoEfectivo + montoTransferencia;
   const saldoPendiente = Math.max(total - montoPagado, 0);
+  const diferenciaContado = total - montoPagado;
   const requiereAutorizacion = items.some(
     (item) => item.costoLote !== null && item.precioUnitario < item.costoLote
   );
 
   useEffect(() => {
     if (!esCredito) {
-      setMontoPagado(total);
+      setMontoEfectivo(total);
+      setMontoTransferencia(0);
     }
   }, [esCredito, total]);
 
   function toggleCredito() {
     const nuevoValor = !esCredito;
     setEsCredito(nuevoValor);
-    setMontoPagado(nuevoValor ? 0 : total);
+    if (nuevoValor) {
+      setMontoEfectivo(0);
+      setMontoTransferencia(0);
+    } else {
+      setMontoEfectivo(total);
+      setMontoTransferencia(0);
+    }
   }
 
   function confirmar() {
+    setErrorMontos(null);
+
+    if (!esCredito && Math.abs(diferenciaContado) > 0.01) {
+      setErrorMontos(
+        diferenciaContado > 0
+          ? `Falta ${formatoMoneda(diferenciaContado)} para completar el total.`
+          : `El efectivo y la transferencia suman ${formatoMoneda(-diferenciaContado)} de más que el total.`
+      );
+      return;
+    }
+    if (montoPagado > total + 0.01) {
+      setErrorMontos('El monto pagado no puede ser mayor al total de la venta.');
+      return;
+    }
     if (
       requiereAutorizacion &&
       (!autorizadoPorTelefono.trim() || !autorizadoPin.trim() || !motivoAutorizacion.trim())
@@ -77,13 +102,16 @@ export function Checkout({
       return;
     }
 
+    const pagos: { monto: number; metodoPago: string }[] = [];
+    if (montoEfectivo > 0) pagos.push({ monto: montoEfectivo, metodoPago: 'efectivo' });
+    if (montoTransferencia > 0) pagos.push({ monto: montoTransferencia, metodoPago: 'transferencia' });
+
     onConfirmar({
       clienteId: cliente.id,
       clienteNombre: cliente.nombre,
       clienteTelefono: cliente.telefono,
       esCredito,
-      montoPagadoAhora: montoPagado,
-      metodoPago,
+      pagos,
       autorizadoPorTelefono: autorizadoPorTelefono.trim() || undefined,
       autorizadoPin: autorizadoPin.trim() || undefined,
       motivoAutorizacion: motivoAutorizacion.trim() || undefined,
@@ -117,21 +145,37 @@ export function Checkout({
           <button onClick={onCambiarCliente}>Cambiar</button>
         </div>
 
-        <label className="etiqueta">Metodo de pago</label>
-        <div className="opciones-metodo">
-          <button
-            className={metodoPago === 'efectivo' ? 'activo' : ''}
-            onClick={() => setMetodoPago('efectivo')}
-          >
-            Efectivo
-          </button>
-          <button
-            className={metodoPago === 'transferencia' ? 'activo' : ''}
-            onClick={() => setMetodoPago('transferencia')}
-          >
-            Transferencia
-          </button>
-        </div>
+        <label className="etiqueta">Pago (efectivo y/o transferencia)</label>
+        <label style={{ fontSize: 13 }}>
+          Efectivo
+          <div className="campo-precio">
+            <span>$</span>
+            <input
+              type="number"
+              step="0.01"
+              value={montoEfectivo}
+              onChange={(e) => {
+                setMontoEfectivo(Number(e.target.value) || 0);
+                setErrorMontos(null);
+              }}
+            />
+          </div>
+        </label>
+        <label style={{ fontSize: 13 }}>
+          Transferencia
+          <div className="campo-precio">
+            <span>$</span>
+            <input
+              type="number"
+              step="0.01"
+              value={montoTransferencia}
+              onChange={(e) => {
+                setMontoTransferencia(Number(e.target.value) || 0);
+                setErrorMontos(null);
+              }}
+            />
+          </div>
+        </label>
 
         <div className="bloque-credito">
           <div className="fila-switch">
@@ -141,23 +185,19 @@ export function Checkout({
             </button>
           </div>
 
+          <div className="linea-resumen">
+            <span>Total pagado ahora</span>
+            <strong>{formatoMoneda(montoPagado)}</strong>
+          </div>
+
           {esCredito && (
-            <>
-              <label className="etiqueta">Monto pagado ahora</label>
-              <div className="campo-precio">
-                <span>$</span>
-                <input
-                  type="number"
-                  value={montoPagado}
-                  onChange={(e) => setMontoPagado(Number(e.target.value) || 0)}
-                />
-              </div>
-              <div className="linea-resumen">
-                <span>Saldo pendiente</span>
-                <strong className="texto-alerta">{formatoMoneda(saldoPendiente)}</strong>
-              </div>
-            </>
+            <div className="linea-resumen">
+              <span>Saldo pendiente</span>
+              <strong className="texto-alerta">{formatoMoneda(saldoPendiente)}</strong>
+            </div>
           )}
+
+          {errorMontos && <div className="aviso-alerta">{errorMontos}</div>}
         </div>
 
         {requiereAutorizacion && (

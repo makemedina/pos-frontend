@@ -424,6 +424,7 @@ export interface VentaDetalle {
   cliente: { id: string; nombre: string; telefono: string };
   vendedor: { id: string; nombre: string };
   metodosPago: string[];
+  pagos: { metodoPago: string; monto: number }[];
   items: ItemVentaDetalle[];
 }
 
@@ -651,12 +652,18 @@ export interface ItemVentaPayload {
   motivoAutorizacion?: string;
 }
 
+export interface PagoInicialPayload {
+  monto: number;
+  metodoPago: string;
+}
+
 export interface CrearVentaPayload {
   clienteId: string;
   items: ItemVentaPayload[];
   esCredito: boolean;
-  montoPagadoAhora: number;
-  metodoPago?: string;
+  // El pago inicial se puede repartir entre varios metodos (ej. parte en
+  // efectivo y parte por transferencia).
+  pagos?: PagoInicialPayload[];
 }
 
 export async function registrarVenta(payload: CrearVentaPayload) {
@@ -737,8 +744,7 @@ export async function confirmarCotizacion(
   id: string,
   datos: {
     esCredito: boolean;
-    montoPagadoAhora: number;
-    metodoPago: string;
+    pagos?: PagoInicialPayload[];
     autorizadoPorTelefono?: string;
     autorizadoPin?: string;
     motivoAutorizacion?: string;

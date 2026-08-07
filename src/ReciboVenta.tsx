@@ -72,7 +72,16 @@ export function ReciboVenta({ config, datos, elementId }: Props) {
         <span>TOTAL</span>
         <span>{formatoMoneda(datos.total)}</span>
       </div>
-      {datos.metodoPago && <div style={{ marginTop: 4 }}>Método de pago: {datos.metodoPago}</div>}
+      {datos.pagos && datos.pagos.length > 0 && (
+        <div style={{ marginTop: 4 }}>
+          {datos.pagos.map((p, idx) => (
+            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span>Pagado ({p.metodoPago})</span>
+              <span>{formatoMoneda(p.monto)}</span>
+            </div>
+          ))}
+        </div>
+      )}
       {datos.esCredito && (
         <div style={{ marginTop: 4 }}>
           <div style={{ fontWeight: 700 }}>VENTA A CRÉDITO</div>

@@ -8,6 +8,11 @@ export interface ItemReciboDatos {
   precioUnitario: number;
 }
 
+export interface PagoReciboDatos {
+  metodoPago: string;
+  monto: number;
+}
+
 export interface DatosRecibo {
   folio: number | string;
   fecha: string;
@@ -15,7 +20,9 @@ export interface DatosRecibo {
   cliente?: { nombre: string; telefono: string } | null;
   items: ItemReciboDatos[];
   total: number;
-  metodoPago?: string;
+  // El pago inicial se puede repartir entre varios metodos (ej. parte en
+  // efectivo y parte por transferencia) -- se muestra cada uno por separado.
+  pagos?: PagoReciboDatos[];
   esCredito: boolean;
   saldoPendiente: number;
   // Saldo total del cliente sumando TODAS sus notas a credito (no solo
@@ -61,7 +68,13 @@ export function construirLineasRecibo(config: Configuracion, datos: DatosRecibo)
   lineas.push({ texto: lineaSeparadora(ancho) });
   lineas.push({ texto: lineaDosColumnas('TOTAL', `$${datos.total.toFixed(2)}`, ancho), negrita: true, doble: true });
 
-  if (datos.metodoPago) lineas.push({ texto: `Metodo de pago: ${datos.metodoPago}` });
+  if (datos.pagos && datos.pagos.length > 0) {
+    for (const pago of datos.pagos) {
+      lineas.push({
+        texto: lineaDosColumnas(`Pagado (${pago.metodoPago})`, `$${pago.monto.toFixed(2)}`, ancho),
+      });
+    }
+  }
   if (datos.esCredito) {
     lineas.push({ texto: 'VENTA A CREDITO', negrita: true });
     lineas.push({ texto: `Saldo pendiente (esta nota): $${datos.saldoPendiente.toFixed(2)}` });

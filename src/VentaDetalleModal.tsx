@@ -67,7 +67,15 @@ export function VentaDetalleModal({ ventaId, onCerrar, onCancelada }: Props) {
           precioUnitario: it.precioUnitario,
         })),
         total: venta.total,
-        metodoPago: venta.metodosPago.join(', ') || undefined,
+        // Un pago se pudo haber repartido entre efectivo y transferencia, o
+        // la nota pudo recibir varios abonos con el mismo metodo -- se
+        // agrupa por metodo para no repetir renglones.
+        pagos: Object.entries(
+          venta.pagos.reduce<Record<string, number>>((acc, p) => {
+            acc[p.metodoPago] = (acc[p.metodoPago] || 0) + p.monto;
+            return acc;
+          }, {})
+        ).map(([metodoPago, monto]) => ({ metodoPago, monto })),
         esCredito: venta.esCredito,
         saldoPendiente: venta.saldoPendiente,
       }

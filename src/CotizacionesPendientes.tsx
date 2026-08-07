@@ -26,14 +26,15 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
   const [cargandoDetalle, setCargandoDetalle] = useState(false);
 
   const [esCredito, setEsCredito] = useState(false);
-  const [montoPagado, setMontoPagado] = useState(0);
-  const [metodoPago, setMetodoPago] = useState('efectivo');
+  const [montoEfectivo, setMontoEfectivo] = useState(0);
+  const [montoTransferencia, setMontoTransferencia] = useState(0);
   const [necesitaAutorizacion, setNecesitaAutorizacion] = useState(false);
   const [autorizadoPorTelefono, setAutorizadoPorTelefono] = useState('');
   const [autorizadoPin, setAutorizadoPin] = useState('');
   const [motivoAutorizacion, setMotivoAutorizacion] = useState('');
   const [confirmando, setConfirmando] = useState(false);
   const [confirmandoCancelar, setConfirmandoCancelar] = useState(false);
+  const [errorMontos, setErrorMontos] = useState<string | null>(null);
 
   useEffect(() => {
     cargar();
@@ -56,13 +57,14 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
     setAutorizadoPorTelefono('');
     setAutorizadoPin('');
     setMotivoAutorizacion('');
-    setMetodoPago('efectivo');
     setEsCredito(false);
     setConfirmandoCancelar(false);
+    setErrorMontos(null);
     try {
       const d = await obtenerCotizacion(id);
       setDetalle(d);
-      setMontoPagado(d.total);
+      setMontoEfectivo(d.total);
+      setMontoTransferencia(0);
     } catch {
       setMensaje('No se pudo cargar esta cotización.');
     } finally {
@@ -79,18 +81,44 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
     if (!detalle) return;
     const nuevoValor = !esCredito;
     setEsCredito(nuevoValor);
-    setMontoPagado(nuevoValor ? 0 : detalle.total);
+    if (nuevoValor) {
+      setMontoEfectivo(0);
+      setMontoTransferencia(0);
+    } else {
+      setMontoEfectivo(detalle.total);
+      setMontoTransferencia(0);
+    }
   }
 
   async function confirmar() {
     if (!detalle) return;
+    setErrorMontos(null);
+    const montoPagado = montoEfectivo + montoTransferencia;
+    const diferenciaContado = detalle.total - montoPagado;
+
+    if (!esCredito && Math.abs(diferenciaContado) > 0.01) {
+      setErrorMontos(
+        diferenciaContado > 0
+          ? `Falta ${formatoMoneda(diferenciaContado)} para completar el total.`
+          : `El efectivo y la transferencia suman ${formatoMoneda(-diferenciaContado)} de más que el total.`
+      );
+      return;
+    }
+    if (montoPagado > detalle.total + 0.01) {
+      setErrorMontos('El monto pagado no puede ser mayor al total de la venta.');
+      return;
+    }
+
+    const pagos: { monto: number; metodoPago: string }[] = [];
+    if (montoEfectivo > 0) pagos.push({ monto: montoEfectivo, metodoPago: 'efectivo' });
+    if (montoTransferencia > 0) pagos.push({ monto: montoTransferencia, metodoPago: 'transferencia' });
+
     setConfirmando(true);
     setMensaje(null);
     try {
       const resultado = await confirmarCotizacion(detalle.id, {
         esCredito,
-        montoPagadoAhora: montoPagado,
-        metodoPago,
+        pagos,
         autorizadoPorTelefono: autorizadoPorTelefono.trim() || undefined,
         autorizadoPin: autorizadoPin.trim() || undefined,
         motivoAutorizacion: motivoAutorizacion.trim() || undefined,
@@ -107,7 +135,7 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
           precioUnitario: i.precioUnitario,
         })),
         total: Number(resultado.venta.total),
-        metodoPago,
+        pagos,
         esCredito,
         saldoPendiente: Number(resultado.venta.saldoPendiente ?? 0),
         saldoTotalCliente: resultado.saldoTotalCliente !== undefined ? Number(resultado.saldoTotalCliente) : undefined,
@@ -148,7 +176,8 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
     }
   }
 
-  const saldoPendiente = detalle ? Math.max(detalle.total - montoPagado, 0) : 0;
+  const montoPagadoTotal = montoEfectivo + montoTransferencia;
+  const saldoPendiente = detalle ? Math.max(detalle.total - montoPagadoTotal, 0) : 0;
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
@@ -214,15 +243,37 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
             <div style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
               <h3 style={{ margin: 0 }}>Confirmar como venta</h3>
 
-              <label className="etiqueta">Metodo de pago</label>
-              <div className="opciones-metodo">
-                <button className={metodoPago === 'efectivo' ? 'activo' : ''} onClick={() => setMetodoPago('efectivo')}>
-                  Efectivo
-                </button>
-                <button className={metodoPago === 'transferencia' ? 'activo' : ''} onClick={() => setMetodoPago('transferencia')}>
-                  Transferencia
-                </button>
-              </div>
+              <label className="etiqueta">Pago (efectivo y/o transferencia)</label>
+              <label style={{ fontSize: 13 }}>
+                Efectivo
+                <div className="campo-precio">
+                  <span>$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={montoEfectivo}
+                    onChange={(e) => {
+                      setMontoEfectivo(Number(e.target.value) || 0);
+                      setErrorMontos(null);
+                    }}
+                  />
+                </div>
+              </label>
+              <label style={{ fontSize: 13 }}>
+                Transferencia
+                <div className="campo-precio">
+                  <span>$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={montoTransferencia}
+                    onChange={(e) => {
+                      setMontoTransferencia(Number(e.target.value) || 0);
+                      setErrorMontos(null);
+                    }}
+                  />
+                </div>
+              </label>
 
               <div className="bloque-credito">
                 <div className="fila-switch">
@@ -232,23 +283,19 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
                   </button>
                 </div>
 
+                <div className="linea-resumen">
+                  <span>Total pagado ahora</span>
+                  <strong>{formatoMoneda(montoPagadoTotal)}</strong>
+                </div>
+
                 {esCredito && (
-                  <>
-                    <label className="etiqueta">Monto pagado ahora</label>
-                    <div className="campo-precio">
-                      <span>$</span>
-                      <input
-                        type="number"
-                        value={montoPagado}
-                        onChange={(e) => setMontoPagado(Number(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="linea-resumen">
-                      <span>Saldo pendiente</span>
-                      <strong className="texto-alerta">{formatoMoneda(saldoPendiente)}</strong>
-                    </div>
-                  </>
+                  <div className="linea-resumen">
+                    <span>Saldo pendiente</span>
+                    <strong className="texto-alerta">{formatoMoneda(saldoPendiente)}</strong>
+                  </div>
                 )}
+
+                {errorMontos && <div className="aviso-alerta">{errorMontos}</div>}
               </div>
 
               {necesitaAutorizacion && (
