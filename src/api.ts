@@ -356,6 +356,19 @@ export async function actualizarCliente(
   return res.json();
 }
 
+// Solo administradores. Si el cliente tiene ventas, cotizaciones o saldo
+// inicial de cartera, el backend rechaza con 409 y code TIENE_INFORMACION_LIGADA.
+export async function eliminarCliente(id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/clientes/${id}`, {
+    method: 'DELETE',
+    headers: headerAuth(),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw { ...data, status: res.status };
+  }
+}
+
 export interface ItemVentaCliente {
   producto: string;
   productoId: string;
@@ -530,6 +543,19 @@ export async function actualizarProveedor(
     throw new Error(data.error || 'No se pudo actualizar el proveedor');
   }
   return res.json();
+}
+
+// Solo administradores. Si el proveedor tiene compras o gastos, el
+// backend rechaza con 409 y code TIENE_INFORMACION_LIGADA.
+export async function eliminarProveedor(id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/proveedores/${id}`, {
+    method: 'DELETE',
+    headers: headerAuth(),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw { ...data, status: res.status };
+  }
 }
 
 export async function importarProveedores(nombres: string[]): Promise<{ creados: number }> {

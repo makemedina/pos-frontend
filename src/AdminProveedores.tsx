@@ -3,14 +3,16 @@ import {
   obtenerProveedoresTodos,
   crearProveedorRapido,
   actualizarProveedor,
+  eliminarProveedor,
   type Proveedor,
 } from './api';
 
 interface Props {
   onCerrar: () => void;
+  esAdmin?: boolean;
 }
 
-export function AdminProveedores({ onCerrar }: Props) {
+export function AdminProveedores({ onCerrar, esAdmin }: Props) {
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -23,6 +25,9 @@ export function AdminProveedores({ onCerrar }: Props) {
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [nombreEdicion, setNombreEdicion] = useState('');
   const [telefonoEdicion, setTelefonoEdicion] = useState('');
+
+  const [confirmandoEliminarId, setConfirmandoEliminarId] = useState<string | null>(null);
+  const [eliminando, setEliminando] = useState(false);
 
   useEffect(() => {
     cargar();
@@ -66,6 +71,21 @@ export function AdminProveedores({ onCerrar }: Props) {
       cargar();
     } catch (err: any) {
       setMensaje(err.message || 'No se pudo actualizar el proveedor.');
+    }
+  }
+
+  async function confirmarEliminar(id: string, nombre: string) {
+    setEliminando(true);
+    try {
+      await eliminarProveedor(id);
+      setMensaje(`Proveedor "${nombre}" eliminado.`);
+      setConfirmandoEliminarId(null);
+      cargar();
+    } catch (err: any) {
+      setMensaje(err.error || 'No se pudo eliminar el proveedor.');
+      setConfirmandoEliminarId(null);
+    } finally {
+      setEliminando(false);
     }
   }
 
@@ -132,7 +152,33 @@ export function AdminProveedores({ onCerrar }: Props) {
                       <strong>{p.nombre}</strong>
                       <div style={{ fontSize: 13, color: '#6b7280' }}>{p.telefono || 'Sin teléfono'}</div>
                     </div>
-                    <button onClick={() => empezarEdicion(p)}>Editar</button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => empezarEdicion(p)}>Editar</button>
+                      {esAdmin && (
+                        <button
+                          onClick={() => setConfirmandoEliminarId(p.id)}
+                          style={{ background: '#fff2f1', color: '#b91c1c' }}
+                        >
+                          Eliminar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {confirmandoEliminarId === p.id && (
+                  <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
+                    <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                      ¿Seguro que quieres eliminar a "{p.nombre}"? No se puede deshacer.
+                    </p>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <button onClick={() => confirmarEliminar(p.id, p.nombre)} disabled={eliminando} style={{ flex: 1 }}>
+                        {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
+                      </button>
+                      <button onClick={() => setConfirmandoEliminarId(null)} style={{ flex: 1 }}>
+                        No, regresar
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

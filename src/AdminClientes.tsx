@@ -6,6 +6,7 @@ import {
   crearClienteCompleto,
   importarClientes,
   actualizarCliente,
+  eliminarCliente,
   obtenerVentasDeCliente,
   obtenerMovimientosDeCliente,
   type ClienteConSaldo,
@@ -49,6 +50,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [editDireccion, setEditDireccion] = useState('');
   const [editPermiteCredito, setEditPermiteCredito] = useState(true);
   const [guardando, setGuardando] = useState(false);
+  const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
 
   // Transacciones
   const [ventas, setVentas] = useState<VentaDeCliente[]>([]);
@@ -126,6 +129,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
     setPestana('datos');
     setVentas([]);
     setMovimientos([]);
+    setConfirmandoEliminar(false);
     try {
       const data = await obtenerClienteDetalle(id);
       setCliente(data);
@@ -169,6 +173,22 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       setMensaje('No se pudo guardar.');
     } finally {
       setGuardando(false);
+    }
+  }
+
+  async function confirmarEliminarCliente() {
+    if (!clienteId) return;
+    setEliminando(true);
+    try {
+      await eliminarCliente(clienteId);
+      setConfirmandoEliminar(false);
+      volverALista();
+      setMensaje('Cliente eliminado.');
+    } catch (err: any) {
+      setMensaje(err.error || 'No se pudo eliminar el cliente.');
+      setConfirmandoEliminar(false);
+    } finally {
+      setEliminando(false);
     }
   }
 
@@ -387,6 +407,31 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 <button onClick={guardarDatosGenerales} disabled={guardando}>
                   {guardando ? 'Guardando...' : 'Guardar cambios'}
                 </button>
+
+                {esAdmin && !confirmandoEliminar && (
+                  <button
+                    onClick={() => setConfirmandoEliminar(true)}
+                    style={{ background: '#fff2f1', color: '#b91c1c' }}
+                  >
+                    Eliminar cliente
+                  </button>
+                )}
+
+                {confirmandoEliminar && (
+                  <div className="bloque-autorizacion">
+                    <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                      ¿Seguro que quieres eliminar a "{cliente.nombre}"? No se puede deshacer.
+                    </p>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <button onClick={confirmarEliminarCliente} disabled={eliminando} style={{ flex: 1 }}>
+                        {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
+                      </button>
+                      <button onClick={() => setConfirmandoEliminar(false)} style={{ flex: 1 }}>
+                        No, regresar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

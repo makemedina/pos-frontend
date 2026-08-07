@@ -666,7 +666,12 @@ export default function App() {
       return <AdminFacturasPendientes onCerrar={() => abrirPantalla('cuentasPorPagarMenu')} />;
     }
     if (pantallaActiva === 'proveedores') {
-      return <AdminProveedores onCerrar={() => abrirPantalla('comprasMenu')} />;
+      return (
+        <AdminProveedores
+          onCerrar={() => abrirPantalla('comprasMenu')}
+          esAdmin={usuario.rolBase === 'administrador'}
+        />
+      );
     }
     if (pantallaActiva === 'historialCompras') {
       return <AdminHistorialCompras onCerrar={() => abrirPantalla('comprasMenu')} />;
