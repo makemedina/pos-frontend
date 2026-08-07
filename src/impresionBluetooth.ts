@@ -101,6 +101,20 @@ export async function conectarImpresora(): Promise<string> {
       dispositivo = dev;
       caracteristica = char;
       perfilConectado = perfil;
+
+      // Si la impresora se desconecta sola (se apago, se alejo, se le
+      // acabo la pila, o simplemente truena la conexion BLE a media
+      // impresion -- comun en impresoras baratas), hay que darnos cuenta:
+      // sin este listener, impresoraConectada() seguia diciendo que si
+      // aunque escribirle ya fallaba siempre con "GATT Server is
+      // disconnected", y el boton de imprimir nunca volvia a intentar
+      // reconectar solo.
+      dev.addEventListener('gattserverdisconnected', () => {
+        dispositivo = null;
+        caracteristica = null;
+        perfilConectado = null;
+      });
+
       return dev.name ?? 'Impresora';
     } catch (err) {
       ultimoError = err;
@@ -218,8 +232,11 @@ function anchoPuntos(anchoPapelMm: number) {
 }
 
 // Altura maxima del logo impreso, para que un logo con proporciones raras
-// (muy alto) no imprima medio metro de papel en blanco.
-const ALTO_MAXIMO_LOGO_PUNTOS = 220;
+// (muy alto) no imprima medio metro de papel en blanco. Tambien acota
+// cuantos bytes hay que mandarle a la impresora: entre mas grande el
+// logo, mas tarda el envio por Bluetooth y mas facil se desconecta a
+// media impresion una impresora barata con poco buffer.
+const ALTO_MAXIMO_LOGO_PUNTOS = 120;
 
 /**
  * Convierte el logo (base64, el mismo que se ve en Configuracion) a un
@@ -297,21 +314,31 @@ export async function imprimirLineas(
   logo?: { base64: string; anchoPapelMm: number }
 ) {
   const bytesTexto = construirBytes(lineas);
-  let bytes = bytesTexto;
 
   if (logo) {
     try {
       const bytesImg = await bytesLogoImpresora(logo.base64, logo.anchoPapelMm);
-      bytes = new Uint8Array([...cmdInicio(), ...bytesImg, ...saltos(1), ...bytesTexto]);
+      const bytesConLogo = new Uint8Array([...cmdInicio(), ...bytesImg, ...saltos(1), ...bytesTexto]);
+      for (let i = 0; i < veces; i++) {
+        await enviarBytes(bytesConLogo);
+      }
+      return;
     } catch {
-      // Si el logo falla (imagen invalida, canvas no disponible, etc.) se
-      // imprime el recibo solo con texto -- mejor eso que no imprimir nada.
-      bytes = bytesTexto;
+      // El logo (generarlo O mandarlo por Bluetooth) fallo -- puede ser
+      // una imagen invalida, o que la impresora se desconecto a media
+      // impresion del bitmap (el logo pesa mucho mas que el puro texto,
+      // y eso es justo lo que mas tardan/fallan las impresoras BLE
+      // baratas con poco buffer). Se reintenta solo con texto: mejor un
+      // recibo sin logo que ningun recibo. Si la impresora se desconecto
+      // de verdad, este reintento tambien va a fallar (con un mensaje
+      // claro de "no hay impresora conectada") -- reconectar necesita un
+      // click nuevo del usuario (Web Bluetooth exige gesto directo para
+      // eso), asi que no se intenta aqui adentro.
     }
   }
 
   for (let i = 0; i < veces; i++) {
-    await enviarBytes(bytes);
+    await enviarBytes(bytesTexto);
   }
 }
 
