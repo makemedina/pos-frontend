@@ -40,7 +40,11 @@ export function Checkout({
   onCerrar,
   errorServidor,
 }: Props) {
-  const total = items.reduce((acc, i) => acc + i.cantidad * i.precioUnitario, 0);
+  // Redondeado a centavos: sumar cantidad*precio en punto flotante puede
+  // dar ruido tipo 136.01000000000002 (mas facil de ver ahora que la
+  // cantidad admite hasta 3 decimales), y este total precarga el campo
+  // de efectivo, asi que se veria tal cual en la pantalla.
+  const total = Math.round(items.reduce((acc, i) => acc + i.cantidad * i.precioUnitario, 0) * 100) / 100;
 
   const [esCredito, setEsCredito] = useState(false);
   // El pago se puede repartir entre efectivo y transferencia -- ej. el

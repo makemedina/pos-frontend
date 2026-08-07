@@ -1,4 +1,4 @@
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoKg } from './formato';
 
 export interface ItemCarrito {
   varianteId: string;
@@ -28,7 +28,7 @@ export function Carrito({ items, onCobrar, onEliminar }: Props) {
             <div>
               <strong>{item.producto}</strong>
               <div className="detalle-pequenio">
-                {item.marca} · {item.cantidad.toFixed(1)} kg · {formatoMoneda(item.precioUnitario)}
+                {item.marca} · {formatoKg(item.cantidad)} kg · {formatoMoneda(item.precioUnitario)}
               </div>
             </div>
             <button className="boton-quitar" onClick={() => onEliminar(index)}>

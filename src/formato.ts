@@ -7,3 +7,13 @@ export function formatoMoneda(valor: number | null | undefined): string {
   const numero = typeof valor === 'number' && Number.isFinite(valor) ? valor : 0;
   return `$${numero.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
+
+// Formatea una cantidad en kg respetando hasta 3 decimales (la precision
+// real que se guarda en la base de datos), sin ceros de mas al final
+// (3 -> "3", 3.5 -> "3.5", 3.456 -> "3.456"). Antes varias pantallas
+// usaban .toFixed(1) para mostrar el peso, lo que hacia parecer que el
+// sistema redondeaba lo capturado aunque el dato guardado fuera exacto.
+export function formatoKg(cantidad: number | null | undefined): string {
+  const numero = typeof cantidad === 'number' && Number.isFinite(cantidad) ? cantidad : 0;
+  return (Math.round(numero * 1000) / 1000).toString();
+}

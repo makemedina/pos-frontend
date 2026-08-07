@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoKg } from './formato';
 import {
   obtenerMovimientosInventario,
   buscarProductos,
@@ -182,22 +182,22 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Entradas</strong>
-                  <div>{resumen.entradasKg.toFixed(1)} kg</div>
+                  <div>{formatoKg(resumen.entradasKg)} kg</div>
                   <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.entradasValor)}</div>
                 </div>
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Salidas</strong>
-                  <div>{resumen.salidasKg.toFixed(1)} kg</div>
+                  <div>{formatoKg(resumen.salidasKg)} kg</div>
                   <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.salidasValor)}</div>
                 </div>
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Merma</strong>
-                  <div>{resumen.mermaKg.toFixed(1)} kg</div>
+                  <div>{formatoKg(resumen.mermaKg)} kg</div>
                   <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.mermaValor)}</div>
                 </div>
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Corrección neta</strong>
-                  <div>{resumen.correccionNetaKg.toFixed(1)} kg</div>
+                  <div>{formatoKg(resumen.correccionNetaKg)} kg</div>
                   <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.correccionNetaValor)}</div>
                 </div>
               </div>
@@ -222,7 +222,7 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? '#16a34a' : '#b91c1c' }}>
-                        {m.cantidad >= 0 ? '+' : ''}{m.cantidad.toFixed(1)} kg
+                        {m.cantidad >= 0 ? '+' : ''}{formatoKg(m.cantidad)} kg
                       </div>
                       <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoMoneda(m.valor)}</div>
                     </div>

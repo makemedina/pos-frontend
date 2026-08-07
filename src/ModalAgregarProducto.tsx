@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoKg } from './formato';
 import type { VarianteCatalogo } from './api';
 import type { ItemCarrito } from './Carrito';
 
@@ -22,7 +22,11 @@ export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, ultimoPrec
   const subtotal = cantidad * precio;
 
   function ajustarCantidad(nueva: number) {
-    setCantidad(Math.max(0.1, +nueva.toFixed(1)));
+    // Redondea a 3 decimales (la precision real que se guarda) solo para
+    // limpiar el ruido de punto flotante de sumar/restar 0.1 repetidas
+    // veces (ej. 0.1+0.1+0.1 = 0.30000000000000004) -- NO a 1 decimal,
+    // que borraria un valor capturado a mano con mas precision.
+    setCantidad(Math.max(0.001, Math.round(nueva * 1000) / 1000));
   }
 
   function agregar() {
@@ -50,8 +54,8 @@ export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, ultimoPrec
         </div>
 
         <p style={{ fontSize: 13, color: '#6b7280' }}>
-          Disponible: <strong>{disponibleReal.toFixed(1)} kg</strong>
-          {cantidadYaEnCarrito > 0 && ` (ya tienes ${cantidadYaEnCarrito.toFixed(1)} kg de este producto en la nota)`}
+          Disponible: <strong>{formatoKg(disponibleReal)} kg</strong>
+          {cantidadYaEnCarrito > 0 && ` (ya tienes ${formatoKg(cantidadYaEnCarrito)} kg de este producto en la nota)`}
         </p>
 
         {disponibleReal <= 0 ? (
@@ -63,7 +67,7 @@ export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, ultimoPrec
               <button onClick={() => ajustarCantidad(cantidad - 0.1)}>−</button>
               <input
                 type="number"
-                step="0.1"
+                step="0.001"
                 value={cantidad}
                 onChange={(e) => setCantidad(Number(e.target.value))}
               />
@@ -72,7 +76,7 @@ export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, ultimoPrec
 
             {excedeStock && (
               <div className="aviso-alerta">
-                Solo hay {disponibleReal.toFixed(1)} kg disponibles de este producto.
+                Solo hay {formatoKg(disponibleReal)} kg disponibles de este producto.
               </div>
             )}
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoKg } from './formato';
 import {
   obtenerProductosGestion,
   obtenerHistorialVariante,
@@ -137,11 +137,11 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                       {p.pocoStock && <span style={{ color: '#b91c1c', fontSize: 12 }}> · poco stock</span>}
                       {p.lotes.map((l, i) => (
                         <div key={i} style={{ fontSize: 12, color: '#6b7280' }}>
-                          {l.cantidadDisponible.toFixed(1)} kg a {formatoMoneda(l.costoUnitario)}/kg
+                          {formatoKg(l.cantidadDisponible)} kg a {formatoMoneda(l.costoUnitario)}/kg
                         </div>
                       ))}
                     </div>
-                    <div style={{ fontWeight: 700 }}>{p.stockDisponible.toFixed(1)} kg</div>
+                    <div style={{ fontWeight: 700 }}>{formatoKg(p.stockDisponible)} kg</div>
                   </div>
                 ))}
               </div>
@@ -154,14 +154,14 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
               <div>
-                <div>Stock disponible: <strong>{productoElegido.stockDisponible.toFixed(1)} kg</strong></div>
+                <div>Stock disponible: <strong>{formatoKg(productoElegido.stockDisponible)} kg</strong></div>
                 <div style={{ fontSize: 13, color: '#6b7280' }}>Precio de venta: {formatoMoneda(productoElegido.precioVenta)}/kg</div>
                 {productoElegido.lotes.length > 0 && (
                   <div style={{ marginTop: 4 }}>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>Lotes en stock (costo de compra):</div>
                     {productoElegido.lotes.map((l, i) => (
                       <div key={i} style={{ fontSize: 13, color: '#6b7280' }}>
-                        {l.cantidadDisponible.toFixed(1)} kg a {formatoMoneda(l.costoUnitario)}/kg · ingresó {new Date(l.fechaIngreso).toLocaleDateString()}
+                        {formatoKg(l.cantidadDisponible)} kg a {formatoMoneda(l.costoUnitario)}/kg · ingresó {new Date(l.fechaIngreso).toLocaleDateString()}
                       </div>
                     ))}
                   </div>
@@ -206,7 +206,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? '#16a34a' : '#b91c1c' }}>
-                          {m.cantidad >= 0 ? '+' : ''}{m.cantidad.toFixed(1)} kg
+                          {m.cantidad >= 0 ? '+' : ''}{formatoKg(m.cantidad)} kg
                         </div>
                         {clickeable && <div style={{ fontSize: 11, color: '#007aff' }}>Ver detalle →</div>}
                       </div>
