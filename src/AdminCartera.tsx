@@ -8,6 +8,7 @@ import {
   obtenerPagosDeNota,
   registrarPagoVenta,
   registrarPagoMultiNota,
+  cancelarPagoVenta,
   type ClienteCartera,
   type NotaCartera,
   type PagoNota,
@@ -46,6 +47,13 @@ export function AdminCartera({ onCerrar }: Props) {
   const [pagos, setPagos] = useState<PagoNota[]>([]);
   const [monto, setMonto] = useState('');
   const [metodoPago, setMetodoPago] = useState('efectivo');
+
+  // Cancelar un pago ya registrado
+  const [confirmandoCancelarPagoId, setConfirmandoCancelarPagoId] = useState<string | null>(null);
+  const [necesitaAutorizacionPago, setNecesitaAutorizacionPago] = useState(false);
+  const [autorizadoPorTelefonoPago, setAutorizadoPorTelefonoPago] = useState('');
+  const [autorizadoPinPago, setAutorizadoPinPago] = useState('');
+  const [cancelandoPago, setCancelandoPago] = useState(false);
 
   useEffect(() => {
     cargarClientes();
@@ -102,6 +110,7 @@ export function AdminCartera({ onCerrar }: Props) {
     setNotaElegida(n);
     setMonto('');
     setMostrarPagoMultiple(false);
+    setConfirmandoCancelarPagoId(null);
     setNivel('pagos');
     setCargando(true);
     try {
@@ -228,6 +237,52 @@ export function AdminCartera({ onCerrar }: Props) {
       } else {
         setMensaje('No se pudo registrar el pago.');
       }
+    }
+  }
+
+  function pedirCancelarPago(pagoId: string) {
+    setConfirmandoCancelarPagoId(pagoId);
+    setNecesitaAutorizacionPago(false);
+    setAutorizadoPorTelefonoPago('');
+    setAutorizadoPinPago('');
+  }
+
+  async function confirmarCancelarPago(pagoId: string) {
+    if (!notaElegida || !clienteElegido) return;
+    setCancelandoPago(true);
+    try {
+      await cancelarPagoVenta(
+        notaElegida.id,
+        pagoId,
+        necesitaAutorizacionPago
+          ? { telefono: autorizadoPorTelefonoPago, pin: autorizadoPinPago }
+          : undefined
+      );
+      setMensaje('Pago cancelado.');
+      setConfirmandoCancelarPagoId(null);
+      setNecesitaAutorizacionPago(false);
+      setAutorizadoPorTelefonoPago('');
+      setAutorizadoPinPago('');
+      const [notaData, pagosData] = await Promise.all([
+        obtenerNotasCliente(clienteElegido.id, verPagadas),
+        obtenerPagosDeNota(notaElegida.id),
+      ]);
+      const notaActualizada = notaData.find((n) => n.id === notaElegida.id) ?? null;
+      setNotaElegida(notaActualizada);
+      setNotas(notaData);
+      setPagos(pagosData);
+    } catch (err: any) {
+      if (err.code === 'REQUIERE_AUTORIZACION') {
+        setNecesitaAutorizacionPago(true);
+        setMensaje('Este pago es de un día anterior: se necesita el teléfono y PIN de un administrador para cancelarlo.');
+      } else if (err.code === 'PAGO_YA_CANCELADO') {
+        setMensaje('Este pago ya estaba cancelado.');
+        setConfirmandoCancelarPagoId(null);
+      } else {
+        setMensaje('No se pudo cancelar el pago.');
+      }
+    } finally {
+      setCancelandoPago(false);
     }
   }
 
@@ -466,13 +521,60 @@ export function AdminCartera({ onCerrar }: Props) {
             <div style={{ display: 'grid', gap: '0.5rem' }}>
               {pagos.length === 0 && <p style={{ color: '#6b7280' }}>Aun no se ha registrado ningun pago.</p>}
               {pagos.map((p) => (
-                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
-                  <span>
-                    {new Date(p.fecha).toLocaleString()} · {p.metodoPago}
-                    <br />
-                    <small style={{ color: '#6b7280' }}>Registro: {p.registradoPor.nombre}</small>
-                  </span>
-                  <strong>{formatoMoneda(p.monto)}</strong>
+                <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>
+                      {new Date(p.fecha).toLocaleString()} · {p.metodoPago}
+                      <br />
+                      <small style={{ color: '#6b7280' }}>Registro: {p.registradoPor.nombre}</small>
+                    </span>
+                    <strong style={p.cancelado ? { textDecoration: 'line-through', color: '#9ca3af' } : undefined}>
+                      {formatoMoneda(p.monto)}
+                    </strong>
+                  </div>
+
+                  {p.cancelado ? (
+                    <div className="aviso-alerta" style={{ marginTop: 6 }}>
+                      ❌ Cancelado{p.canceladoEn ? ` el ${new Date(p.canceladoEn).toLocaleString()}` : ''}
+                    </div>
+                  ) : confirmandoCancelarPagoId === p.id ? (
+                    <div className="bloque-autorizacion" style={{ marginTop: 6 }}>
+                      <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                        ¿Seguro que quieres cancelar este pago? No se puede deshacer.
+                      </p>
+                      {necesitaAutorizacionPago && (
+                        <>
+                          <input
+                            placeholder="Teléfono del administrador"
+                            value={autorizadoPorTelefonoPago}
+                            onChange={(e) => setAutorizadoPorTelefonoPago(e.target.value)}
+                          />
+                          <input
+                            placeholder="PIN"
+                            type="password"
+                            value={autorizadoPinPago}
+                            onChange={(e) => setAutorizadoPinPago(e.target.value)}
+                          />
+                        </>
+                      )}
+                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        <button onClick={() => confirmarCancelarPago(p.id)} disabled={cancelandoPago} style={{ flex: 1 }}>
+                          {cancelandoPago ? 'Cancelando...' : 'Sí, cancelar'}
+                        </button>
+                        <button onClick={() => setConfirmandoCancelarPagoId(null)} style={{ flex: 1 }}>
+                          No, regresar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      className="boton-secundario"
+                      onClick={() => pedirCancelarPago(p.id)}
+                      style={{ marginTop: 6, width: '100%', background: '#fff2f1', color: '#b91c1c' }}
+                    >
+                      🗑️ Cancelar pago
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

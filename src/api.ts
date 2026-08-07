@@ -1217,6 +1217,8 @@ export interface PagoNota {
   monto: number;
   metodoPago: string;
   fecha: string;
+  cancelado: boolean;
+  canceladoEn: string | null;
   registradoPor: { nombre: string };
 }
 
@@ -1255,6 +1257,21 @@ export async function registrarPagoVenta(ventaId: string, monto: number, metodoP
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
     body: JSON.stringify({ monto, metodoPago }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}
+
+export async function cancelarPagoVenta(
+  ventaId: string,
+  pagoId: string,
+  autorizacion?: { telefono: string; pin: string }
+) {
+  const res = await fetch(`${API_URL}/ventas/${ventaId}/pagos/${pagoId}/cancelar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(autorizacion ?? {}),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw { ...data, status: res.status };
