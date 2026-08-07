@@ -209,8 +209,107 @@ async function enviarBytes(bytes: Uint8Array) {
   }
 }
 
-export async function imprimirLineas(lineas: LineaRecibo[], veces = 1) {
-  const bytes = construirBytes(lineas);
+// Ancho de impresion en puntos (dots) segun el tamano de papel -- estandar
+// casi universal en impresoras termicas ESC/POS baratas (203dpi): 384
+// puntos para 58mm, 576 para 80mm. No confundir con anchoCaracteres(), que
+// es para TEXTO (columnas), esto es para la imagen (pixeles).
+function anchoPuntos(anchoPapelMm: number) {
+  return anchoPapelMm === 80 ? 576 : 384;
+}
+
+// Altura maxima del logo impreso, para que un logo con proporciones raras
+// (muy alto) no imprima medio metro de papel en blanco.
+const ALTO_MAXIMO_LOGO_PUNTOS = 220;
+
+/**
+ * Convierte el logo (base64, el mismo que se ve en Configuracion) a un
+ * bitmap blanco/negro y arma el comando ESC/POS para imprimirlo (GS v 0,
+ * "print raster bit image"). Se hace con un <canvas> oculto: se dibuja el
+ * logo centrado sobre fondo blanco del ancho exacto del papel, y cada
+ * pixel se vuelve 1 bit (negro si es oscuro u opaco, blanco si no).
+ */
+async function bytesLogoImpresora(logoBase64: string, anchoPapelMm: number): Promise<number[]> {
+  const anchoDots = anchoPuntos(anchoPapelMm);
+
+  const img = await conTiempoLimite(
+    new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('No se pudo leer la imagen del logo.'));
+      el.src = logoBase64;
+    }),
+    8000,
+    'El logo tardó demasiado en cargar.'
+  );
+
+  let dibujoAncho = anchoDots;
+  let dibujoAlto = Math.round((img.height / img.width) * dibujoAncho) || 1;
+  if (dibujoAlto > ALTO_MAXIMO_LOGO_PUNTOS) {
+    dibujoAlto = ALTO_MAXIMO_LOGO_PUNTOS;
+    dibujoAncho = Math.round((img.width / img.height) * dibujoAlto) || 1;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = anchoDots;
+  canvas.height = dibujoAlto;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('No se pudo preparar el logo para imprimir.');
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const offsetX = Math.round((anchoDots - dibujoAncho) / 2);
+  ctx.drawImage(img, offsetX, 0, dibujoAncho, dibujoAlto);
+
+  const { data } = ctx.getImageData(0, 0, anchoDots, dibujoAlto);
+  const bytesPorFila = Math.ceil(anchoDots / 8);
+  const bitmap = new Uint8Array(bytesPorFila * dibujoAlto);
+
+  for (let y = 0; y < dibujoAlto; y++) {
+    for (let x = 0; x < anchoDots; x++) {
+      const idx = (y * anchoDots + x) * 4;
+      const gris = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
+      const alpha = data[idx + 3];
+      const esNegro = alpha > 10 && gris < 200;
+      if (esNegro) {
+        const byteIndex = y * bytesPorFila + (x >> 3);
+        bitmap[byteIndex] |= 0x80 >> x % 8;
+      }
+    }
+  }
+
+  // GS v 0: m xL xH yL yH d1...dk -- m=0 (normal), x/y en little-endian.
+  return [
+    GS,
+    0x76,
+    0x30,
+    0x00,
+    bytesPorFila & 0xff,
+    (bytesPorFila >> 8) & 0xff,
+    dibujoAlto & 0xff,
+    (dibujoAlto >> 8) & 0xff,
+    ...Array.from(bitmap),
+  ];
+}
+
+export async function imprimirLineas(
+  lineas: LineaRecibo[],
+  veces = 1,
+  logo?: { base64: string; anchoPapelMm: number }
+) {
+  const bytesTexto = construirBytes(lineas);
+  let bytes = bytesTexto;
+
+  if (logo) {
+    try {
+      const bytesImg = await bytesLogoImpresora(logo.base64, logo.anchoPapelMm);
+      bytes = new Uint8Array([...cmdInicio(), ...bytesImg, ...saltos(1), ...bytesTexto]);
+    } catch {
+      // Si el logo falla (imagen invalida, canvas no disponible, etc.) se
+      // imprime el recibo solo con texto -- mejor eso que no imprimir nada.
+      bytes = bytesTexto;
+    }
+  }
+
   for (let i = 0; i < veces; i++) {
     await enviarBytes(bytes);
   }
