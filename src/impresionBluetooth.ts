@@ -1,16 +1,33 @@
 // Utilidades para imprimir el recibo en una impresora termica Bluetooth
-// usando el protocolo ESC/POS. Se probo con el servicio/caracteristica
-// GATT mas comun en impresoras BLE economicas de 58mm/80mm (familia
-// generica tipo "GoojPrt"/"Zjiang"). SI TU IMPRESORA NO IMPRIME, esto es
-// lo primero a revisar: cada fabricante puede usar un UUID distinto; se
-// puede inspeccionar con chrome://bluetooth-internals o la app/SDK de
-// tu impresora, y ajustar las dos constantes de abajo.
+// usando el protocolo ESC/POS. Cada fabricante de impresora BLE economica
+// usa un servicio/caracteristica GATT distinto -- no hay un estandar unico.
+// En vez de fijar un solo UUID, se prueban varios PERFILES_CONOCIDOS en
+// orden (los mas comunes en impresoras de 58mm/80mm tipo GoojPrt/Zjiang/
+// "Cat printer") hasta que uno conecta. Si NINGUNO funciona, hay que
+// inspeccionar el dispositivo con chrome://bluetooth-internals en Android
+// (o la app/SDK de la impresora) para sacar su UUID exacto y agregarlo
+// a esta lista.
+interface PerfilImpresora {
+  nombre: string;
+  servicio: number | string;
+  caracteristica: number | string;
+}
 
-const SERVICE_UUID = 0xff00; // 0000ff00-0000-1000-8000-00805f9b34fb
-const CHARACTERISTIC_UUID = 0xff02; // 0000ff02-0000-1000-8000-00805f9b34fb
+const PERFILES_CONOCIDOS: PerfilImpresora[] = [
+  { nombre: 'Generico FF00/FF02', servicio: 0xff00, caracteristica: 0xff02 },
+  { nombre: 'Generico FF00/FF01', servicio: 0xff00, caracteristica: 0xff01 },
+  { nombre: 'POS58 comun 18F0/2AF1', servicio: 0x18f0, caracteristica: 0x2af1 },
+  { nombre: 'Serial BLE FFE0/FFE1', servicio: 0xffe0, caracteristica: 0xffe1 },
+  {
+    nombre: 'UART transparente ISSC',
+    servicio: '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+    caracteristica: '49535343-8841-43f4-a8d4-ecbe34729bb3',
+  },
+];
 
 let dispositivo: any = null;
 let caracteristica: any = null;
+let perfilConectado: PerfilImpresora | null = null;
 
 export function impresoraConectada(): boolean {
   return !!caracteristica;
@@ -18,6 +35,11 @@ export function impresoraConectada(): boolean {
 
 export function nombreImpresoraConectada(): string | null {
   return dispositivo?.name ?? null;
+}
+
+/** Perfil de servicio/caracteristica GATT que conecto -- util para diagnostico/soporte. */
+export function perfilImpresoraConectado(): string | null {
+  return perfilConectado?.nombre ?? null;
 }
 
 function conTiempoLimite<T>(promesa: Promise<T>, ms: number, mensajeError: string): Promise<T> {
@@ -42,9 +64,12 @@ export async function conectarImpresora(): Promise<string> {
     throw new Error('Este navegador no soporta Web Bluetooth (usa Chrome en Android).');
   }
 
+  // Web Bluetooth exige declarar de antemano TODOS los servicios GATT que
+  // se van a pedir despues -- si no se listan aqui, getPrimaryService()
+  // falla aunque el dispositivo si tenga ese servicio.
   const dev = await bt.requestDevice({
     acceptAllDevices: true,
-    optionalServices: [SERVICE_UUID],
+    optionalServices: PERFILES_CONOCIDOS.map((p) => p.servicio),
   });
 
   // gatt.connect() a veces se queda colgado sin fallar ni conectar --
@@ -56,20 +81,45 @@ export async function conectarImpresora(): Promise<string> {
     15000,
     'La conexión tardó demasiado. Verifica que la impresora esté encendida y cerca, y vuelve a intentar.'
   );
-  const service = await conTiempoLimite<any>(
-    server.getPrimaryService(SERVICE_UUID),
-    10000,
-    'No se encontró el servicio Bluetooth esperado en esta impresora.'
-  );
-  const char = await conTiempoLimite<any>(
-    service.getCharacteristic(CHARACTERISTIC_UUID),
-    10000,
-    'No se encontró la característica Bluetooth esperada en esta impresora.'
-  );
 
-  dispositivo = dev;
-  caracteristica = char;
-  return dev.name ?? 'Impresora';
+  // Se prueba cada perfil conocido en orden hasta que uno conecte -- cada
+  // fabricante usa un UUID de servicio/caracteristica distinto.
+  let ultimoError: any = null;
+  for (const perfil of PERFILES_CONOCIDOS) {
+    try {
+      const service = await conTiempoLimite<any>(
+        server.getPrimaryService(perfil.servicio),
+        6000,
+        `Sin respuesta probando el perfil "${perfil.nombre}".`
+      );
+      const char = await conTiempoLimite<any>(
+        service.getCharacteristic(perfil.caracteristica),
+        6000,
+        `Sin respuesta probando el perfil "${perfil.nombre}".`
+      );
+
+      dispositivo = dev;
+      caracteristica = char;
+      perfilConectado = perfil;
+      return dev.name ?? 'Impresora';
+    } catch (err) {
+      ultimoError = err;
+    }
+  }
+
+  try {
+    dev.gatt.disconnect();
+  } catch {
+    // ignorar, de todos modos no se guardo ninguna referencia
+  }
+
+  throw new Error(
+    `No se encontró ningún perfil de impresora compatible en "${dev.name ?? 'este dispositivo'}". ` +
+      `Se probaron ${PERFILES_CONOCIDOS.length} perfiles conocidos sin éxito ` +
+      `(último error: ${ultimoError?.message ?? ultimoError}). ` +
+      'Necesitamos el UUID exacto: en el celular abre chrome://bluetooth-internals, ' +
+      'busca el dispositivo y revisa sus servicios, o avísale a soporte el modelo exacto de la impresora.'
+  );
 }
 
 export function desconectarImpresora() {
@@ -80,6 +130,7 @@ export function desconectarImpresora() {
   }
   dispositivo = null;
   caracteristica = null;
+  perfilConectado = null;
 }
 
 function quitarAcentos(texto: string) {

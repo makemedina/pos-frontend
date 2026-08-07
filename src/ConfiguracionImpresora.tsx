@@ -3,6 +3,7 @@ import { obtenerConfiguracion, guardarConfiguracion, type Configuracion } from '
 import {
   impresoraConectada,
   nombreImpresoraConectada,
+  perfilImpresoraConectado,
   conectarImpresora,
   desconectarImpresora,
   imprimirPrueba,
@@ -103,7 +104,9 @@ export function ConfiguracionImpresora({ onCerrar }: Props) {
           <div style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
             <div>
               <strong>Impresora:</strong>{' '}
-              {impresoraConectada() ? `Conectada (${nombreImpresoraConectada()})` : 'Ninguna conectada'}
+              {impresoraConectada()
+                ? `Conectada (${nombreImpresoraConectada()} · perfil ${perfilImpresoraConectado()})`
+                : 'Ninguna conectada'}
             </div>
             {impresoraConectada() ? (
               <button type="button" onClick={desconectar}>Desconectar</button>
