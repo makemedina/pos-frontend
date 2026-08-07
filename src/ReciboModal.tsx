@@ -107,11 +107,7 @@ export function ReciboModal({ datos, onCerrar }: Props) {
       }
       const lineas = construirLineasRecibo(config, datos);
       const veces = config.imprimirDosVeces ? 2 : 1;
-      await imprimirLineas(
-        lineas,
-        veces,
-        config.logoBase64 ? { base64: config.logoBase64, anchoPapelMm: config.anchoPapelMm } : undefined
-      );
+      await imprimirLineas(lineas, veces);
       setMensaje('Recibo enviado a la impresora.');
     } catch (err: any) {
       setMensaje(err.message || 'No se pudo imprimir. Revisa que la impresora esté prendida y cerca.');
