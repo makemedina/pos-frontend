@@ -845,6 +845,8 @@ export interface VentaDetalleCorte {
   saldoPendiente: number;
   estadoPago: string;
   metodoPago: string | null;
+  montoEfectivo: number;
+  montoTransferencia: number;
   fecha: string;
 }
 

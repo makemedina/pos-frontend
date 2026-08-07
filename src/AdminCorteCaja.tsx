@@ -221,17 +221,27 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                   <div>Transferencia: {formatoMoneda(resumen.ventas.subtotalesPorMetodo.transferencia)}</div>
                   <div>Crédito (sin abono hoy): {formatoMoneda(resumen.ventas.subtotalesPorMetodo.credito)}</div>
                 </div>
-                {resumen.ventas.detalle.map((v) => (
-                  <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-                    <span>#{v.folio} · {v.cliente} · {v.vendedor} · {v.metodoPago ?? 'crédito'}</span>
-                    <span>
-                      {formatoMoneda(v.total)}{' '}
-                      <small style={{ color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                        ({v.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(v.saldoPendiente)}`})
-                      </small>
-                    </span>
-                  </div>
-                ))}
+                {resumen.ventas.detalle.map((v) => {
+                  const pagoMixto = v.montoEfectivo > 0 && v.montoTransferencia > 0;
+                  return (
+                    <div key={v.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>#{v.folio} · {v.cliente} · {v.vendedor} · {v.metodoPago ?? 'crédito'}</span>
+                        <span>
+                          {formatoMoneda(v.total)}{' '}
+                          <small style={{ color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                            ({v.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(v.saldoPendiente)}`})
+                          </small>
+                        </span>
+                      </div>
+                      {pagoMixto && (
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                          Efectivo: {formatoMoneda(v.montoEfectivo)} · Transferencia: {formatoMoneda(v.montoTransferencia)}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
