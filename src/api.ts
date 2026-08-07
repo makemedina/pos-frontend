@@ -437,6 +437,32 @@ export async function obtenerDetalleVenta(ventaId: string): Promise<VentaDetalle
   return res.json();
 }
 
+export interface ItemUtilidadVenta {
+  producto: string;
+  marca: string;
+  cantidad: number;
+  precioUnitario: number;
+  costoUnitario: number;
+  utilidad: number;
+}
+
+export interface UtilidadVenta {
+  utilidadDevengada: number;
+  utilidadCobrada: number;
+  items: ItemUtilidadVenta[];
+}
+
+// Solo administradores (o un vendedor con el permiso puedeVerUtilidad) --
+// el backend responde 403 para cualquier otro usuario.
+export async function obtenerUtilidadVenta(ventaId: string): Promise<UtilidadVenta> {
+  const res = await fetch(`${API_URL}/ventas/${ventaId}/utilidad`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar la utilidad de la venta');
+  }
+  return res.json();
+}
+
 export async function cancelarVenta(
   ventaId: string,
   autorizacion?: { telefono: string; pin: string }

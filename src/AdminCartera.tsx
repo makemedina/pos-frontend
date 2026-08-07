@@ -222,12 +222,21 @@ export function AdminCartera({ onCerrar }: Props) {
         saldoTotalCliente: Number(resultado.saldoTotalCliente ?? 0),
       });
       setMonto('');
-      // Refresca la nota (saldo actualizado) y su historial de pagos.
+      // Refresca la nota (saldo actualizado) y su historial de pagos. Si la
+      // nota quedo pagada (o con saldo a favor) y "ver tambien pagadas" esta
+      // apagado, ya no viene en notaData -- se usa el saldo que ya sabemos
+      // por el resultado del pago en vez de dejar la nota en null (eso
+      // rompia la pantalla mostrando "Venta #undefined").
       const [notaData, pagosData] = await Promise.all([
         obtenerNotasCliente(clienteElegido!.id, verPagadas),
         obtenerPagosDeNota(notaElegida.id),
       ]);
-      const notaActualizada = notaData.find((n) => n.id === notaElegida.id) ?? null;
+      const saldoNotaRestante = Number(resultado.saldoNotaRestante ?? 0);
+      const notaActualizada = notaData.find((n) => n.id === notaElegida.id) ?? {
+        ...notaElegida,
+        saldoPendiente: saldoNotaRestante,
+        estadoPago: saldoNotaRestante <= 0 ? 'pagada' : 'parcial',
+      };
       setNotaElegida(notaActualizada);
       setNotas(notaData);
       setPagos(pagosData);
@@ -449,7 +458,6 @@ export function AdminCartera({ onCerrar }: Props) {
                         type="number"
                         step="0.01"
                         min="0"
-                        max={n.saldoPendiente}
                         placeholder="0.00"
                         style={{ width: 110, textAlign: 'right' }}
                       />
@@ -589,7 +597,6 @@ export function AdminCartera({ onCerrar }: Props) {
                     onChange={(e) => setMonto(e.target.value)}
                     type="number"
                     step="0.01"
-                    max={notaElegida.saldoPendiente}
                     required
                   />
                 </label>

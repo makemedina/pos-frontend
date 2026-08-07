@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
-import { obtenerDetalleVenta, cancelarVenta, type VentaDetalle } from './api';
+import { obtenerDetalleVenta, cancelarVenta, obtenerUtilidadVenta, type VentaDetalle, type UtilidadVenta } from './api';
 import { ReciboModal } from './ReciboModal';
 import type { DatosRecibo } from './construirRecibo';
 
@@ -11,7 +11,7 @@ interface Props {
   onCancelada?: () => void;
 }
 
-export function VentaDetalleModal({ ventaId, onCerrar, onCancelada }: Props) {
+export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: Props) {
   const [venta, setVenta] = useState<VentaDetalle | null>(null);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -21,6 +21,9 @@ export function VentaDetalleModal({ ventaId, onCerrar, onCancelada }: Props) {
   const [autorizadoPorTelefono, setAutorizadoPorTelefono] = useState('');
   const [autorizadoPin, setAutorizadoPin] = useState('');
   const [cancelando, setCancelando] = useState(false);
+  const [pestana, setPestana] = useState<'detalle' | 'utilidad'>('detalle');
+  const [utilidad, setUtilidad] = useState<UtilidadVenta | null>(null);
+  const [cargandoUtilidad, setCargandoUtilidad] = useState(false);
 
   useEffect(() => {
     obtenerDetalleVenta(ventaId)
@@ -28,6 +31,15 @@ export function VentaDetalleModal({ ventaId, onCerrar, onCancelada }: Props) {
       .catch(() => setMensaje('No se pudo cargar el detalle de la nota.'))
       .finally(() => setCargando(false));
   }, [ventaId]);
+
+  useEffect(() => {
+    if (!esAdmin) return;
+    setCargandoUtilidad(true);
+    obtenerUtilidadVenta(ventaId)
+      .then(setUtilidad)
+      .catch(() => {})
+      .finally(() => setCargandoUtilidad(false));
+  }, [ventaId, esAdmin]);
 
   async function confirmarCancelacion() {
     setCancelando(true);
@@ -93,7 +105,61 @@ export function VentaDetalleModal({ ventaId, onCerrar, onCancelada }: Props) {
 
         {cargando && <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>}
 
-        {venta && (
+        {venta && esAdmin && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <button
+              onClick={() => setPestana('detalle')}
+              style={pestana === 'detalle' ? {} : { background: 'transparent', color: '#6b7280' }}
+            >
+              Detalle
+            </button>
+            <button
+              onClick={() => setPestana('utilidad')}
+              style={pestana === 'utilidad' ? {} : { background: 'transparent', color: '#6b7280' }}
+            >
+              📈 Utilidad
+            </button>
+          </div>
+        )}
+
+        {venta && pestana === 'utilidad' && esAdmin && (
+          <div style={{ display: 'grid', gap: 8 }}>
+            {cargandoUtilidad && <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando utilidad...</p>}
+            {!cargandoUtilidad && !utilidad && (
+              <p style={{ textAlign: 'center', color: '#6b7280' }}>No se pudo cargar la utilidad de esta venta.</p>
+            )}
+            {utilidad && (
+              <>
+                <div className="resumen-nota">
+                  {utilidad.items.map((it, idx) => (
+                    <div key={idx} className="linea-resumen">
+                      <span>
+                        {it.producto} {it.marca} · {it.cantidad} kg
+                        <br />
+                        <small style={{ color: '#6b7280' }}>
+                          Costo {formatoMoneda(it.costoUnitario)} · Precio {formatoMoneda(it.precioUnitario)}
+                        </small>
+                      </span>
+                      <span>{formatoMoneda(it.utilidad)}</span>
+                    </div>
+                  ))}
+                  <div className="linea-resumen total">
+                    <span>Utilidad total (en papel)</span>
+                    <span>{formatoMoneda(utilidad.utilidadDevengada)}</span>
+                  </div>
+                </div>
+                {Math.abs(utilidad.utilidadCobrada - utilidad.utilidadDevengada) > 0.01 && (
+                  <div className="linea-resumen">
+                    <span>Utilidad ya cobrada</span>
+                    <span>{formatoMoneda(utilidad.utilidadCobrada)}</span>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {venta && pestana === 'detalle' && (
           <>
             <div className="resumen-nota">
               <div className="linea-resumen">
