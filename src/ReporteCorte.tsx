@@ -89,6 +89,33 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
         </div>
       )}
 
+      {resumen && resumen.gastos.detalle.length > 0 && (
+        <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+          <h3>Gastos del día ({resumen.gastos.detalle.length})</h3>
+          <div style={{ fontSize: 13 }}>
+            <div>Efectivo: {formatoMoneda(resumen.gastos.subtotalesPorMetodo.efectivo)}</div>
+            <div>Transferencia: {formatoMoneda(resumen.gastos.subtotalesPorMetodo.transferencia)}</div>
+          </div>
+          {resumen.gastos.detalle.map((g) => (
+            <div key={g.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>
+                  {g.concepto}
+                  <br />
+                  <small style={{ color: '#6b7280' }}>
+                    {g.categoria}{g.proveedor ? ` · ${g.proveedor}` : ''} · {g.metodoPago}
+                  </small>
+                </span>
+                <strong>{formatoMoneda(g.monto)}</strong>
+              </div>
+              <small style={{ color: '#6b7280' }}>
+                {new Date(g.fecha).toLocaleTimeString()} · registró: {g.registradoPor}
+              </small>
+            </div>
+          ))}
+        </div>
+      )}
+
       {resumen && (resumen.canceladas.ventas.length > 0 || resumen.canceladas.compras.length > 0) && (
         <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fff2f1' }}>
           <h3 style={{ color: '#b91c1c' }}>❌ Cancelado hoy</h3>

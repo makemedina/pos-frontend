@@ -880,6 +880,17 @@ export interface PagoProveedorDetalleCorte {
   registradoPor: string;
 }
 
+export interface GastoDetalleCorte {
+  id: string;
+  concepto: string;
+  categoria: string;
+  proveedor: string | null;
+  monto: number;
+  metodoPago: string;
+  fecha: string;
+  registradoPor: string;
+}
+
 export interface DepositoDetalleCorte {
   id: string;
   monto: number;
@@ -963,7 +974,12 @@ export interface ResumenCorteDia {
     subtotalesPorMetodo: SubtotalesPorMetodo;
     detalle: CompraDetalleCorte[];
   };
-  gastos: { total: number; cantidad: number };
+  gastos: {
+    total: number;
+    cantidad: number;
+    subtotalesPorMetodo: SubtotalesPorMetodo;
+    detalle: GastoDetalleCorte[];
+  };
   pagosClientes: {
     total: number;
     efectivo: number;
