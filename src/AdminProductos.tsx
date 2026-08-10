@@ -3,6 +3,7 @@ import { formatoMoneda, formatoKg } from './formato';
 import {
   obtenerProductosGestion,
   obtenerHistorialVariante,
+  actualizarProducto,
   type ProductoGestion,
   type MovimientoVariante,
 } from './api';
@@ -38,6 +39,10 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
   const [ventaAbierta, setVentaAbierta] = useState<string | null>(null);
   const [compraAbierta, setCompraAbierta] = useState<string | null>(null);
 
+  const [editandoNombre, setEditandoNombre] = useState(false);
+  const [nombreEdicion, setNombreEdicion] = useState('');
+  const [guardandoNombre, setGuardandoNombre] = useState(false);
+
   useEffect(() => {
     cargar();
   }, []);
@@ -56,6 +61,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
 
   async function abrirProducto(p: ProductoGestion) {
     setProductoElegido(p);
+    setEditandoNombre(false);
     setCargandoHistorial(true);
     try {
       setHistorial(await obtenerHistorialVariante(p.id));
@@ -69,6 +75,33 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
   function volverALista() {
     setProductoElegido(null);
     setHistorial([]);
+    setEditandoNombre(false);
+  }
+
+  function empezarEdicionNombre() {
+    if (!productoElegido) return;
+    setNombreEdicion(productoElegido.producto);
+    setEditandoNombre(true);
+  }
+
+  async function guardarNombre() {
+    if (!productoElegido) return;
+    const nombre = nombreEdicion.trim();
+    if (!nombre) return;
+    setGuardandoNombre(true);
+    try {
+      await actualizarProducto(productoElegido.productoId, nombre);
+      setProductoElegido((prev) => (prev ? { ...prev, producto: nombre } : prev));
+      setProductos((prev) =>
+        prev.map((p) => (p.productoId === productoElegido.productoId ? { ...p, producto: nombre } : p))
+      );
+      setEditandoNombre(false);
+      setMensaje('Nombre actualizado.');
+    } catch (err: any) {
+      setMensaje(err.error || 'No se pudo actualizar el nombre.');
+    } finally {
+      setGuardandoNombre(false);
+    }
   }
 
   function clickMovimiento(m: MovimientoVariante) {
@@ -154,6 +187,29 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
               <div>
+                {editandoNombre ? (
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8 }}>
+                    <input
+                      value={nombreEdicion}
+                      onChange={(e) => setNombreEdicion(e.target.value)}
+                      style={{ flex: 1 }}
+                      autoFocus
+                    />
+                    <button onClick={guardarNombre} disabled={guardandoNombre || !nombreEdicion.trim()}>
+                      {guardandoNombre ? 'Guardando...' : 'Guardar'}
+                    </button>
+                    <button onClick={() => setEditandoNombre(false)} disabled={guardandoNombre}>
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                    <strong>{productoElegido.producto}</strong>
+                    <button onClick={empezarEdicionNombre} style={{ padding: '2px 10px', fontSize: 12 }}>
+                      ✏️ Editar nombre
+                    </button>
+                  </div>
+                )}
                 <div>Stock disponible: <strong>{formatoKg(productoElegido.stockDisponible)} kg</strong></div>
                 <div style={{ fontSize: 13, color: '#6b7280' }}>Precio de venta: {formatoMoneda(productoElegido.precioVenta)}/kg</div>
                 {productoElegido.lotes.length > 0 && (

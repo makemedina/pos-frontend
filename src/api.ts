@@ -191,6 +191,17 @@ export async function obtenerProductosGestion(): Promise<ProductoGestion[]> {
   return res.json();
 }
 
+export async function actualizarProducto(id: string, nombre: string): Promise<{ id: string; nombre: string }> {
+  const res = await fetch(`${API_URL}/catalogo/productos/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ nombre }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}
+
 export interface MovimientoVariante {
   tipo: 'entrada' | 'salida' | 'merma' | 'correccion_positiva' | 'correccion_negativa';
   id: string;
