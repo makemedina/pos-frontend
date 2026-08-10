@@ -26,6 +26,7 @@ import { AdminFacturasPendientes } from './AdminFacturasPendientes';
 import { AdminHistorialCompras } from './AdminHistorialCompras';
 import { AdminUsuarios } from './AdminUsuarios';
 import { AdminHerramientas } from './AdminHerramientas';
+import { AdminBackups } from './AdminBackups';
 import { AdminGastos } from './AdminGastos';
 import { AdminDepositos } from './AdminDepositos';
 import { AdminCorteCaja } from './AdminCorteCaja';
@@ -86,7 +87,8 @@ type Pantalla =
   | 'inventarioMenu'
   | 'finanzasMenu'
   | 'configuracionMenu'
-  | 'herramientas';
+  | 'herramientas'
+  | 'respaldos';
 
 interface OpcionMenu {
   pantalla: Pantalla;
@@ -642,6 +644,9 @@ export default function App() {
         { pantalla: 'configuracionRecibo', icono: '🧾', titulo: 'Recibo e impresora', descripcion: 'Encabezado, pie de página y conectar impresora', clase: 'boton-flotante-ajuste' },
         { pantalla: 'usuarios', icono: '👤', titulo: 'Usuarios', descripcion: 'Altas, PIN y permisos', clase: 'boton-flotante-usuarios' },
         { pantalla: 'herramientas', icono: '🛠️', titulo: 'Herramientas', descripcion: 'Carga inicial y reinicio de datos', clase: 'boton-flotante-ajuste' },
+        ...(usuario.rolBase === 'administrador'
+          ? [{ pantalla: 'respaldos' as Pantalla, icono: '💾', titulo: 'Respaldos', descripcion: 'Crear, descargar y restaurar respaldos', clase: 'boton-flotante-ajuste' }]
+          : []),
       ]);
     }
 
@@ -681,6 +686,9 @@ export default function App() {
     }
     if (pantallaActiva === 'herramientas') {
       return <AdminHerramientas onCerrar={() => abrirPantalla('configuracionMenu')} />;
+    }
+    if (pantallaActiva === 'respaldos') {
+      return <AdminBackups onCerrar={() => abrirPantalla('configuracionMenu')} />;
     }
     if (pantallaActiva === 'gastos') {
       return <AdminGastos onCerrar={() => abrirPantalla('finanzasMenu')} />;

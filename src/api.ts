@@ -1395,3 +1395,67 @@ export async function registrarPagoMultiNota(
   if (!res.ok) throw { ...data, status: res.status };
   return data;
 }
+
+// ---------- RESPALDOS (solo administradores) ----------
+
+export interface BackupInfo {
+  key: string;
+  fecha: string;
+  tamano: number;
+  tipo: 'manual' | 'automatico' | 'pre-restauracion';
+}
+
+export async function obtenerBackups(): Promise<BackupInfo[]> {
+  const res = await fetch(`${API_URL}/admin/backups`, { headers: headerAuth() });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}
+
+export async function crearBackupManual(): Promise<BackupInfo> {
+  const res = await fetch(`${API_URL}/admin/backups`, { method: 'POST', headers: headerAuth() });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}
+
+export async function eliminarBackup(key: string): Promise<void> {
+  const res = await fetch(`${API_URL}/admin/backups?key=${encodeURIComponent(key)}`, {
+    method: 'DELETE',
+    headers: headerAuth(),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw { ...data, status: res.status };
+  }
+}
+
+export async function restaurarBackup(key: string, confirmacion: string): Promise<void> {
+  const res = await fetch(`${API_URL}/admin/backups/restaurar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ key, confirmacion }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+}
+
+/** Descarga el respaldo directo al dispositivo (no se puede usar un link normal porque la ruta exige el token de sesion). */
+export async function descargarBackup(key: string): Promise<void> {
+  const res = await fetch(`${API_URL}/admin/backups/descargar?key=${encodeURIComponent(key)}`, {
+    headers: headerAuth(),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo descargar el respaldo');
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = key.split('/').pop() || 'respaldo.dump';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
