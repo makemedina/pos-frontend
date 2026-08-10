@@ -295,10 +295,10 @@ export function AdminCartera({ onCerrar }: Props) {
     }
   }
 
-  const totalCartera = clientes.reduce((acc, c) => acc + c.saldoTotal, 0);
   const clientesFiltrados = clientes.filter(
     (c) => !busquedaCartera.trim() || c.nombre.toLowerCase().includes(busquedaCartera.trim().toLowerCase())
   );
+  const totalCartera = clientesFiltrados.reduce((acc, c) => acc + c.saldoTotal, 0);
 
   async function exportar() {
     setExportando(true);
@@ -389,7 +389,7 @@ export function AdminCartera({ onCerrar }: Props) {
               ))}
             </div>
 
-            {clientes.length > 0 && (
+            {clientesFiltrados.length > 0 && (
               <div
                 style={{
                   display: 'flex',
@@ -400,7 +400,7 @@ export function AdminCartera({ onCerrar }: Props) {
                   fontWeight: 700,
                 }}
               >
-                <span>Total en cartera</span>
+                <span>{busquedaCartera.trim() ? 'Total filtrado' : 'Total en cartera'}</span>
                 <span>{formatoMoneda(totalCartera)}</span>
               </div>
             )}
