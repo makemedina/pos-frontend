@@ -68,6 +68,47 @@ function parsearSaldos(texto: string): { nombre: string; saldo: number }[] {
   return resultado;
 }
 
+type OpcionesReset = {
+  ventasComprasAjustes: boolean;
+  cotizaciones: boolean;
+  gastos: boolean;
+  depositos: boolean;
+  cortes: boolean;
+  catalogos: boolean;
+  reiniciarNumeracion: boolean;
+};
+
+const OPCIONES_TODO_TODO: OpcionesReset = {
+  ventasComprasAjustes: true,
+  cotizaciones: true,
+  gastos: true,
+  depositos: true,
+  cortes: true,
+  catalogos: true,
+  reiniciarNumeracion: true,
+};
+
+const OPCIONES_VACIAS: OpcionesReset = {
+  ventasComprasAjustes: false,
+  cotizaciones: false,
+  gastos: false,
+  depositos: false,
+  cortes: false,
+  catalogos: false,
+  reiniciarNumeracion: false,
+};
+
+function resumenOpcionesReset(o: OpcionesReset): string[] {
+  const items: string[] = [];
+  if (o.ventasComprasAjustes) items.push('Ventas, compras y ajustes de inventario (el stock quedará en 0)');
+  if (o.cotizaciones) items.push('Cotizaciones pendientes');
+  if (o.gastos) items.push('Gastos');
+  if (o.depositos) items.push('Depósitos a banco');
+  if (o.cortes) items.push('Cortes de caja (historial)');
+  if (o.catalogos) items.push('Clientes, proveedores y productos/variantes (catálogos)');
+  return items;
+}
+
 export function AdminHerramientas({ onCerrar }: Props) {
   const [mensaje, setMensaje] = useState<string | null>(null);
 
@@ -80,25 +121,52 @@ export function AdminHerramientas({ onCerrar }: Props) {
     return ayer.toISOString().slice(0, 10);
   });
 
-  // ---------- Reset de transacciones ----------
+  // ---------- Reset / borrado de datos ----------
+  // pasos: 'inicial' (boton rojo) -> 'elegir' (Todo todo vs Selectivo) ->
+  // 'selectivo' (checkboxes, solo si eligio selectivo) -> 'confirmar'
+  // (resumen + escribir BORRAR TODO).
+  const [pasoReset, setPasoReset] = useState<'inicial' | 'elegir' | 'selectivo' | 'confirmar'>('inicial');
+  const [opcionesReset, setOpcionesReset] = useState<OpcionesReset>(OPCIONES_VACIAS);
   const [confirmacionReset, setConfirmacionReset] = useState('');
   const [reseteando, setReseteando] = useState(false);
-  const [mostrarReset, setMostrarReset] = useState(false);
 
-  async function ejecutarReset() {
+  const catalogosDisponible = opcionesReset.ventasComprasAjustes && opcionesReset.cotizaciones && opcionesReset.gastos;
+  const balancesSeReinician = opcionesReset.ventasComprasAjustes && opcionesReset.gastos && opcionesReset.depositos;
+  const algunaOpcionElegida = Object.values(opcionesReset).some(Boolean);
+
+  function toggleOpcionReset(clave: keyof OpcionesReset) {
+    setOpcionesReset((prev) => {
+      const next = { ...prev, [clave]: !prev[clave] };
+      const catalogosValido = next.ventasComprasAjustes && next.cotizaciones && next.gastos;
+      if (!catalogosValido) next.catalogos = false;
+      return next;
+    });
+  }
+
+  function cancelarReset() {
+    setPasoReset('inicial');
+    setOpcionesReset(OPCIONES_VACIAS);
+    setConfirmacionReset('');
+  }
+
+  async function confirmarReset() {
     if (confirmacionReset !== 'BORRAR TODO') return;
     setReseteando(true);
     try {
       const res = await fetch(`${API_URL}/admin/resetear-transacciones`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...headerAuth() },
-        body: JSON.stringify({ confirmacion: confirmacionReset }),
+        body: JSON.stringify({ confirmacion: confirmacionReset, opciones: opcionesReset }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'No se pudo resetear.');
-      setMensaje('Listo: ventas, compras, gastos, ajustes y cortes fueron borrados. Clientes, proveedores, productos y usuarios se conservaron.');
-      setMostrarReset(false);
-      setConfirmacionReset('');
+      if (!res.ok) throw new Error(data.error || 'No se pudo borrar.');
+      setMensaje(
+        'Listo, se borró lo que elegiste.' +
+          (data.respaldoCreado
+            ? ' Se guardó un respaldo completo de antes del borrado en Respaldos, por si hace falta recuperar algo.'
+            : ' No se pudo guardar un respaldo automático antes de borrar (revisa que los respaldos estén configurados).')
+      );
+      cancelarReset();
     } catch (err: any) {
       setMensaje(err.message);
     } finally {
@@ -330,26 +398,155 @@ export function AdminHerramientas({ onCerrar }: Props) {
           </div>
         </div>
 
-        {/* ---------- Reset de transacciones (zona de peligro) ---------- */}
+        {/* ---------- Reset / borrado de datos (zona de peligro) ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem', background: '#fff2f1' }}>
-          <h3 style={{ color: '#b91c1c' }}>⚠️ Reiniciar transacciones</h3>
-          <p style={{ fontSize: 13, color: '#7f1d1d' }}>
-            Borra TODAS las ventas, compras, gastos, ajustes de inventario y cortes de caja —
-            para poder empezar la operación real desde cero, sin datos de prueba. Esto{' '}
-            <strong>no se puede deshacer</strong>. NO borra usuarios, clientes, proveedores ni
-            productos/variantes (esos catálogos se conservan).
-          </p>
+          <h3 style={{ color: '#b91c1c' }}>⚠️ Borrar datos del sistema</h3>
 
-          {!mostrarReset ? (
-            <button
-              onClick={() => setMostrarReset(true)}
-              style={{ background: '#b91c1c', color: 'white' }}
-            >
-              Quiero reiniciar las transacciones
-            </button>
-          ) : (
+          {pasoReset === 'inicial' && (
+            <>
+              <p style={{ fontSize: 13, color: '#7f1d1d' }}>
+                Borra datos reales del sistema — esto <strong>no se puede deshacer</strong>. Se
+                guarda un respaldo automático justo antes, por si hace falta recuperar algo.
+              </p>
+              <button onClick={() => setPasoReset('elegir')} style={{ background: '#b91c1c', color: 'white' }}>
+                Quiero borrar datos
+              </button>
+            </>
+          )}
+
+          {pasoReset === 'elegir' && (
             <div style={{ display: 'grid', gap: 8 }}>
-              <label style={{ fontSize: 13 }}>
+              <p style={{ fontSize: 13, color: '#7f1d1d' }}>¿Qué quieres borrar?</p>
+
+              <button
+                onClick={() => { setOpcionesReset(OPCIONES_TODO_TODO); setPasoReset('confirmar'); }}
+                style={{ textAlign: 'left', padding: '0.75rem', background: 'white' }}
+              >
+                <strong>Todo todo</strong>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>
+                  Ventas, compras, gastos, depósitos, cortes, cotizaciones, clientes, proveedores
+                  y productos. Reinicia la numeración de ventas y cotizaciones desde el #1 — como
+                  si el sistema nunca se hubiera usado.
+                </div>
+              </button>
+
+              <button
+                onClick={() => { setOpcionesReset(OPCIONES_VACIAS); setPasoReset('selectivo'); }}
+                style={{ textAlign: 'left', padding: '0.75rem', background: 'white' }}
+              >
+                <strong>Elegir qué borrar</strong>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>
+                  Solo algunas categorías de datos (por ejemplo nada más los gastos, o nada más
+                  las ventas de prueba).
+                </div>
+              </button>
+
+              <button onClick={cancelarReset}>Cancelar</button>
+            </div>
+          )}
+
+          {pasoReset === 'selectivo' && (
+            <div style={{ display: 'grid', gap: 8 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={opcionesReset.ventasComprasAjustes}
+                  onChange={() => toggleOpcionReset('ventasComprasAjustes')}
+                />
+                Ventas, compras y ajustes de inventario (van juntos: el stock quedará en 0)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={opcionesReset.cotizaciones}
+                  onChange={() => toggleOpcionReset('cotizaciones')}
+                />
+                Cotizaciones pendientes
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={opcionesReset.gastos}
+                  onChange={() => toggleOpcionReset('gastos')}
+                />
+                Gastos
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={opcionesReset.depositos}
+                  onChange={() => toggleOpcionReset('depositos')}
+                />
+                Depósitos a banco
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={opcionesReset.cortes}
+                  onChange={() => toggleOpcionReset('cortes')}
+                />
+                Cortes de caja (historial)
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, opacity: catalogosDisponible ? 1 : 0.5 }}>
+                <input
+                  type="checkbox"
+                  checked={opcionesReset.catalogos}
+                  disabled={!catalogosDisponible}
+                  onChange={() => toggleOpcionReset('catalogos')}
+                />
+                Clientes, proveedores y productos (catálogos)
+              </label>
+              {!catalogosDisponible && (
+                <p style={{ fontSize: 12, color: '#6b7280', marginLeft: 26 }}>
+                  Para borrar catálogos primero marca ventas/compras/ajustes, cotizaciones y gastos —
+                  todos hacen referencia a clientes, proveedores o productos.
+                </p>
+              )}
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginTop: 8, paddingTop: 8, borderTop: '1px solid #f3d4d1' }}>
+                <input
+                  type="checkbox"
+                  checked={opcionesReset.reiniciarNumeracion}
+                  onChange={() => toggleOpcionReset('reiniciarNumeracion')}
+                />
+                Reiniciar la numeración de ventas/cotizaciones desde el #1
+              </label>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <button
+                  onClick={() => setPasoReset('confirmar')}
+                  disabled={!algunaOpcionElegida}
+                  style={{ flex: 1, background: '#b91c1c', color: 'white' }}
+                >
+                  Continuar
+                </button>
+                <button onClick={cancelarReset} style={{ flex: 1 }}>Cancelar</button>
+              </div>
+            </div>
+          )}
+
+          {pasoReset === 'confirmar' && (
+            <div style={{ display: 'grid', gap: 8 }}>
+              <p style={{ fontSize: 13, color: '#7f1d1d' }}>Se va a borrar, para siempre:</p>
+              <ul style={{ fontSize: 13, color: '#7f1d1d', margin: 0, paddingLeft: 20 }}>
+                {resumenOpcionesReset(opcionesReset).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              {opcionesReset.reiniciarNumeracion && (
+                <p style={{ fontSize: 12, color: '#7f1d1d' }}>
+                  La numeración de ventas/cotizaciones volverá a empezar en #1.
+                </p>
+              )}
+              {(opcionesReset.ventasComprasAjustes || opcionesReset.gastos || opcionesReset.depositos) && (
+                <p style={{ fontSize: 12, color: '#7f1d1d' }}>
+                  {balancesSeReinician
+                    ? 'El saldo de efectivo y de banco se reiniciará a $0.'
+                    : 'El saldo de efectivo/banco NO se reiniciará automáticamente — quizá necesites corregirlo a mano en Configuración.'}
+                </p>
+              )}
+
+              <label style={{ fontSize: 13, marginTop: 8 }}>
                 Escribe <strong>BORRAR TODO</strong> para confirmar:
               </label>
               <input
@@ -359,13 +556,13 @@ export function AdminHerramientas({ onCerrar }: Props) {
               />
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
-                  onClick={ejecutarReset}
+                  onClick={confirmarReset}
                   disabled={confirmacionReset !== 'BORRAR TODO' || reseteando}
                   style={{ flex: 1, background: '#b91c1c', color: 'white' }}
                 >
-                  {reseteando ? 'Borrando...' : 'Confirmar y borrar todo'}
+                  {reseteando ? 'Borrando...' : 'Confirmar y borrar'}
                 </button>
-                <button onClick={() => { setMostrarReset(false); setConfirmacionReset(''); }} style={{ flex: 1 }}>
+                <button onClick={cancelarReset} disabled={reseteando} style={{ flex: 1 }}>
                   Cancelar
                 </button>
               </div>
