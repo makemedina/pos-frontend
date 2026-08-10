@@ -39,6 +39,7 @@ export function AdminCartera({ onCerrar }: Props) {
   // Pago repartido entre varias notas (desde el nivel de notas)
   const [mostrarPagoMultiple, setMostrarPagoMultiple] = useState(false);
   const [metodoPagoMultiple, setMetodoPagoMultiple] = useState('efectivo');
+  const [montoPagoMultiple, setMontoPagoMultiple] = useState('');
   const [asignacionesPago, setAsignacionesPago] = useState<Record<string, string>>({});
   const [guardandoPagoMultiple, setGuardandoPagoMultiple] = useState(false);
 
@@ -135,16 +136,31 @@ export function AdminCartera({ onCerrar }: Props) {
   function abrirPagoMultiple() {
     setAsignacionesPago({});
     setMetodoPagoMultiple('efectivo');
+    setMontoPagoMultiple('');
     setMostrarPagoMultiple(true);
   }
 
   function cerrarPagoMultiple() {
     setMostrarPagoMultiple(false);
     setAsignacionesPago({});
+    setMontoPagoMultiple('');
   }
 
   function actualizarAsignacion(notaId: string, valor: string) {
     setAsignacionesPago((prev) => ({ ...prev, [notaId]: valor }));
+  }
+
+  // Marcar/desmarcar una nota en el checklist: al marcarla se rellena su
+  // recuadro con el saldo pendiente de esa nota (editable despues); al
+  // desmarcarla se le quita cualquier monto que tuviera asignado.
+  function toggleNotaPago(n: NotaCartera) {
+    setAsignacionesPago((prev) => {
+      if (n.id in prev) {
+        const { [n.id]: _omitida, ...resto } = prev;
+        return resto;
+      }
+      return { ...prev, [n.id]: String(n.saldoPendiente) };
+    });
   }
 
   const notasPendientesPago = notas.filter((n) => n.saldoPendiente > 0);
@@ -152,6 +168,7 @@ export function AdminCartera({ onCerrar }: Props) {
     (acc, n) => acc + (Number(asignacionesPago[n.id]) || 0),
     0
   );
+  const restantePorDistribuir = Number(montoPagoMultiple || 0) - totalAsignadoPago;
 
   async function handlePagoMultiple(e: React.FormEvent) {
     e.preventDefault();
@@ -436,34 +453,77 @@ export function AdminCartera({ onCerrar }: Props) {
                   </select>
                 </label>
 
+                <label>
+                  Importe del pago recibido
+                  <input
+                    value={montoPagoMultiple}
+                    onChange={(e) => setMontoPagoMultiple(e.target.value)}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                  />
+                </label>
+
                 <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
-                  Asigna cuanto de lo que te dio el cliente se abona a cada nota.
+                  Marca las notas que se pagan con este importe — cada una se rellena con su saldo, pero puedes cambiarlo.
                 </p>
 
                 <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {notasPendientesPago.map((n) => (
-                    <div
-                      key={n.id}
-                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}
-                    >
-                      <div>
-                        <strong>Venta #{n.folio}</strong>
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>
-                          Saldo: {formatoMoneda(n.saldoPendiente)}
+                  {notasPendientesPago.map((n) => {
+                    const seleccionada = n.id in asignacionesPago;
+                    return (
+                      <div
+                        key={n.id}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={seleccionada}
+                          onChange={() => toggleNotaPago(n)}
+                        />
+                        <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => toggleNotaPago(n)}>
+                          <strong>Venta #{n.folio}</strong>
+                          <div style={{ fontSize: 12, color: '#6b7280' }}>
+                            Saldo: {formatoMoneda(n.saldoPendiente)}
+                          </div>
                         </div>
+                        {seleccionada && (
+                          <input
+                            value={asignacionesPago[n.id] ?? ''}
+                            onChange={(e) => actualizarAsignacion(n.id, e.target.value)}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            style={{ width: 110, textAlign: 'right' }}
+                          />
+                        )}
                       </div>
-                      <input
-                        value={asignacionesPago[n.id] ?? ''}
-                        onChange={(e) => actualizarAsignacion(n.id, e.target.value)}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        style={{ width: 110, textAlign: 'right' }}
-                      />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: 10,
+                    background: restantePorDistribuir < 0 ? '#fff2f1' : '#f8fafc',
+                    fontWeight: 700,
+                  }}
+                >
+                  <span>Por distribuir</span>
+                  <span style={{ color: restantePorDistribuir < 0 ? '#b91c1c' : undefined }}>
+                    {formatoMoneda(restantePorDistribuir)}
+                  </span>
+                </div>
+                {restantePorDistribuir < 0 && (
+                  <p style={{ fontSize: 12, color: '#b91c1c', margin: 0 }}>
+                    Asignaste más de lo que dice el importe del pago recibido.
+                  </p>
+                )}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, paddingTop: 4 }}>
                   <span>Total a registrar</span>

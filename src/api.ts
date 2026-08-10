@@ -623,6 +623,38 @@ export async function registrarPagoCompra(compraId: string, monto: number, metod
   return data;
 }
 
+export interface AsignacionPagoMultipleCompra {
+  compraId: string;
+  monto: number;
+}
+
+export interface DetallePagoMultiCompra {
+  compraId: string;
+  numeroFactura: string | null;
+  monto: number;
+  saldoFacturaRestante: number;
+}
+
+export interface ResultadoPagoMultiCompra {
+  detalle: DetallePagoMultiCompra[];
+  totalPagado: number;
+}
+
+export async function registrarPagoMultiCompra(
+  proveedorId: string,
+  asignaciones: AsignacionPagoMultipleCompra[],
+  metodoPago: string
+): Promise<ResultadoPagoMultiCompra> {
+  const res = await fetch(`${API_URL}/proveedores/${proveedorId}/pagos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ asignaciones, metodoPago }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}
+
 export interface FacturaPendiente {
   id: string;
   numeroFactura: string | null;
