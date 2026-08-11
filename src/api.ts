@@ -1056,6 +1056,10 @@ export interface ResumenCorteDia {
   valorInventario?: number;
   balanzaAyer?: number | null;
   balanzaEsperada?: number | null;
+  // A diferencia de los de arriba, este es visible para cualquiera (no
+  // solo quien puede ver utilidad) -- punto de partida del cuadre de
+  // efectivo del dia, que tambien es publico.
+  efectivoAyer?: number | null;
 }
 
 export async function obtenerCorteDelDia(fecha?: string): Promise<ResumenCorteDia> {
