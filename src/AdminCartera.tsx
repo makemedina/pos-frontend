@@ -427,10 +427,12 @@ export function AdminCartera({ onCerrar }: Props) {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 700, color: c.saldoTotal > 0 ? '#b91c1c' : '#16a34a' }}>
-                        {formatoMoneda(c.saldoTotal)}
+                        {formatoMoneda(Math.abs(c.saldoTotal))}
                       </div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>
-                        {c.notasConSaldo} nota{c.notasConSaldo !== 1 ? 's' : ''} pendiente{c.notasConSaldo !== 1 ? 's' : ''}
+                      <div style={{ fontSize: 12, color: c.saldoTotal < 0 ? '#16a34a' : '#6b7280' }}>
+                        {c.saldoTotal < 0
+                          ? 'Saldo a favor'
+                          : `${c.notasConSaldo} nota${c.notasConSaldo !== 1 ? 's' : ''} pendiente${c.notasConSaldo !== 1 ? 's' : ''}`}
                       </div>
                     </div>
                   </div>
@@ -592,7 +594,11 @@ export function AdminCartera({ onCerrar }: Props) {
                     <div style={{ textAlign: 'right' }}>
                       <div>Total: {formatoMoneda(n.total)}</div>
                       <div style={{ fontSize: 12, color: n.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                        {n.estadoPago === 'pagada' ? 'Pagada' : `Saldo: ${formatoMoneda(n.saldoPendiente)}`}
+                        {n.estadoPago === 'pagada'
+                          ? n.saldoPendiente < 0
+                            ? `Pagada · saldo a favor ${formatoMoneda(Math.abs(n.saldoPendiente))}`
+                            : 'Pagada'
+                          : `Saldo: ${formatoMoneda(n.saldoPendiente)}`}
                       </div>
                     </div>
                   </div>

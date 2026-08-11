@@ -5,7 +5,8 @@
 // simplemente muestra $0.00 en ese caso, en vez de romper.
 export function formatoMoneda(valor: number | null | undefined): string {
   const numero = typeof valor === 'number' && Number.isFinite(valor) ? valor : 0;
-  return `$${numero.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const signo = numero < 0 ? '-' : '';
+  return `${signo}$${Math.abs(numero).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // Formatea una cantidad en kg respetando hasta 3 decimales (la precision
