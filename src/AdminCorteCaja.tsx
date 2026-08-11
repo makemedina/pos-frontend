@@ -12,6 +12,7 @@ interface Props {
 export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
   const [efectivoContado, setEfectivoContado] = useState('');
   const [saldoBancoContado, setSaldoBancoContado] = useState('');
+  const [observacion, setObservacion] = useState('');
   const [usarFechaPersonalizada, setUsarFechaPersonalizada] = useState(false);
   const [fechaPersonalizada, setFechaPersonalizada] = useState(() => {
     const ayer = new Date();
@@ -44,10 +45,16 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await guardarCorte(Number(efectivoContado), Number(saldoBancoContado), usarFechaPersonalizada ? fechaPersonalizada : undefined);
+      await guardarCorte(
+        Number(efectivoContado),
+        Number(saldoBancoContado),
+        usarFechaPersonalizada ? fechaPersonalizada : undefined,
+        observacion
+      );
       setMensaje('Corte de caja guardado');
       setEfectivoContado('');
       setSaldoBancoContado('');
+      setObservacion('');
       setUsarFechaPersonalizada(false);
       cargarResumen();
     } catch (err: any) {
@@ -173,6 +180,17 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                   </p>
                 )}
                 <input value={saldoBancoContado} onChange={(e) => setSaldoBancoContado(e.target.value)} type="number" step="0.01" placeholder="Saldo en banco" required />
+
+                <label>
+                  Observación (opcional)
+                  <textarea
+                    value={observacion}
+                    onChange={(e) => setObservacion(e.target.value)}
+                    placeholder="Ej. faltaron $50 porque se le regalaron a un cliente"
+                    rows={2}
+                    style={{ width: '100%', resize: 'vertical' }}
+                  />
+                </label>
 
                 {onVerHistorial && (
                   <div style={{ fontSize: 12 }}>

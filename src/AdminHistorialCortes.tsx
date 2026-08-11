@@ -15,6 +15,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
   const [editando, setEditando] = useState<CorteHistorico | null>(null);
   const [efectivoContado, setEfectivoContado] = useState('');
   const [saldoBancoContado, setSaldoBancoContado] = useState('');
+  const [observacion, setObservacion] = useState('');
   const [confirmandoEliminarId, setConfirmandoEliminarId] = useState<string | null>(null);
   const [eliminando, setEliminando] = useState(false);
   const [fechaAImprimir, setFechaAImprimir] = useState<string | null>(null);
@@ -39,13 +40,14 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
     setEditando(c);
     setEfectivoContado(String(c.efectivoContado));
     setSaldoBancoContado(String(c.saldoBancoContado));
+    setObservacion(c.observacion || '');
   }
 
   async function guardarEdicion(e: React.FormEvent) {
     e.preventDefault();
     if (!editando) return;
     try {
-      await actualizarCorte(editando.id, Number(efectivoContado), Number(saldoBancoContado));
+      await actualizarCorte(editando.id, Number(efectivoContado), Number(saldoBancoContado), observacion);
       setMensaje(`Corte del ${new Date(editando.fecha).toLocaleDateString()} actualizado.`);
       setEditando(null);
       cargar();
@@ -108,6 +110,11 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                         )}
                       </>
                     )}
+                    {c.observacion && (
+                      <div style={{ fontSize: 13, marginTop: 4, whiteSpace: 'pre-wrap' }}>
+                        📝 {c.observacion}
+                      </div>
+                    )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <button onClick={() => setFechaAImprimir(c.fecha.slice(0, 10))}>🖨️ Imprimir</button>
@@ -156,6 +163,16 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
             <label>
               Saldo en banco
               <input value={saldoBancoContado} onChange={(e) => setSaldoBancoContado(e.target.value)} type="number" step="0.01" required />
+            </label>
+            <label>
+              Observación (opcional)
+              <textarea
+                value={observacion}
+                onChange={(e) => setObservacion(e.target.value)}
+                placeholder="Ej. faltaron $50 porque se le regalaron a un cliente"
+                rows={2}
+                style={{ width: '100%', resize: 'vertical' }}
+              />
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="submit">Guardar corrección</button>

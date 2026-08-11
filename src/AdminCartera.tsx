@@ -22,6 +22,7 @@ interface Props {
 type Nivel = 'clientes' | 'notas' | 'pagos';
 
 const ELEMENT_ID_REPORTE_CARTERA = 'cartera-reporte';
+const ELEMENT_ID_REPORTE_NOTAS_CLIENTE = 'cartera-notas-cliente-reporte';
 
 export function AdminCartera({ onCerrar }: Props) {
   const [nivel, setNivel] = useState<Nivel>('clientes');
@@ -39,6 +40,13 @@ export function AdminCartera({ onCerrar }: Props) {
   const [exportandoFormato, setExportandoFormato] = useState<'imagen' | 'pdf' | null>(null);
   const [imagenCarteraBlob, setImagenCarteraBlob] = useState<Blob | null>(null);
   const [pdfCarteraBlob, setPdfCarteraBlob] = useState<Blob | null>(null);
+
+  // Mismo patron, pero para el reporte de UN cliente (nivel 2) -- estado
+  // separado para que cambiar de cliente o volver al nivel 1 no deje un
+  // boton de "Compartir" apuntando a un archivo de otro cliente.
+  const [exportandoFormatoNotas, setExportandoFormatoNotas] = useState<'imagen' | 'pdf' | null>(null);
+  const [imagenNotasBlob, setImagenNotasBlob] = useState<Blob | null>(null);
+  const [pdfNotasBlob, setPdfNotasBlob] = useState<Blob | null>(null);
 
   // Nivel 1: clientes
   const [clientes, setClientes] = useState<ClienteCartera[]>([]);
@@ -83,6 +91,14 @@ export function AdminCartera({ onCerrar }: Props) {
     setImagenCarteraBlob(null);
     setPdfCarteraBlob(null);
   }, [busquedaCartera, clientes]);
+
+  // Mismo criterio para el reporte de un cliente especifico: si cambian
+  // sus notas (otro cliente, se prendio/apago "ver pagadas", se registro
+  // un pago) la imagen/PDF ya generados quedaron desactualizados.
+  useEffect(() => {
+    setImagenNotasBlob(null);
+    setPdfNotasBlob(null);
+  }, [clienteElegido, notas]);
 
   async function cargarClientes() {
     setCargando(true);
@@ -424,6 +440,54 @@ export function AdminCartera({ onCerrar }: Props) {
     }
   }
 
+  async function generarImagenNotas() {
+    if (!clienteElegido) return;
+    setExportandoFormatoNotas('imagen');
+    setMensaje(null);
+    try {
+      setImagenNotasBlob(await generarImagenRecibo(ELEMENT_ID_REPORTE_NOTAS_CLIENTE));
+    } catch (err: any) {
+      setMensaje(err?.message || 'No se pudo generar la imagen.');
+    } finally {
+      setExportandoFormatoNotas(null);
+    }
+  }
+
+  async function compartirImagenNotas() {
+    if (!imagenNotasBlob || !clienteElegido) return;
+    try {
+      await compartirArchivo(imagenNotasBlob, `cartera-${clienteElegido.nombre}.png`, 'image/png');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo compartir la imagen.');
+      }
+    }
+  }
+
+  async function generarPdfNotas() {
+    if (!clienteElegido) return;
+    setExportandoFormatoNotas('pdf');
+    setMensaje(null);
+    try {
+      setPdfNotasBlob(await generarPdfRecibo(ELEMENT_ID_REPORTE_NOTAS_CLIENTE));
+    } catch (err: any) {
+      setMensaje(err?.message || 'No se pudo generar el PDF.');
+    } finally {
+      setExportandoFormatoNotas(null);
+    }
+  }
+
+  async function compartirPdfNotas() {
+    if (!pdfNotasBlob || !clienteElegido) return;
+    try {
+      await compartirArchivo(pdfNotasBlob, `cartera-${clienteElegido.nombre}.pdf`, 'application/pdf');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo compartir el PDF.');
+      }
+    }
+  }
+
   // Exporta las notas del cliente que se esta viendo (nivel 2). Usa lo
   // que ya esta cargado en pantalla -- si "Ver tambien las notas ya
   // pagadas" esta prendido, el reporte tambien las incluye; si no, solo
@@ -482,10 +546,26 @@ export function AdminCartera({ onCerrar }: Props) {
                 )}
               </>
             )}
-            {nivel === 'notas' && (
-              <button onClick={exportarNotasCliente} disabled={exportando || notas.length === 0}>
-                {exportando ? 'Generando...' : '📊 Exportar Excel'}
-              </button>
+            {nivel === 'notas' && notas.length > 0 && (
+              <>
+                <button onClick={exportarNotasCliente} disabled={exportando}>
+                  {exportando ? 'Generando...' : '📊 Excel'}
+                </button>
+                {!imagenNotasBlob ? (
+                  <button onClick={generarImagenNotas} disabled={!!exportandoFormatoNotas}>
+                    {exportandoFormatoNotas === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
+                  </button>
+                ) : (
+                  <button onClick={compartirImagenNotas}>📤 Compartir imagen</button>
+                )}
+                {!pdfNotasBlob ? (
+                  <button onClick={generarPdfNotas} disabled={!!exportandoFormatoNotas}>
+                    {exportandoFormatoNotas === 'pdf' ? 'Generando...' : '📄 PDF'}
+                  </button>
+                ) : (
+                  <button onClick={compartirPdfNotas}>📤 Compartir PDF</button>
+                )}
+              </>
             )}
             <button onClick={onCerrar}>Cerrar</button>
           </div>
@@ -677,32 +757,39 @@ export function AdminCartera({ onCerrar }: Props) {
               "📊 Exportar Excel" (arriba) exporta lo que esté marcado aquí: solo pendientes, o pendientes y pagadas.
             </p>
 
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
-              {notas.length === 0 && <p style={{ color: '#6b7280' }}>No hay notas para mostrar.</p>}
-              {notas.map((n) => (
-                <div
-                  key={n.id}
-                  style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
-                  onClick={() => abrirNota(n)}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <strong>Venta #{n.folio}</strong>
-                      <div style={{ fontSize: 13, color: '#6b7280' }}>{new Date(n.fecha).toLocaleDateString()}</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div>Total: {formatoMoneda(n.total)}</div>
-                      <div style={{ fontSize: 12, color: n.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                        {n.estadoPago === 'pagada'
-                          ? n.saldoPendiente < 0
-                            ? `Pagada · saldo a favor ${formatoMoneda(Math.abs(n.saldoPendiente))}`
-                            : 'Pagada'
-                          : `Saldo: ${formatoMoneda(n.saldoPendiente)}`}
+            <div id={ELEMENT_ID_REPORTE_NOTAS_CLIENTE} style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <strong>{clienteElegido?.nombre}</strong>
+                <div style={{ fontSize: 13, color: '#6b7280' }}>{clienteElegido?.telefono}</div>
+              </div>
+
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                {notas.length === 0 && <p style={{ color: '#6b7280' }}>No hay notas para mostrar.</p>}
+                {notas.map((n) => (
+                  <div
+                    key={n.id}
+                    style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                    onClick={() => abrirNota(n)}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <strong>Venta #{n.folio}</strong>
+                        <div style={{ fontSize: 13, color: '#6b7280' }}>{new Date(n.fecha).toLocaleDateString()}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div>Total: {formatoMoneda(n.total)}</div>
+                        <div style={{ fontSize: 12, color: n.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                          {n.estadoPago === 'pagada'
+                            ? n.saldoPendiente < 0
+                              ? `Pagada · saldo a favor ${formatoMoneda(Math.abs(n.saldoPendiente))}`
+                              : 'Pagada'
+                            : `Saldo: ${formatoMoneda(n.saldoPendiente)}`}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </>
         )}

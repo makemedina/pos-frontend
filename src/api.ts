@@ -1003,6 +1003,7 @@ export interface ResumenCorteDia {
     utilidadDia: number;
     valorInventario: number;
     balanzaTotal: number;
+    observacion: string | null;
   } | null;
   ventas: {
     total: number;
@@ -1067,11 +1068,16 @@ export async function obtenerCorteDelDia(fecha?: string): Promise<ResumenCorteDi
   return res.json();
 }
 
-export async function guardarCorte(efectivoContado: number, saldoBancoContado: number, fecha?: string) {
+export async function guardarCorte(
+  efectivoContado: number,
+  saldoBancoContado: number,
+  fecha?: string,
+  observacion?: string
+) {
   const res = await fetch(`${API_URL}/corte/caja`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ efectivoContado, saldoBancoContado, fecha }),
+    body: JSON.stringify({ efectivoContado, saldoBancoContado, fecha, observacion }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw { ...data, status: res.status };
@@ -1091,6 +1097,7 @@ export interface CorteHistorico {
   balanzaTotal?: number;
   balanzaEsperada?: number | null;
   diferenciaCuadre?: number | null;
+  observacion: string | null;
 }
 
 export async function obtenerHistorialCortes(): Promise<CorteHistorico[]> {
@@ -1102,11 +1109,16 @@ export async function obtenerHistorialCortes(): Promise<CorteHistorico[]> {
   return res.json();
 }
 
-export async function actualizarCorte(id: string, efectivoContado: number, saldoBancoContado: number) {
+export async function actualizarCorte(
+  id: string,
+  efectivoContado: number,
+  saldoBancoContado: number,
+  observacion?: string
+) {
   const res = await fetch(`${API_URL}/corte/caja/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ efectivoContado, saldoBancoContado }),
+    body: JSON.stringify({ efectivoContado, saldoBancoContado, observacion }),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -1262,6 +1274,30 @@ export async function obtenerMovimientosInventario(
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || 'No se pudo cargar el reporte de movimientos');
+  }
+  return res.json();
+}
+
+// ---------- ANTIGÜEDAD DE STOCK ----------
+
+export interface LoteAntiguo {
+  id: string;
+  producto: string;
+  marca: string;
+  proveedor: string;
+  cantidadDisponible: number;
+  costoUnitario: number;
+  valorEnStock: number;
+  fechaIngreso: string;
+  diasEnStock: number;
+  critico: boolean;
+}
+
+export async function obtenerAntiguedadStock(): Promise<LoteAntiguo[]> {
+  const res = await fetch(`${API_URL}/inventario/antiguedad-stock`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar la antigüedad del stock');
   }
   return res.json();
 }

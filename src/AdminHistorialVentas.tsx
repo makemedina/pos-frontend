@@ -19,6 +19,8 @@ interface Props {
   ventasPendientesCount?: number;
   onVerCotizaciones?: () => void;
   cotizacionesPendientesCount?: number;
+  onVerAntiguedadStock?: () => void;
+  lotesAntiguosCount?: number;
   mensajeGlobal?: string | null;
   onCerrarMensajeGlobal?: () => void;
 }
@@ -42,6 +44,8 @@ export function AdminHistorialVentas({
   ventasPendientesCount = 0,
   onVerCotizaciones,
   cotizacionesPendientesCount = 0,
+  onVerAntiguedadStock,
+  lotesAntiguosCount = 0,
   mensajeGlobal,
   onCerrarMensajeGlobal,
 }: Props) {
@@ -185,6 +189,16 @@ export function AdminHistorialVentas({
             style={{ background: '#fff7e6', color: '#92400e', cursor: 'pointer' }}
           >
             📴 Tienes {ventasPendientesCount} venta{ventasPendientesCount !== 1 ? 's' : ''} sin sincronizar — toca para verlas
+          </div>
+        )}
+
+        {esInicio && lotesAntiguosCount > 0 && (
+          <div
+            className="banner-mensaje"
+            onClick={onVerAntiguedadStock}
+            style={{ background: '#fff2f1', color: '#b91c1c', cursor: 'pointer' }}
+          >
+            ⏳ Tienes {lotesAntiguosCount} lote{lotesAntiguosCount !== 1 ? 's' : ''} con más de 15 días en stock — toca para verlos
           </div>
         )}
 

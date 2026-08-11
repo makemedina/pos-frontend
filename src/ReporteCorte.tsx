@@ -291,6 +291,13 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                 )}
               </div>
             )}
+
+            {yaGuardado?.observacion && (
+              <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
+                <strong style={{ fontSize: 13 }}>Observación</strong>
+                <p style={{ fontSize: 13, margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>{yaGuardado.observacion}</p>
+              </div>
+            )}
           </div>
         );
       })()}

@@ -7,6 +7,7 @@ import {
   crearCotizacion,
   obtenerCotizacionesPendientes,
   confirmarCotizacion,
+  obtenerAntiguedadStock,
   type VarianteCatalogo,
   type UsuarioSesion,
   type Cliente,
@@ -36,6 +37,7 @@ import { AdminProductos } from './AdminProductos';
 import { AdminClientes } from './AdminClientes';
 import { AdminProveedores } from './AdminProveedores';
 import { AdminMovimientosInventario } from './AdminMovimientosInventario';
+import { AdminAntiguedadStock } from './AdminAntiguedadStock';
 import { AdminHistorialVentas } from './AdminHistorialVentas';
 import { AdminHistorialCortes } from './AdminHistorialCortes';
 import { AdminConfiguracion } from './AdminConfiguracion';
@@ -72,6 +74,7 @@ type Pantalla =
   | 'clientes'
   | 'movimientosInventario'
   | 'productos'
+  | 'antiguedadStock'
   | 'historialCortes'
   | 'comprasMenu'
   | 'facturasPendientes'
@@ -152,6 +155,8 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
       return !!usuario.permisos?.puedeVerCostos;
     case 'productos':
       return !!usuario.permisos?.puedeVerCostos;
+    case 'antiguedadStock':
+      return !!usuario.permisos?.puedeVerCostos;
     case 'historialCortes':
       return false; // solo administrador puede editar cortes pasados
     case 'clientesMenu':
@@ -161,7 +166,7 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
     case 'cuentasPorPagarMenu':
       return puedeVer('cuentas', usuario) || puedeVer('facturasPendientes', usuario);
     case 'inventarioMenu':
-      return puedeVer('productos', usuario) || puedeVer('movimientosInventario', usuario);
+      return puedeVer('productos', usuario) || puedeVer('movimientosInventario', usuario) || puedeVer('antiguedadStock', usuario);
     case 'finanzasMenu':
       return (
         puedeVer('gastos', usuario) ||
@@ -209,11 +214,18 @@ export default function App() {
   const [cotizacionParaCompartir, setCotizacionParaCompartir] = useState<DatosCotizacion | null>(null);
   const [cotizacionesPendientesCount, setCotizacionesPendientesCount] = useState(0);
 
+  // Lotes con mas de 15 dias en stock sin venderse -- se avisa apenas se
+  // entra, para no descubrirlo hasta que ya se echo a perder.
+  const [lotesAntiguosCount, setLotesAntiguosCount] = useState(0);
+
   useEffect(() => {
     if (usuario) {
       cargarCatalogo();
       refrescarCacheOffline();
       cargarCotizacionesPendientesCount();
+      if (usuario.rolBase === 'administrador' || usuario.permisos?.puedeVerCostos) {
+        cargarLotesAntiguosCount();
+      }
     }
   }, [usuario]);
 
@@ -284,6 +296,15 @@ export default function App() {
       setCotizacionesPendientesCount(pendientes.length);
     } catch {
       // Sin conexion: se deja el contador como estaba, no es critico.
+    }
+  }
+
+  async function cargarLotesAntiguosCount() {
+    try {
+      const lotes = await obtenerAntiguedadStock();
+      setLotesAntiguosCount(lotes.filter((l) => l.critico).length);
+    } catch {
+      // Sin conexion o sin permiso: se deja el contador como estaba.
     }
   }
 
@@ -628,6 +649,7 @@ export default function App() {
       return renderSubmenu('Inventario', [
         { pantalla: 'productos', icono: '🥩', titulo: 'Productos', descripcion: 'Stock, historial y ajustes', clase: 'boton-flotante-ajuste' },
         { pantalla: 'movimientosInventario', icono: '📈', titulo: 'Movimientos de inventario', descripcion: 'Entradas, salidas, merma y correcciones', clase: 'boton-flotante-historial' },
+        { pantalla: 'antiguedadStock', icono: '⏳', titulo: 'Antigüedad de stock', descripcion: 'Lotes con más de 15 días sin venderse', clase: 'boton-flotante-historial' },
       ]);
     }
     if (pantallaActiva === 'finanzasMenu') {
@@ -754,6 +776,9 @@ export default function App() {
     if (pantallaActiva === 'movimientosInventario') {
       return <AdminMovimientosInventario onCerrar={() => abrirPantalla('inventarioMenu')} />;
     }
+    if (pantallaActiva === 'antiguedadStock') {
+      return <AdminAntiguedadStock onCerrar={() => abrirPantalla('inventarioMenu')} />;
+    }
     if (pantallaActiva === 'ventasOffline') {
       return (
         <VentasOffline
@@ -862,6 +887,8 @@ export default function App() {
         ventasPendientesCount={ventasPendientesCount}
         onVerCotizaciones={() => abrirPantalla('cotizacionesPendientes')}
         cotizacionesPendientesCount={cotizacionesPendientesCount}
+        onVerAntiguedadStock={() => abrirPantalla('antiguedadStock')}
+        lotesAntiguosCount={lotesAntiguosCount}
         mensajeGlobal={mensaje}
         onCerrarMensajeGlobal={() => setMensaje(null)}
       />
