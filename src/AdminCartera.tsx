@@ -348,6 +348,33 @@ export function AdminCartera({ onCerrar }: Props) {
     }
   }
 
+  // Exporta las notas del cliente que se esta viendo (nivel 2). Usa lo
+  // que ya esta cargado en pantalla -- si "Ver tambien las notas ya
+  // pagadas" esta prendido, el reporte tambien las incluye; si no, solo
+  // salen las pendientes.
+  async function exportarNotasCliente() {
+    if (!clienteElegido) return;
+    setExportando(true);
+    setMensaje(null);
+    try {
+      const filas = notas.map((n) => ({
+        Cliente: clienteElegido.nombre,
+        Telefono: clienteElegido.telefono,
+        Folio: n.folio,
+        Fecha: new Date(n.fecha).toLocaleDateString(),
+        Total: n.total,
+        'Saldo pendiente': n.saldoPendiente,
+        Estado: n.estadoPago,
+      }));
+      const nombreArchivo = `cartera-${clienteElegido.nombre.trim().toLowerCase().replace(/\s+/g, '-')}`;
+      await exportarAExcel(filas, nombreArchivo);
+    } catch {
+      setMensaje('No se pudo generar el reporte de este cliente.');
+    } finally {
+      setExportando(false);
+    }
+  }
+
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
@@ -360,6 +387,11 @@ export function AdminCartera({ onCerrar }: Props) {
           <div style={{ display: 'flex', gap: 8 }}>
             {nivel === 'clientes' && (
               <button onClick={exportar} disabled={exportando}>
+                {exportando ? 'Generando...' : '📊 Exportar Excel'}
+              </button>
+            )}
+            {nivel === 'notas' && (
+              <button onClick={exportarNotasCliente} disabled={exportando || notas.length === 0}>
                 {exportando ? 'Generando...' : '📊 Exportar Excel'}
               </button>
             )}
@@ -540,6 +572,9 @@ export function AdminCartera({ onCerrar }: Props) {
               <input type="checkbox" checked={verPagadas} onChange={(e) => setVerPagadas(e.target.checked)} />
               Ver tambien las notas ya pagadas
             </label>
+            <p style={{ fontSize: 12, color: '#6b7280', margin: '-0.5rem 0 0' }}>
+              "📊 Exportar Excel" (arriba) exporta lo que esté marcado aquí: solo pendientes, o pendientes y pagadas.
+            </p>
 
             <div style={{ display: 'grid', gap: '0.75rem' }}>
               {notas.length === 0 && <p style={{ color: '#6b7280' }}>No hay notas para mostrar.</p>}
