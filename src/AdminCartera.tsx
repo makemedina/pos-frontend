@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
 import { exportarAExcel } from './exportarExcel';
+import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
 import { ComprobantePagoModal, type DatosComprobantePago } from './ComprobantePagoModal';
 import {
   obtenerResumenCartera,
@@ -20,6 +21,8 @@ interface Props {
 
 type Nivel = 'clientes' | 'notas' | 'pagos';
 
+const ELEMENT_ID_REPORTE_CARTERA = 'cartera-reporte';
+
 export function AdminCartera({ onCerrar }: Props) {
   const [nivel, setNivel] = useState<Nivel>('clientes');
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -27,6 +30,15 @@ export function AdminCartera({ onCerrar }: Props) {
   const [comprobanteActivo, setComprobanteActivo] = useState<DatosComprobantePago | null>(null);
   const [exportando, setExportando] = useState(false);
   const [cargando, setCargando] = useState(true);
+
+  // Reporte de cartera (nivel 1) como imagen o PDF -- mismo patron que el
+  // corte de caja (AdminCorteCaja.tsx): generar y compartir van separados
+  // a proposito, porque si se comparte justo despues de generar (que
+  // tarda un momento en el celular), el navegador ya no lo reconoce como
+  // accion directa del usuario.
+  const [exportandoFormato, setExportandoFormato] = useState<'imagen' | 'pdf' | null>(null);
+  const [imagenCarteraBlob, setImagenCarteraBlob] = useState<Blob | null>(null);
+  const [pdfCarteraBlob, setPdfCarteraBlob] = useState<Blob | null>(null);
 
   // Nivel 1: clientes
   const [clientes, setClientes] = useState<ClienteCartera[]>([]);
@@ -64,6 +76,13 @@ export function AdminCartera({ onCerrar }: Props) {
     if (nivel === 'notas' && clienteElegido) cargarNotas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [verPagadas]);
+
+  // Si cambia el filtro o se recargan los clientes, la imagen/PDF ya
+  // generados quedaron desactualizados -- hay que generarlos de nuevo.
+  useEffect(() => {
+    setImagenCarteraBlob(null);
+    setPdfCarteraBlob(null);
+  }, [busquedaCartera, clientes]);
 
   async function cargarClientes() {
     setCargando(true);
@@ -348,6 +367,52 @@ export function AdminCartera({ onCerrar }: Props) {
     }
   }
 
+  async function generarImagenCartera() {
+    setExportandoFormato('imagen');
+    setMensaje(null);
+    try {
+      setImagenCarteraBlob(await generarImagenRecibo(ELEMENT_ID_REPORTE_CARTERA));
+    } catch (err: any) {
+      setMensaje(err?.message || 'No se pudo generar la imagen de la cartera.');
+    } finally {
+      setExportandoFormato(null);
+    }
+  }
+
+  async function compartirImagenCartera() {
+    if (!imagenCarteraBlob) return;
+    try {
+      await compartirArchivo(imagenCarteraBlob, 'cartera.png', 'image/png');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo compartir la imagen.');
+      }
+    }
+  }
+
+  async function generarPdfCartera() {
+    setExportandoFormato('pdf');
+    setMensaje(null);
+    try {
+      setPdfCarteraBlob(await generarPdfRecibo(ELEMENT_ID_REPORTE_CARTERA));
+    } catch (err: any) {
+      setMensaje(err?.message || 'No se pudo generar el PDF de la cartera.');
+    } finally {
+      setExportandoFormato(null);
+    }
+  }
+
+  async function compartirPdfCartera() {
+    if (!pdfCarteraBlob) return;
+    try {
+      await compartirArchivo(pdfCarteraBlob, 'cartera.pdf', 'application/pdf');
+    } catch (err: any) {
+      if (!(err instanceof CompartirCanceladoError)) {
+        setMensaje(err?.message || 'No se pudo compartir el PDF.');
+      }
+    }
+  }
+
   // Exporta las notas del cliente que se esta viendo (nivel 2). Usa lo
   // que ya esta cargado en pantalla -- si "Ver tambien las notas ya
   // pagadas" esta prendido, el reporte tambien las incluye; si no, solo
@@ -385,10 +450,26 @@ export function AdminCartera({ onCerrar }: Props) {
             {nivel === 'pagos' && `Venta #${notaElegida?.folio}`}
           </h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            {nivel === 'clientes' && (
-              <button onClick={exportar} disabled={exportando}>
-                {exportando ? 'Generando...' : '📊 Exportar Excel'}
-              </button>
+            {nivel === 'clientes' && clientesFiltrados.length > 0 && (
+              <>
+                <button onClick={exportar} disabled={exportando}>
+                  {exportando ? 'Generando...' : '📊 Excel'}
+                </button>
+                {!imagenCarteraBlob ? (
+                  <button onClick={generarImagenCartera} disabled={!!exportandoFormato}>
+                    {exportandoFormato === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
+                  </button>
+                ) : (
+                  <button onClick={compartirImagenCartera}>📤 Compartir imagen</button>
+                )}
+                {!pdfCarteraBlob ? (
+                  <button onClick={generarPdfCartera} disabled={!!exportandoFormato}>
+                    {exportandoFormato === 'pdf' ? 'Generando...' : '📄 PDF'}
+                  </button>
+                ) : (
+                  <button onClick={compartirPdfCartera}>📤 Compartir PDF</button>
+                )}
+              </>
             )}
             {nivel === 'notas' && (
               <button onClick={exportarNotasCliente} disabled={exportando || notas.length === 0}>
@@ -412,49 +493,51 @@ export function AdminCartera({ onCerrar }: Props) {
               value={busquedaCartera}
               onChange={(e) => setBusquedaCartera(e.target.value)}
             />
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
-              {clientesFiltrados.length === 0 && <p style={{ color: '#6b7280' }}>No hay clientes que coincidan.</p>}
-              {clientesFiltrados.map((c) => (
-                <div
-                  key={c.id}
-                  style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
-                  onClick={() => abrirCliente(c)}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <strong>{c.nombre}</strong>
-                      <div style={{ fontSize: 13, color: '#6b7280' }}>{c.telefono}</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 700, color: c.saldoTotal > 0 ? '#b91c1c' : '#16a34a' }}>
-                        {formatoMoneda(Math.abs(c.saldoTotal))}
+            <div id={ELEMENT_ID_REPORTE_CARTERA} style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                {clientesFiltrados.length === 0 && <p style={{ color: '#6b7280' }}>No hay clientes que coincidan.</p>}
+                {clientesFiltrados.map((c) => (
+                  <div
+                    key={c.id}
+                    style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                    onClick={() => abrirCliente(c)}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <strong>{c.nombre}</strong>
+                        <div style={{ fontSize: 13, color: '#6b7280' }}>{c.telefono}</div>
                       </div>
-                      <div style={{ fontSize: 12, color: c.saldoTotal < 0 ? '#16a34a' : '#6b7280' }}>
-                        {c.saldoTotal < 0
-                          ? 'Saldo a favor'
-                          : `${c.notasConSaldo} nota${c.notasConSaldo !== 1 ? 's' : ''} pendiente${c.notasConSaldo !== 1 ? 's' : ''}`}
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 700, color: c.saldoTotal > 0 ? '#b91c1c' : '#16a34a' }}>
+                          {formatoMoneda(Math.abs(c.saldoTotal))}
+                        </div>
+                        <div style={{ fontSize: 12, color: c.saldoTotal < 0 ? '#16a34a' : '#6b7280' }}>
+                          {c.saldoTotal < 0
+                            ? 'Saldo a favor'
+                            : `${c.notasConSaldo} nota${c.notasConSaldo !== 1 ? 's' : ''} pendiente${c.notasConSaldo !== 1 ? 's' : ''}`}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            {clientesFiltrados.length > 0 && (
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '0.75rem',
-                  borderRadius: 14,
-                  background: '#f8fafc',
-                  fontWeight: 700,
-                }}
-              >
-                <span>{busquedaCartera.trim() ? 'Total filtrado' : 'Total en cartera'}</span>
-                <span>{formatoMoneda(totalCartera)}</span>
+                ))}
               </div>
-            )}
+
+              {clientesFiltrados.length > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '0.75rem',
+                    borderRadius: 14,
+                    background: '#f8fafc',
+                    fontWeight: 700,
+                  }}
+                >
+                  <span>{busquedaCartera.trim() ? 'Total filtrado' : 'Total en cartera'}</span>
+                  <span>{formatoMoneda(totalCartera)}</span>
+                </div>
+              )}
+            </div>
           </>
         )}
 
