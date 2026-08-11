@@ -172,13 +172,24 @@ export function AdminCartera({ onCerrar }: Props) {
   // Marcar/desmarcar una nota en el checklist: al marcarla se rellena su
   // recuadro con el saldo pendiente de esa nota (editable despues); al
   // desmarcarla se le quita cualquier monto que tuviera asignado.
+  //
+  // Excepcion: si esta es la ULTIMA nota que faltaba marcar y el importe
+  // del pago alcanza para mas de lo que esta nota debe, se le asigna TODO
+  // lo que sobra (no solo su saldo) -- asi el excedente queda registrado
+  // como saldo a favor en esa nota, en vez de quedarse sin aplicar. Sin
+  // esto, marcar la unica nota pendiente con un pago de $3,016 sobre una
+  // deuda de $3,015.89 dejaba los 11 centavos "por distribuir" pero
+  // nunca se guardaban en ningun lado.
   function toggleNotaPago(n: NotaCartera) {
     setAsignacionesPago((prev) => {
       if (n.id in prev) {
         const { [n.id]: _omitida, ...resto } = prev;
         return resto;
       }
-      return { ...prev, [n.id]: String(n.saldoPendiente) };
+      const quedanSinMarcar = notasPendientesPago.some((m) => m.id !== n.id && !(m.id in prev));
+      const restante = Number(montoPagoMultiple || 0) - totalAsignadoPago;
+      const monto = !quedanSinMarcar && restante > n.saldoPendiente ? restante : n.saldoPendiente;
+      return { ...prev, [n.id]: String(monto) };
     });
   }
 
@@ -639,6 +650,11 @@ export function AdminCartera({ onCerrar }: Props) {
                 {restantePorDistribuir < 0 && (
                   <p style={{ fontSize: 12, color: '#b91c1c', margin: 0 }}>
                     Asignaste más de lo que dice el importe del pago recibido.
+                  </p>
+                )}
+                {restantePorDistribuir > 0 && notasPendientesPago.every((n) => n.id in asignacionesPago) && (
+                  <p style={{ fontSize: 12, color: '#b91c1c', margin: 0 }}>
+                    Este sobrante no se va a registrar en ningún lado — súmalo al monto de alguna nota si es parte del pago (ej. quedará como saldo a favor).
                   </p>
                 )}
 
