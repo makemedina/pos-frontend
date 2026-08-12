@@ -220,17 +220,13 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
           <label className="etiqueta">Total a pagar: {formatoMoneda(total)}</label>
         )}
 
-        {pagoInicial > 0 && (
-          <>
-            <label className="etiqueta">
-              {esCredito ? 'Método del pago inicial' : 'Método de pago'}
-            </label>
-            <select value={metodoPagoInicial} onChange={(e) => setMetodoPagoInicial(e.target.value)}>
-              <option value="efectivo">Efectivo</option>
-              <option value="transferencia">Transferencia</option>
-            </select>
-          </>
-        )}
+        <label className="etiqueta">
+          {esCredito ? 'Método del pago inicial (si hay)' : 'Método de pago'}
+        </label>
+        <select value={metodoPagoInicial} onChange={(e) => setMetodoPagoInicial(e.target.value)}>
+          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option>
+        </select>
 
         <div className="subtotal-linea">
           <div>
