@@ -8,6 +8,7 @@ import {
   obtenerCotizacionesPendientes,
   confirmarCotizacion,
   obtenerAntiguedadStock,
+  obtenerClientesEnRiesgo,
   type VarianteCatalogo,
   type UsuarioSesion,
   type Cliente,
@@ -38,6 +39,7 @@ import { AdminClientes } from './AdminClientes';
 import { AdminProveedores } from './AdminProveedores';
 import { AdminMovimientosInventario } from './AdminMovimientosInventario';
 import { AdminAntiguedadStock } from './AdminAntiguedadStock';
+import { AdminAnaliticaVentas } from './AdminAnaliticaVentas';
 import { AdminHistorialVentas } from './AdminHistorialVentas';
 import { AdminHistorialCortes } from './AdminHistorialCortes';
 import { AdminConfiguracion } from './AdminConfiguracion';
@@ -75,6 +77,7 @@ type Pantalla =
   | 'movimientosInventario'
   | 'productos'
   | 'antiguedadStock'
+  | 'analiticaVentas'
   | 'historialCortes'
   | 'comprasMenu'
   | 'facturasPendientes'
@@ -157,6 +160,8 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
       return !!usuario.permisos?.puedeVerCostos;
     case 'antiguedadStock':
       return !!usuario.permisos?.puedeVerCostos;
+    case 'analiticaVentas':
+      return !!usuario.permisos?.puedeVerCarteraGeneral;
     case 'historialCortes':
       return false; // solo administrador puede editar cortes pasados
     case 'clientesMenu':
@@ -172,7 +177,8 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
         puedeVer('gastos', usuario) ||
         puedeVer('depositos', usuario) ||
         puedeVer('corte', usuario) ||
-        puedeVer('dashboard', usuario)
+        puedeVer('dashboard', usuario) ||
+        puedeVer('analiticaVentas', usuario)
       );
     case 'configuracionMenu':
       return puedeVer('configuracion', usuario) || puedeVer('usuarios', usuario) || puedeVer('configuracionRecibo', usuario);
@@ -218,6 +224,10 @@ export default function App() {
   // entra, para no descubrirlo hasta que ya se echo a perder.
   const [lotesAntiguosCount, setLotesAntiguosCount] = useState(0);
 
+  // Clientes cuyo ritmo de compra o volumen reciente cayo por debajo de lo
+  // normal para ellos -- se avisa apenas se entra, para saber a quien llamar.
+  const [clientesEnRiesgoCount, setClientesEnRiesgoCount] = useState(0);
+
   useEffect(() => {
     if (usuario) {
       cargarCatalogo();
@@ -225,6 +235,9 @@ export default function App() {
       cargarCotizacionesPendientesCount();
       if (usuario.rolBase === 'administrador' || usuario.permisos?.puedeVerCostos) {
         cargarLotesAntiguosCount();
+      }
+      if (usuario.rolBase === 'administrador' || usuario.permisos?.puedeVerCarteraGeneral) {
+        cargarClientesEnRiesgoCount();
       }
     }
   }, [usuario]);
@@ -303,6 +316,15 @@ export default function App() {
     try {
       const lotes = await obtenerAntiguedadStock();
       setLotesAntiguosCount(lotes.filter((l) => l.critico).length);
+    } catch {
+      // Sin conexion o sin permiso: se deja el contador como estaba.
+    }
+  }
+
+  async function cargarClientesEnRiesgoCount() {
+    try {
+      const clientes = await obtenerClientesEnRiesgo();
+      setClientesEnRiesgoCount(clientes.length);
     } catch {
       // Sin conexion o sin permiso: se deja el contador como estaba.
     }
@@ -658,6 +680,7 @@ export default function App() {
         { pantalla: 'gastos', icono: '💸', titulo: 'Gastos', descripcion: 'Registrar y ver gastos operativos', clase: 'boton-flotante-gastos' },
         { pantalla: 'depositos', icono: '🏦', titulo: 'Depósitos a banco', descripcion: 'Traspasar efectivo a banco', clase: 'boton-flotante-gastos' },
         { pantalla: 'dashboard', icono: '📊', titulo: 'Estadísticas', descripcion: 'Ventas, utilidad y mas vendidos', clase: 'boton-flotante-dashboard' },
+        { pantalla: 'analiticaVentas', icono: '🎯', titulo: 'Analítica de ventas', descripcion: 'Clientes que dejaron de comprar o compran menos', clase: 'boton-flotante-dashboard' },
       ]);
     }
     if (pantallaActiva === 'configuracionMenu') {
@@ -779,6 +802,9 @@ export default function App() {
     if (pantallaActiva === 'antiguedadStock') {
       return <AdminAntiguedadStock onCerrar={() => abrirPantalla('inventarioMenu')} />;
     }
+    if (pantallaActiva === 'analiticaVentas') {
+      return <AdminAnaliticaVentas onCerrar={() => abrirPantalla('finanzasMenu')} />;
+    }
     if (pantallaActiva === 'ventasOffline') {
       return (
         <VentasOffline
@@ -889,6 +915,8 @@ export default function App() {
         cotizacionesPendientesCount={cotizacionesPendientesCount}
         onVerAntiguedadStock={() => abrirPantalla('antiguedadStock')}
         lotesAntiguosCount={lotesAntiguosCount}
+        onVerAnaliticaVentas={() => abrirPantalla('analiticaVentas')}
+        clientesEnRiesgoCount={clientesEnRiesgoCount}
         mensajeGlobal={mensaje}
         onCerrarMensajeGlobal={() => setMensaje(null)}
       />

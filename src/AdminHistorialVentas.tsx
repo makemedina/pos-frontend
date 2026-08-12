@@ -21,6 +21,8 @@ interface Props {
   cotizacionesPendientesCount?: number;
   onVerAntiguedadStock?: () => void;
   lotesAntiguosCount?: number;
+  onVerAnaliticaVentas?: () => void;
+  clientesEnRiesgoCount?: number;
   mensajeGlobal?: string | null;
   onCerrarMensajeGlobal?: () => void;
 }
@@ -46,6 +48,8 @@ export function AdminHistorialVentas({
   cotizacionesPendientesCount = 0,
   onVerAntiguedadStock,
   lotesAntiguosCount = 0,
+  onVerAnaliticaVentas,
+  clientesEnRiesgoCount = 0,
   mensajeGlobal,
   onCerrarMensajeGlobal,
 }: Props) {
@@ -199,6 +203,16 @@ export function AdminHistorialVentas({
             style={{ background: '#fff2f1', color: '#b91c1c', cursor: 'pointer' }}
           >
             ⏳ Tienes {lotesAntiguosCount} lote{lotesAntiguosCount !== 1 ? 's' : ''} con más de 15 días en stock — toca para verlos
+          </div>
+        )}
+
+        {esInicio && clientesEnRiesgoCount > 0 && (
+          <div
+            className="banner-mensaje"
+            onClick={onVerAnaliticaVentas}
+            style={{ background: '#fff2f1', color: '#b91c1c', cursor: 'pointer' }}
+          >
+            🎯 Tienes {clientesEnRiesgoCount} cliente{clientesEnRiesgoCount !== 1 ? 's' : ''} en riesgo — toca para ver a quién llamarle
           </div>
         )}
 

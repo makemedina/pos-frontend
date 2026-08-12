@@ -1306,6 +1306,32 @@ export async function obtenerAntiguedadStock(): Promise<LoteAntiguo[]> {
   return res.json();
 }
 
+// ---------- ANALÍTICA DE VENTAS (clientes en riesgo) ----------
+
+export type MotivoRiesgoCliente = 'dejo_de_comprar' | 'compra_menos' | 'ambos';
+
+export interface ClienteEnRiesgo {
+  id: string;
+  nombre: string;
+  telefono: string;
+  ultimaCompra: string;
+  diasSinComprar: number;
+  intervaloPromedioDias: number;
+  ritmoPct: number;
+  gastoRecientePct: number | null;
+  motivo: MotivoRiesgoCliente;
+  prioridadPct: number;
+}
+
+export async function obtenerClientesEnRiesgo(): Promise<ClienteEnRiesgo[]> {
+  const res = await fetch(`${API_URL}/analitica/clientes-en-riesgo`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar la analítica de ventas');
+  }
+  return res.json();
+}
+
 // ---------- HISTORIAL DE VENTAS ----------
 
 export interface ItemVentaHistorial {
