@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
 import {
   buscarProveedores,
@@ -33,13 +33,28 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
 
   const [numeroFactura, setNumeroFactura] = useState('');
   const [fechaVencimiento, setFechaVencimiento] = useState('');
+  const [esCredito, setEsCredito] = useState(false);
   const [pagoInicial, setPagoInicial] = useState(0);
+  const [metodoPagoInicial, setMetodoPagoInicial] = useState('efectivo');
 
   const [items, setItems] = useState<ItemCompraLocal[]>([]);
   const [mostrarBuscadorProducto, setMostrarBuscadorProducto] = useState(false);
 
   const total = items.reduce((acc, i) => acc + i.cantidad * i.costoUnitario, 0);
   const saldoPendiente = total - pagoInicial;
+
+  // Al contado, el pago inicial siempre es el total completo (se ajusta
+  // solo si se agregan/quitan productos); a credito, arranca en $0 y el
+  // usuario decide cuanto abonar de una vez (puede ser nada).
+  useEffect(() => {
+    if (!esCredito) setPagoInicial(total);
+  }, [esCredito, total]);
+
+  function toggleCredito() {
+    const nuevo = !esCredito;
+    setEsCredito(nuevo);
+    setPagoInicial(nuevo ? 0 : total);
+  }
 
   async function buscarProv(valor: string) {
     setBusquedaProveedor(valor);
@@ -79,6 +94,7 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
         costoUnitario: i.costoUnitario,
       })),
       pagoInicial: pagoInicial || undefined,
+      metodoPagoInicial: pagoInicial > 0 ? metodoPagoInicial : undefined,
     });
 
     onCompletada(`Compra registrada por ${formatoMoneda(total)}`);
@@ -179,20 +195,47 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
           </button>
         </div>
 
-        <label className="etiqueta">Pago inicial (opcional)</label>
-        <div className="campo-precio">
-          <span>$</span>
-          <input
-            type="number"
-            value={pagoInicial}
-            onChange={(e) => setPagoInicial(Number(e.target.value))}
-          />
+        <div className="bloque-credito">
+          <div className="fila-switch">
+            <span>Compra a crédito</span>
+            <button className={`switch ${esCredito ? 'on' : ''}`} onClick={toggleCredito}>
+              <span className="switch-bola" />
+            </button>
+          </div>
         </div>
+
+        {esCredito ? (
+          <>
+            <label className="etiqueta">Pago inicial (opcional)</label>
+            <div className="campo-precio">
+              <span>$</span>
+              <input
+                type="number"
+                value={pagoInicial}
+                onChange={(e) => setPagoInicial(Number(e.target.value) || 0)}
+              />
+            </div>
+          </>
+        ) : (
+          <label className="etiqueta">Total a pagar: {formatoMoneda(total)}</label>
+        )}
+
+        {pagoInicial > 0 && (
+          <>
+            <label className="etiqueta">
+              {esCredito ? 'Método del pago inicial' : 'Método de pago'}
+            </label>
+            <select value={metodoPagoInicial} onChange={(e) => setMetodoPagoInicial(e.target.value)}>
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+            </select>
+          </>
+        )}
 
         <div className="subtotal-linea">
           <div>
             <p>Total de la compra</p>
-            {saldoPendiente > 0 && (
+            {esCredito && saldoPendiente > 0 && (
               <p className="texto-alerta" style={{ fontSize: 12 }}>
                 Queda pendiente: {formatoMoneda(saldoPendiente)}
               </p>

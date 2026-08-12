@@ -64,7 +64,7 @@ function formatDateInput(date: Date) {
 export function AdminDashboard({ onCerrar }: Props) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
-  const [periodo, setPeriodo] = useState('mes');
+  const [periodo, setPeriodo] = useState('dia');
   const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
   const [metricaExpandida, setMetricaExpandida] = useState<MetricaClave | null>(null);
