@@ -720,6 +720,7 @@ export default function App() {
         <AdminProveedores
           onCerrar={() => abrirPantalla('comprasMenu')}
           esAdmin={usuario.rolBase === 'administrador'}
+          puedeVerCostos={!!usuario.permisos?.puedeVerCostos}
         />
       );
     }

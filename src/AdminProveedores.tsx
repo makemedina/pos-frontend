@@ -6,13 +6,15 @@ import {
   eliminarProveedor,
   type Proveedor,
 } from './api';
+import { ProveedorCostos } from './ProveedorCostos';
 
 interface Props {
   onCerrar: () => void;
   esAdmin?: boolean;
+  puedeVerCostos?: boolean;
 }
 
-export function AdminProveedores({ onCerrar, esAdmin }: Props) {
+export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -28,6 +30,8 @@ export function AdminProveedores({ onCerrar, esAdmin }: Props) {
 
   const [confirmandoEliminarId, setConfirmandoEliminarId] = useState<string | null>(null);
   const [eliminando, setEliminando] = useState(false);
+
+  const [proveedorCostos, setProveedorCostos] = useState<Proveedor | null>(null);
 
   useEffect(() => {
     cargar();
@@ -95,6 +99,16 @@ export function AdminProveedores({ onCerrar, esAdmin }: Props) {
     return p.nombre.toLowerCase().includes(q) || (p.telefono || '').includes(busqueda.trim());
   });
 
+  if (proveedorCostos) {
+    return (
+      <ProveedorCostos
+        proveedorId={proveedorCostos.id}
+        proveedorNombre={proveedorCostos.nombre}
+        onCerrar={() => setProveedorCostos(null)}
+      />
+    );
+  }
+
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
@@ -153,6 +167,9 @@ export function AdminProveedores({ onCerrar, esAdmin }: Props) {
                       <div style={{ fontSize: 13, color: '#6b7280' }}>{p.telefono || 'Sin teléfono'}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
+                      {puedeVerCostos && (
+                        <button onClick={() => setProveedorCostos(p)}>Costos</button>
+                      )}
                       <button onClick={() => empezarEdicion(p)}>Editar</button>
                       {esAdmin && (
                         <button

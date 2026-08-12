@@ -582,6 +582,51 @@ export async function importarProveedores(nombres: string[]): Promise<{ creados:
   return res.json();
 }
 
+export interface CostoProveedorProducto {
+  varianteId: string;
+  producto: string;
+  marca: string;
+  costo: number;
+  actualizadoEn: string;
+}
+
+export async function obtenerCostosProveedor(proveedorId: string): Promise<CostoProveedorProducto[]> {
+  const res = await fetch(`${API_URL}/proveedores/${proveedorId}/costos`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los costos del proveedor');
+  }
+  return res.json();
+}
+
+export async function guardarCostoProveedor(
+  proveedorId: string,
+  varianteId: string,
+  costo: number
+): Promise<CostoProveedorProducto> {
+  const res = await fetch(`${API_URL}/proveedores/${proveedorId}/costos/${varianteId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ costo }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo guardar el costo');
+  }
+  return res.json();
+}
+
+export async function eliminarCostoProveedor(proveedorId: string, varianteId: string): Promise<void> {
+  const res = await fetch(`${API_URL}/proveedores/${proveedorId}/costos/${varianteId}`, {
+    method: 'DELETE',
+    headers: headerAuth(),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo eliminar el costo');
+  }
+}
+
 // ---------- COMPRAS ----------
 
 export interface ItemCompraPayload {
