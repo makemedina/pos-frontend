@@ -39,6 +39,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
   const [montoPagoMultiple, setMontoPagoMultiple] = useState('');
   const [asignacionesPago, setAsignacionesPago] = useState<Record<string, string>>({});
   const [guardandoPagoMultiple, setGuardandoPagoMultiple] = useState(false);
+  const [guardandoPago, setGuardandoPago] = useState(false);
 
   // Nivel 3: historial de abonos de una factura + formulario de abono individual
   const [facturaElegida, setFacturaElegida] = useState<FacturaPendiente | null>(null);
@@ -195,8 +196,9 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
 
   async function handlePago(e: React.FormEvent) {
     e.preventDefault();
-    if (!facturaElegida) return;
+    if (!facturaElegida || guardandoPago) return;
 
+    setGuardandoPago(true);
     try {
       await registrarPagoCompra(facturaElegida.id, Number(monto), metodoPago);
       setMensaje(`Pago registrado para ${facturaElegida.proveedor.nombre}`);
@@ -221,6 +223,8 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
       } else {
         setMensaje('No se pudo registrar el pago');
       }
+    } finally {
+      setGuardandoPago(false);
     }
   }
 
@@ -483,7 +487,9 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     <option value="transferencia">Transferencia</option>
                   </select>
                 </label>
-                <button type="submit">Guardar pago</button>
+                <button type="submit" disabled={guardandoPago}>
+                  {guardandoPago ? 'Guardando...' : 'Guardar pago'}
+                </button>
               </form>
             )}
           </>

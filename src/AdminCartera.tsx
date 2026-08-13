@@ -62,6 +62,7 @@ export function AdminCartera({ onCerrar }: Props) {
   const [montoPagoMultiple, setMontoPagoMultiple] = useState('');
   const [asignacionesPago, setAsignacionesPago] = useState<Record<string, string>>({});
   const [guardandoPagoMultiple, setGuardandoPagoMultiple] = useState(false);
+  const [guardandoPago, setGuardandoPago] = useState(false);
 
   // Nivel 3: pagos de una nota + formulario de abono
   const [notaElegida, setNotaElegida] = useState<NotaCartera | null>(null);
@@ -269,8 +270,9 @@ export function AdminCartera({ onCerrar }: Props) {
 
   async function handlePago(e: React.FormEvent) {
     e.preventDefault();
-    if (!notaElegida) return;
+    if (!notaElegida || guardandoPago) return;
 
+    setGuardandoPago(true);
     try {
       const resultado = await registrarPagoVenta(notaElegida.id, Number(monto), metodoPago);
       setMensaje(`Pago registrado para la venta #${notaElegida.folio}`);
@@ -309,6 +311,8 @@ export function AdminCartera({ onCerrar }: Props) {
       } else {
         setMensaje('No se pudo registrar el pago.');
       }
+    } finally {
+      setGuardandoPago(false);
     }
   }
 
@@ -894,7 +898,9 @@ export function AdminCartera({ onCerrar }: Props) {
                     <option value="transferencia">Transferencia</option>
                   </select>
                 </label>
-                <button type="submit">Guardar pago</button>
+                <button type="submit" disabled={guardandoPago}>
+                  {guardandoPago ? 'Guardando...' : 'Guardar pago'}
+                </button>
               </form>
             )}
           </>
