@@ -414,6 +414,7 @@ export interface MovimientoCliente {
   folio: number;
   fecha: string;
   monto: number;
+  cancelado?: boolean;
 }
 
 export async function obtenerMovimientosDeCliente(

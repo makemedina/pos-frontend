@@ -482,14 +482,15 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                   movimientos.map((m) => (
                     <div
                       key={`${m.tipo}-${m.id}`}
-                      style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}
+                      style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6, opacity: m.cancelado ? 0.5 : 1 }}
                     >
                       <span>
                         {m.tipo === 'venta' ? '🛒 Venta' : '💵 Abono'} #{m.folio}
+                        {m.cancelado && <span style={{ color: '#b91c1c', fontWeight: 600 }}> (cancelado)</span>}
                         <br />
                         <small style={{ color: '#6b7280' }}>{new Date(m.fecha).toLocaleString()}</small>
                       </span>
-                      <strong style={{ color: m.tipo === 'venta' ? '#b91c1c' : '#16a34a' }}>
+                      <strong style={{ color: m.tipo === 'venta' ? '#b91c1c' : '#16a34a', textDecoration: m.cancelado ? 'line-through' : 'none' }}>
                         {m.tipo === 'venta' ? '+' : '-'}{formatoMoneda(m.monto)}
                       </strong>
                     </div>
