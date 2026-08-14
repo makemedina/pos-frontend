@@ -60,6 +60,10 @@ export function Checkout({
   const montoPagado = montoEfectivo + montoTransferencia;
   const saldoPendiente = Math.max(total - montoPagado, 0);
   const diferenciaContado = total - montoPagado;
+  // Si el cliente pago de mas (efectivo o transferencia, credito o de
+  // contado), el excedente se guarda como saldo a favor en su cuenta --
+  // ya no se rechaza como error.
+  const excedente = Math.max(montoPagado - total, 0);
   const requiereAutorizacion = items.some(
     (item) => item.costoLote !== null && item.precioUnitario < item.costoLote
   );
@@ -86,16 +90,8 @@ export function Checkout({
   function confirmar() {
     setErrorMontos(null);
 
-    if (!esCredito && Math.abs(diferenciaContado) > 0.01) {
-      setErrorMontos(
-        diferenciaContado > 0
-          ? `Falta ${formatoMoneda(diferenciaContado)} para completar el total.`
-          : `El efectivo y la transferencia suman ${formatoMoneda(-diferenciaContado)} de más que el total.`
-      );
-      return;
-    }
-    if (montoPagado > total + 0.01) {
-      setErrorMontos('El monto pagado no puede ser mayor al total de la venta.');
+    if (!esCredito && diferenciaContado > 0.01) {
+      setErrorMontos(`Falta ${formatoMoneda(diferenciaContado)} para completar el total.`);
       return;
     }
     if (
@@ -198,6 +194,12 @@ export function Checkout({
             <div className="linea-resumen">
               <span>Saldo pendiente</span>
               <strong className="texto-alerta">{formatoMoneda(saldoPendiente)}</strong>
+            </div>
+          )}
+
+          {excedente > 0.01 && (
+            <div className="banner-mensaje">
+              💰 Sobran {formatoMoneda(excedente)} — se guardarán como saldo a favor de {cliente.nombre}.
             </div>
           )}
 
