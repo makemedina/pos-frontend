@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { obtenerConfiguracion, type Configuracion } from './api';
 import { obtenerConfiguracionCache } from './offline';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, etiquetaMetodoPago } from './formato';
 import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
 
 export interface DatosComprobantePago {
@@ -147,7 +147,7 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
                 <span>MONTO ABONADO</span>
                 <span>{formatoMoneda(datos.monto)}</span>
               </div>
-              <div style={{ marginTop: 4 }}>Método de pago: {datos.metodoPago}</div>
+              <div style={{ marginTop: 4 }}>Método de pago: {etiquetaMetodoPago(datos.metodoPago)}</div>
 
               <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
               {datos.detalleNotas ? (

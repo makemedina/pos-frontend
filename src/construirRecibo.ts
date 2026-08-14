@@ -1,5 +1,6 @@
 import { anchoCaracteres, lineaDosColumnas, lineaSeparadora, type LineaRecibo } from './impresionBluetooth';
 import type { Configuracion } from './api';
+import { etiquetaMetodoPago } from './formato';
 
 export interface ItemReciboDatos {
   producto: string;
@@ -12,6 +13,7 @@ export interface PagoReciboDatos {
   metodoPago: string;
   monto: number;
 }
+
 
 export interface DatosRecibo {
   folio: number | string;
@@ -71,7 +73,7 @@ export function construirLineasRecibo(config: Configuracion, datos: DatosRecibo)
   if (datos.pagos && datos.pagos.length > 0) {
     for (const pago of datos.pagos) {
       lineas.push({
-        texto: lineaDosColumnas(`Pagado (${pago.metodoPago})`, `$${pago.monto.toFixed(2)}`, ancho),
+        texto: lineaDosColumnas(`Pagado (${etiquetaMetodoPago(pago.metodoPago)})`, `$${pago.monto.toFixed(2)}`, ancho),
       });
     }
   }

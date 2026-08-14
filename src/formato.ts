@@ -18,3 +18,14 @@ export function formatoKg(cantidad: number | null | undefined): string {
   const numero = typeof cantidad === 'number' && Number.isFinite(cantidad) ? cantidad : 0;
   return (Math.round(numero * 1000) / 1000).toString();
 }
+
+// El backend guarda "saldo_favor" tal cual (es el valor que espera la
+// logica de pagos) -- esto solo lo traduce a texto legible dondequiera
+// que se muestre un metodo de pago en pantalla o en un recibo.
+const ETIQUETAS_METODO_PAGO: Record<string, string> = {
+  saldo_favor: 'saldo a favor',
+};
+
+export function etiquetaMetodoPago(metodoPago: string): string {
+  return ETIQUETAS_METODO_PAGO[metodoPago] ?? metodoPago;
+}

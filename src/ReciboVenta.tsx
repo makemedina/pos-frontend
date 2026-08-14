@@ -1,5 +1,5 @@
 import type { Configuracion } from './api';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, etiquetaMetodoPago } from './formato';
 import type { DatosRecibo } from './construirRecibo';
 
 interface Props {
@@ -76,7 +76,7 @@ export function ReciboVenta({ config, datos, elementId }: Props) {
         <div style={{ marginTop: 4 }}>
           {datos.pagos.map((p, idx) => (
             <div key={idx} style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Pagado ({p.metodoPago})</span>
+              <span>Pagado ({etiquetaMetodoPago(p.metodoPago)})</span>
               <span>{formatoMoneda(p.monto)}</span>
             </div>
           ))}

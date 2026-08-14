@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, etiquetaMetodoPago } from './formato';
 import { exportarAExcel } from './exportarExcel';
 import { VentaDetalleModal } from './VentaDetalleModal';
 import {
@@ -139,7 +139,7 @@ export function AdminHistorialVentas({
           'Total de la venta': v.total,
           'Saldo pendiente': v.saldoPendiente,
           Estado: v.estadoPago,
-          'Metodo(s) de pago': v.metodosPago.join(', '),
+          'Metodo(s) de pago': v.metodosPago.map(etiquetaMetodoPago).join(', '),
         }))
       );
       await exportarAExcel(filas, 'historial-ventas');
@@ -328,7 +328,7 @@ export function AdminHistorialVentas({
                       {v.cliente.nombre} · {v.cliente.telefono}
                     </div>
                     <div style={{ fontSize: 12, color: '#6b7280' }}>
-                      Vendio: {v.vendedor.nombre} · {v.metodosPago.join(', ') || 'sin pago registrado'}
+                      Vendio: {v.vendedor.nombre} · {v.metodosPago.map(etiquetaMetodoPago).join(', ') || 'sin pago registrado'}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>

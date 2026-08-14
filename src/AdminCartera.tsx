@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, etiquetaMetodoPago } from './formato';
 import { exportarAExcel } from './exportarExcel';
 import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
 import { ComprobantePagoModal, type DatosComprobantePago } from './ComprobantePagoModal';
@@ -10,6 +10,7 @@ import {
   registrarPagoVenta,
   registrarPagoMultiNota,
   cancelarPagoVenta,
+  obtenerSaldoAFavor,
   type ClienteCartera,
   type NotaCartera,
   type PagoNota,
@@ -66,6 +67,7 @@ export function AdminCartera({ onCerrar }: Props) {
 
   // Nivel 3: pagos de una nota + formulario de abono
   const [notaElegida, setNotaElegida] = useState<NotaCartera | null>(null);
+  const [saldoFavorDisponible, setSaldoFavorDisponible] = useState(0);
   const [pagos, setPagos] = useState<PagoNota[]>([]);
   const [monto, setMonto] = useState('');
   const [metodoPago, setMetodoPago] = useState('efectivo');
@@ -150,6 +152,7 @@ export function AdminCartera({ onCerrar }: Props) {
     setConfirmandoCancelarPagoId(null);
     setNivel('pagos');
     setCargando(true);
+    if (clienteElegido) obtenerSaldoAFavor(clienteElegido.id).then(setSaldoFavorDisponible);
     try {
       const data = await obtenerPagosDeNota(n.id);
       setPagos(data);
@@ -306,7 +309,7 @@ export function AdminCartera({ onCerrar }: Props) {
       setNotas(notaData);
       setPagos(pagosData);
     } catch (err: any) {
-      if (err.code === 'MONTO_INVALIDO') {
+      if (err.code === 'MONTO_INVALIDO' || err.code === 'SALDO_A_FAVOR_INSUFICIENTE') {
         setMensaje(err.error || 'El monto del pago no es valido.');
       } else {
         setMensaje('No se pudo registrar el pago.');
@@ -823,7 +826,7 @@ export function AdminCartera({ onCerrar }: Props) {
                 <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>
-                      {new Date(p.fecha).toLocaleString()} · {p.metodoPago}
+                      {new Date(p.fecha).toLocaleString()} · {etiquetaMetodoPago(p.metodoPago)}
                       <br />
                       <small style={{ color: '#6b7280' }}>Registro: {p.registradoPor.nombre}</small>
                     </span>
@@ -920,6 +923,11 @@ export function AdminCartera({ onCerrar }: Props) {
                   <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)}>
                     <option value="efectivo">Efectivo</option>
                     <option value="transferencia">Transferencia</option>
+                    {saldoFavorDisponible > 0 && (
+                      <option value="saldo_favor">
+                        Saldo a favor del cliente ({formatoMoneda(saldoFavorDisponible)} disponible)
+                      </option>
+                    )}
                   </select>
                 </label>
                 <button type="submit" disabled={guardandoPago}>

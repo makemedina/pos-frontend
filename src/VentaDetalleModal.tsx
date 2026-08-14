@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, etiquetaMetodoPago } from './formato';
 import { obtenerDetalleVenta, cancelarVenta, obtenerUtilidadVenta, type VentaDetalle, type UtilidadVenta } from './api';
 import { ReciboModal } from './ReciboModal';
 import type { DatosRecibo } from './construirRecibo';
@@ -191,7 +191,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
 
             <div className="linea-resumen">
               <span>Método(s) de pago</span>
-              <span>{venta.metodosPago.join(', ') || 'Sin pago registrado'}</span>
+              <span>{venta.metodosPago.map(etiquetaMetodoPago).join(', ') || 'Sin pago registrado'}</span>
             </div>
             <div className="linea-resumen">
               <span>Estado</span>

@@ -239,6 +239,13 @@ export async function buscarClientes(query: string): Promise<Cliente[]> {
   return res.json();
 }
 
+export async function obtenerSaldoAFavor(clienteId: string): Promise<number> {
+  const res = await fetch(`${API_URL}/clientes/${clienteId}/saldo-a-favor`, { headers: headerAuth() });
+  if (!res.ok) return 0;
+  const data = await res.json().catch(() => ({ disponible: 0 }));
+  return Number(data.disponible ?? 0);
+}
+
 export async function crearClienteRapido(nombre: string, telefono: string): Promise<Cliente> {
   const res = await fetch(`${API_URL}/clientes`, {
     method: 'POST',

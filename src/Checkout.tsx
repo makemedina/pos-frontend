@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
-import type { Cliente } from './api';
+import { obtenerSaldoAFavor, type Cliente } from './api';
 import type { ItemCarrito } from './Carrito';
 
 interface Props {
@@ -51,13 +51,18 @@ export function Checkout({
   // cliente da $500 en efectivo y paga $300 con tarjeta/transferencia.
   const [montoEfectivo, setMontoEfectivo] = useState(total);
   const [montoTransferencia, setMontoTransferencia] = useState(0);
+  // Si el cliente ya tenia saldo a favor de otra nota (por un sobrepago
+  // anterior), se puede aplicar aqui como si fuera otro metodo de pago
+  // mas -- no es dinero nuevo, se descuenta de esa otra nota.
+  const [saldoFavorDisponible, setSaldoFavorDisponible] = useState(0);
+  const [montoSaldoFavor, setMontoSaldoFavor] = useState(0);
   const [autorizadoPorTelefono, setAutorizadoPorTelefono] = useState('');
   const [autorizadoPin, setAutorizadoPin] = useState('');
   const [motivoAutorizacion, setMotivoAutorizacion] = useState('');
   const [errorAutorizacion, setErrorAutorizacion] = useState<string | null>(null);
   const [errorMontos, setErrorMontos] = useState<string | null>(null);
 
-  const montoPagado = montoEfectivo + montoTransferencia;
+  const montoPagado = montoEfectivo + montoTransferencia + montoSaldoFavor;
   const saldoPendiente = Math.max(total - montoPagado, 0);
   const diferenciaContado = total - montoPagado;
   // Si el cliente pago de mas (efectivo o transferencia, credito o de
@@ -69,15 +74,24 @@ export function Checkout({
   );
 
   useEffect(() => {
+    obtenerSaldoAFavor(cliente.id).then(setSaldoFavorDisponible);
+  }, [cliente.id]);
+
+  useEffect(() => {
     if (!esCredito) {
-      setMontoEfectivo(total);
+      setMontoEfectivo(Math.max(total - montoSaldoFavor, 0));
       setMontoTransferencia(0);
     }
+    // No se agrega montoSaldoFavor a las dependencias a proposito: solo
+    // queremos recalcular el efectivo cuando cambia el total o el modo,
+    // no crear un loop cada vez que el usuario edita el saldo a favor.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [esCredito, total]);
 
   function toggleCredito() {
     const nuevoValor = !esCredito;
     setEsCredito(nuevoValor);
+    setMontoSaldoFavor(0);
     if (nuevoValor) {
       setMontoEfectivo(0);
       setMontoTransferencia(0);
@@ -85,6 +99,15 @@ export function Checkout({
       setMontoEfectivo(total);
       setMontoTransferencia(0);
     }
+  }
+
+  function cambiarSaldoFavor(valor: number) {
+    const limitado = Math.min(Math.max(valor, 0), saldoFavorDisponible);
+    setMontoSaldoFavor(limitado);
+    if (!esCredito) {
+      setMontoEfectivo(Math.max(total - montoTransferencia - limitado, 0));
+    }
+    setErrorMontos(null);
   }
 
   function confirmar() {
@@ -105,6 +128,7 @@ export function Checkout({
     const pagos: { monto: number; metodoPago: string }[] = [];
     if (montoEfectivo > 0) pagos.push({ monto: montoEfectivo, metodoPago: 'efectivo' });
     if (montoTransferencia > 0) pagos.push({ monto: montoTransferencia, metodoPago: 'transferencia' });
+    if (montoSaldoFavor > 0) pagos.push({ monto: montoSaldoFavor, metodoPago: 'saldo_favor' });
 
     onConfirmar({
       clienteId: cliente.id,
@@ -176,6 +200,21 @@ export function Checkout({
             />
           </div>
         </label>
+
+        {saldoFavorDisponible > 0 && (
+          <label style={{ fontSize: 13 }}>
+            Saldo a favor (tiene {formatoMoneda(saldoFavorDisponible)} disponible)
+            <div className="campo-precio">
+              <span>$</span>
+              <input
+                type="number"
+                step="0.01"
+                value={montoSaldoFavor}
+                onChange={(e) => cambiarSaldoFavor(Number(e.target.value) || 0)}
+              />
+            </div>
+          </label>
+        )}
 
         <div className="bloque-credito">
           <div className="fila-switch">
