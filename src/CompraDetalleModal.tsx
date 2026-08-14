@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
-import { obtenerDetalleCompra, cancelarCompra, type CompraDetalle } from './api';
+import { obtenerDetalleCompra, cancelarCompra, corregirCompraACredito, type CompraDetalle } from './api';
 import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
 
 interface Props {
@@ -10,6 +10,12 @@ interface Props {
 }
 
 const ELEMENT_ID = 'compra-recibo-render';
+
+function esHoy(fechaIso: string) {
+  const f = new Date(fechaIso);
+  const hoy = new Date();
+  return f.getFullYear() === hoy.getFullYear() && f.getMonth() === hoy.getMonth() && f.getDate() === hoy.getDate();
+}
 
 export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
   const [compra, setCompra] = useState<CompraDetalle | null>(null);
@@ -23,6 +29,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
   const [autorizadoPorTelefono, setAutorizadoPorTelefono] = useState('');
   const [autorizadoPin, setAutorizadoPin] = useState('');
   const [cancelando, setCancelando] = useState(false);
+  const [corrigiendo, setCorrigiendo] = useState(false);
 
   useEffect(() => {
     obtenerDetalleCompra(compraId)
@@ -78,6 +85,23 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
       if (!(err instanceof CompartirCanceladoError)) {
         setMensaje(err?.message || 'No se pudo compartir el PDF.');
       }
+    }
+  }
+
+  async function corregirACredito() {
+    setCorrigiendo(true);
+    try {
+      await corregirCompraACredito(compraId);
+      setCompra(await obtenerDetalleCompra(compraId));
+      setMensaje('Corregido: esta compra ahora queda a crédito, sin pago registrado.');
+    } catch (err: any) {
+      if (err.code === 'CORTE_YA_HECHO') {
+        setMensaje('Ya se guardó el corte de hoy, así que ya no se puede corregir aquí. Habla con un administrador.');
+      } else {
+        setMensaje(err.error || 'No se pudo corregir la compra.');
+      }
+    } finally {
+      setCorrigiendo(false);
     }
   }
 
@@ -163,6 +187,17 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
                 ❌ Esta compra fue cancelada{compra.canceladaEn ? ` el ${new Date(compra.canceladaEn).toLocaleString()}` : ''}.
                 El inventario que había agregado ya se puso en cero.
               </div>
+            )}
+
+            {!compra.cancelada && compra.metodosPago.length > 0 && esHoy(compra.fecha) && (
+              <button
+                className="boton-secundario"
+                onClick={corregirACredito}
+                disabled={corrigiendo}
+                style={{ width: '100%', marginTop: 8 }}
+              >
+                {corrigiendo ? 'Corrigiendo...' : '↩️ Se capturó mal: cambiar a crédito (sin pago)'}
+              </button>
             )}
 
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>

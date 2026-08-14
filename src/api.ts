@@ -1225,6 +1225,19 @@ export async function cancelarCompra(
   return data;
 }
 
+// Devuelve la Compra "plana" (sin proveedor/items/metodosPago) -- despues
+// de llamar esto, recarga el detalle completo con obtenerDetalleCompra().
+export async function corregirCompraACredito(compraId: string): Promise<void> {
+  const res = await fetch(`${API_URL}/compras/${compraId}/corregir-a-credito`, {
+    method: 'POST',
+    headers: headerAuth(),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw { ...data, status: res.status };
+  }
+}
+
 export async function obtenerDetalleCompra(compraId: string): Promise<CompraDetalle> {
   const res = await fetch(`${API_URL}/compras/${compraId}`, { headers: headerAuth() });
   if (!res.ok) {
