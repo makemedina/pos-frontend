@@ -836,44 +836,68 @@ export function AdminCartera({ onCerrar }: Props) {
                     <div className="aviso-alerta" style={{ marginTop: 6 }}>
                       ❌ Cancelado{p.canceladoEn ? ` el ${new Date(p.canceladoEn).toLocaleString()}` : ''}
                     </div>
-                  ) : confirmandoCancelarPagoId === p.id ? (
-                    <div className="bloque-autorizacion" style={{ marginTop: 6 }}>
-                      <p className="texto-alerta" style={{ fontWeight: 600 }}>
-                        ¿Seguro que quieres cancelar este pago? No se puede deshacer.
-                      </p>
-                      {necesitaAutorizacionPago && (
-                        <>
-                          <input
-                            placeholder="Teléfono del administrador"
-                            value={autorizadoPorTelefonoPago}
-                            onChange={(e) => setAutorizadoPorTelefonoPago(e.target.value)}
-                          />
-                          <input
-                            placeholder="PIN"
-                            type="password"
-                            value={autorizadoPinPago}
-                            onChange={(e) => setAutorizadoPinPago(e.target.value)}
-                          />
-                        </>
-                      )}
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                        <button onClick={() => confirmarCancelarPago(p.id)} disabled={cancelandoPago} style={{ flex: 1 }}>
-                          {cancelandoPago ? 'Cancelando...' : 'Sí, cancelar'}
-                        </button>
-                        <button onClick={() => setConfirmandoCancelarPagoId(null)} style={{ flex: 1 }}>
-                          No, regresar
-                        </button>
-                      </div>
-                    </div>
                   ) : (
                     <button
                       className="boton-secundario"
-                      onClick={() => pedirCancelarPago(p.id)}
-                      style={{ marginTop: 6, width: '100%', background: '#fff2f1', color: '#b91c1c' }}
+                      onClick={() =>
+                        notaElegida &&
+                        clienteElegido &&
+                        setComprobanteActivo({
+                          folioNota: notaElegida.folio,
+                          clienteNombre: clienteElegido.nombre,
+                          clienteTelefono: clienteElegido.telefono,
+                          monto: p.monto,
+                          metodoPago: p.metodoPago,
+                          fecha: new Date(p.fecha).toLocaleString(),
+                          saldoNotaRestante: notaElegida.saldoPendiente,
+                          saldoTotalCliente: clienteElegido.saldoTotal,
+                        })
+                      }
+                      style={{ marginTop: 6, width: '100%' }}
                     >
-                      🗑️ Cancelar pago
+                      🧾 Reimprimir comprobante
                     </button>
                   )}
+
+                  {!p.cancelado &&
+                    (confirmandoCancelarPagoId === p.id ? (
+                      <div className="bloque-autorizacion" style={{ marginTop: 6 }}>
+                        <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                          ¿Seguro que quieres cancelar este pago? No se puede deshacer.
+                        </p>
+                        {necesitaAutorizacionPago && (
+                          <>
+                            <input
+                              placeholder="Teléfono del administrador"
+                              value={autorizadoPorTelefonoPago}
+                              onChange={(e) => setAutorizadoPorTelefonoPago(e.target.value)}
+                            />
+                            <input
+                              placeholder="PIN"
+                              type="password"
+                              value={autorizadoPinPago}
+                              onChange={(e) => setAutorizadoPinPago(e.target.value)}
+                            />
+                          </>
+                        )}
+                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                          <button onClick={() => confirmarCancelarPago(p.id)} disabled={cancelandoPago} style={{ flex: 1 }}>
+                            {cancelandoPago ? 'Cancelando...' : 'Sí, cancelar'}
+                          </button>
+                          <button onClick={() => setConfirmandoCancelarPagoId(null)} style={{ flex: 1 }}>
+                            No, regresar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        className="boton-secundario"
+                        onClick={() => pedirCancelarPago(p.id)}
+                        style={{ marginTop: 6, width: '100%', background: '#fff2f1', color: '#b91c1c' }}
+                      >
+                        🗑️ Cancelar pago
+                      </button>
+                    ))}
                 </div>
               ))}
             </div>
