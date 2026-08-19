@@ -13,6 +13,7 @@ interface DiaResumen {
   kgVendidos: number;
   totalCobrado: number;
   utilidadNeta: number;
+  utilidadNetaCobrada: number;
   porcentajeEfectivo: number;
 }
 
@@ -24,6 +25,7 @@ interface DashboardData {
   kgVendidos: number;
   totalGastos: number;
   utilidadNeta: number;
+  utilidadNetaCobrada: number;
   ventasCantidad: number;
   ticketMedio: number;
   porcentajeEfectivo: number;
@@ -47,6 +49,7 @@ type MetricaClave =
   | 'kgVendidos'
   | 'totalCobrado'
   | 'utilidadNeta'
+  | 'utilidadNetaCobrada'
   | 'medioDePago';
 
 const METRICAS_INFO: Record<MetricaClave, { titulo: string; obtenerValor: (d: DiaResumen) => string }> = {
@@ -58,6 +61,7 @@ const METRICAS_INFO: Record<MetricaClave, { titulo: string; obtenerValor: (d: Di
   kgVendidos: { titulo: 'Kg vendidos por día', obtenerValor: (d) => `${formatoKg(d.kgVendidos)} kg` },
   totalCobrado: { titulo: 'Total cobrado por día', obtenerValor: (d) => formatoMoneda(d.totalCobrado) },
   utilidadNeta: { titulo: 'Utilidad neta por día', obtenerValor: (d) => formatoMoneda(d.utilidadNeta) },
+  utilidadNetaCobrada: { titulo: 'Utilidad neta cobrada por día', obtenerValor: (d) => formatoMoneda(d.utilidadNetaCobrada) },
   medioDePago: { titulo: 'Medio de pago por día', obtenerValor: (d) => `${d.porcentajeEfectivo.toFixed(1)}% efectivo` },
 };
 
@@ -137,6 +141,7 @@ export function AdminDashboard({ onCerrar }: Props) {
                 'Total cobrado': data.totalCobrado,
                 'Total gastos': data.totalGastos,
                 'Utilidad neta': data.utilidadNeta,
+                'Utilidad neta cobrada': data.utilidadNetaCobrada,
                 '% pagos en efectivo': data.porcentajeEfectivo,
               },
             ],
@@ -276,6 +281,13 @@ export function AdminDashboard({ onCerrar }: Props) {
               >
                 <strong>Utilidad neta</strong>
                 <div>{formatoMoneda(data.utilidadNeta)}</div>
+              </div>
+              <div
+                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                onClick={() => setMetricaExpandida('utilidadNetaCobrada')}
+              >
+                <strong>Utilidad neta cobrada</strong>
+                <div>{formatoMoneda(data.utilidadNetaCobrada)}</div>
               </div>
               <div
                 style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
