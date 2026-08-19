@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoKg } from './formato';
 import { headerAuth, API_URL } from './api';
 import { exportarVariasHojas } from './exportarExcel';
 
@@ -9,6 +9,8 @@ interface DiaResumen {
   ventasCantidad: number;
   ticketMedio: number;
   ganancia: number;
+  utilidadCobrada: number;
+  kgVendidos: number;
   totalCobrado: number;
   utilidadNeta: number;
   porcentajeEfectivo: number;
@@ -18,6 +20,8 @@ interface DashboardData {
   totalVentas: number;
   totalCobrado: number;
   utilidadBruta: number;
+  utilidadCobrada: number;
+  kgVendidos: number;
   totalGastos: number;
   utilidadNeta: number;
   ventasCantidad: number;
@@ -34,13 +38,24 @@ interface Props {
   onCerrar: () => void;
 }
 
-type MetricaClave = 'facturacion' | 'ventas' | 'ticketMedio' | 'ganancia' | 'totalCobrado' | 'utilidadNeta' | 'medioDePago';
+type MetricaClave =
+  | 'facturacion'
+  | 'ventas'
+  | 'ticketMedio'
+  | 'ganancia'
+  | 'utilidadCobrada'
+  | 'kgVendidos'
+  | 'totalCobrado'
+  | 'utilidadNeta'
+  | 'medioDePago';
 
 const METRICAS_INFO: Record<MetricaClave, { titulo: string; obtenerValor: (d: DiaResumen) => string }> = {
   facturacion: { titulo: 'Facturación por día', obtenerValor: (d) => formatoMoneda(d.facturacion) },
   ventas: { titulo: 'Ventas por día', obtenerValor: (d) => String(d.ventasCantidad) },
   ticketMedio: { titulo: 'Ticket medio por día', obtenerValor: (d) => formatoMoneda(d.ticketMedio) },
-  ganancia: { titulo: 'Ganancia por día', obtenerValor: (d) => formatoMoneda(d.ganancia) },
+  ganancia: { titulo: 'Utilidad en papel por día', obtenerValor: (d) => formatoMoneda(d.ganancia) },
+  utilidadCobrada: { titulo: 'Utilidad cobrada por día', obtenerValor: (d) => formatoMoneda(d.utilidadCobrada) },
+  kgVendidos: { titulo: 'Kg vendidos por día', obtenerValor: (d) => `${formatoKg(d.kgVendidos)} kg` },
   totalCobrado: { titulo: 'Total cobrado por día', obtenerValor: (d) => formatoMoneda(d.totalCobrado) },
   utilidadNeta: { titulo: 'Utilidad neta por día', obtenerValor: (d) => formatoMoneda(d.utilidadNeta) },
   medioDePago: { titulo: 'Medio de pago por día', obtenerValor: (d) => `${d.porcentajeEfectivo.toFixed(1)}% efectivo` },
@@ -116,7 +131,9 @@ export function AdminDashboard({ onCerrar }: Props) {
                 Facturación: data.totalVentas,
                 Ventas: data.ventasCantidad,
                 'Ticket medio': data.ticketMedio,
-                Ganancia: data.utilidadBruta,
+                'Kg vendidos': data.kgVendidos,
+                'Utilidad en papel': data.utilidadBruta,
+                'Utilidad cobrada': data.utilidadCobrada,
                 'Total cobrado': data.totalCobrado,
                 'Total gastos': data.totalGastos,
                 'Utilidad neta': data.utilidadNeta,
@@ -224,14 +241,28 @@ export function AdminDashboard({ onCerrar }: Props) {
               </div>
               <div
                 style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
-                onClick={() => setMetricaExpandida('ganancia')}
+                onClick={() => setMetricaExpandida('kgVendidos')}
               >
-                <strong>Ganancia</strong>
-                <div>{formatoMoneda(data.utilidadBruta)}</div>
+                <strong>Kg vendidos</strong>
+                <div>{formatoKg(data.kgVendidos)} kg</div>
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+              <div
+                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                onClick={() => setMetricaExpandida('ganancia')}
+              >
+                <strong>Utilidad en papel</strong>
+                <div>{formatoMoneda(data.utilidadBruta)}</div>
+              </div>
+              <div
+                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                onClick={() => setMetricaExpandida('utilidadCobrada')}
+              >
+                <strong>Utilidad cobrada</strong>
+                <div>{formatoMoneda(data.utilidadCobrada)}</div>
+              </div>
               <div
                 style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
                 onClick={() => setMetricaExpandida('totalCobrado')}
