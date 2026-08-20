@@ -16,6 +16,7 @@ import {
   type Cliente,
 } from './api';
 import { Carrito, type ItemCarrito } from './Carrito';
+import logoMrCarnes from './logo-mrcarnes.png';
 import { ModalAgregarProducto } from './ModalAgregarProducto';
 import { Checkout } from './Checkout';
 import { SeleccionarClienteVenta } from './SeleccionarClienteVenta';
@@ -953,6 +954,19 @@ export default function App() {
 
   return (
     <div className="app">
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          padding: '6px 12px',
+          background: '#fff',
+          borderBottom: '1px solid #e5e7eb',
+        }}
+      >
+        <img src={logoMrCarnes} alt="Mr Carnes" style={{ height: 28, width: 'auto' }} />
+      </div>
+
       {!enLinea && (
         <div
           style={{
