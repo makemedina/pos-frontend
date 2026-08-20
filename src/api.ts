@@ -296,6 +296,7 @@ export interface ClienteConSaldo {
   permiteVentaCredito: boolean;
   saldoInicial: number;
   saldoTotal: number;
+  diasLlamada?: number[];
 }
 
 export async function obtenerClientesConSaldo(filtro: 'todos' | 'conDeuda' | 'sinDeuda'): Promise<ClienteConSaldo[]> {
@@ -314,6 +315,49 @@ export async function obtenerClienteDetalle(id: string): Promise<ClienteConSaldo
     throw new Error(data.error || 'No se pudo cargar el cliente');
   }
   return res.json();
+}
+
+export async function actualizarDiasLlamadaCliente(id: string, dias: number[]): Promise<number[]> {
+  const res = await fetch(`${API_URL}/clientes/${id}/dias-llamada`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ dias }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron guardar los días de llamada');
+  }
+  const data = await res.json();
+  return data.diasLlamada;
+}
+
+export interface LlamadaHoy {
+  id: string;
+  nombre: string;
+  telefono: string;
+  notas: string | null;
+  hecha: boolean;
+}
+
+export async function obtenerLlamadasDeHoy(): Promise<LlamadaHoy[]> {
+  const res = await fetch(`${API_URL}/clientes/llamadas/hoy`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar las llamadas de hoy');
+  }
+  return res.json();
+}
+
+export async function marcarLlamadaCliente(id: string, hecha: boolean): Promise<void> {
+  const res = await fetch(`${API_URL}/clientes/${id}/llamadas/hoy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ hecha }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo registrar la llamada');
+  }
 }
 
 export async function crearClienteCompleto(datos: { nombre: string; telefono: string; direccion?: string }): Promise<Cliente> {

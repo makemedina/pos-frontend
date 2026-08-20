@@ -9,6 +9,7 @@ import {
   eliminarCliente,
   obtenerVentasDeCliente,
   obtenerMovimientosDeCliente,
+  actualizarDiasLlamadaCliente,
   type ClienteConSaldo,
   type VentaDeCliente,
   type MovimientoCliente,
@@ -24,6 +25,18 @@ interface Props {
 
 type Filtro = 'todos' | 'conDeuda' | 'sinDeuda';
 type Pestana = 'datos' | 'transacciones' | 'movimientos';
+
+// valor = lo que regresa Date.getDay() (0=domingo...6=sabado), mismo
+// que usa el backend -- el orden de despliegue aqui es lunes a domingo.
+const DIAS_SEMANA = [
+  { valor: 1, etiqueta: 'Lun' },
+  { valor: 2, etiqueta: 'Mar' },
+  { valor: 3, etiqueta: 'Mié' },
+  { valor: 4, etiqueta: 'Jue' },
+  { valor: 5, etiqueta: 'Vie' },
+  { valor: 6, etiqueta: 'Sáb' },
+  { valor: 0, etiqueta: 'Dom' },
+];
 
 export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [filtro, setFiltro] = useState<Filtro>('todos');
@@ -49,6 +62,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [editTelefono, setEditTelefono] = useState('');
   const [editDireccion, setEditDireccion] = useState('');
   const [editPermiteCredito, setEditPermiteCredito] = useState(true);
+  const [editDiasLlamada, setEditDiasLlamada] = useState<number[]>([]);
   const [guardando, setGuardando] = useState(false);
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
   const [eliminando, setEliminando] = useState(false);
@@ -137,6 +151,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       setEditTelefono(data.telefono);
       setEditDireccion(data.direccion || '');
       setEditPermiteCredito(data.permiteVentaCredito);
+      setEditDiasLlamada(data.diasLlamada || []);
     } catch {
       // Sin conexion: usamos lo que ya teniamos de la lista (viene de la
       // caché si estamos offline), en vez de fallar por completo.
@@ -160,14 +175,21 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
     cargarLista();
   }
 
+  function toggleDiaLlamada(dia: number) {
+    setEditDiasLlamada((prev) => (prev.includes(dia) ? prev.filter((d) => d !== dia) : [...prev, dia].sort()));
+  }
+
   async function guardarDatosGenerales() {
     if (!clienteId) return;
     setGuardando(true);
     try {
       const datos: any = { nombre: editNombre, telefono: editTelefono, direccion: editDireccion };
       if (esAdmin) datos.permiteVentaCredito = editPermiteCredito;
-      const actualizado = await actualizarCliente(clienteId, datos);
-      setCliente((prev) => (prev ? { ...prev, ...actualizado } : prev));
+      const [actualizado] = await Promise.all([
+        actualizarCliente(clienteId, datos),
+        actualizarDiasLlamadaCliente(clienteId, editDiasLlamada),
+      ]);
+      setCliente((prev) => (prev ? { ...prev, ...actualizado, diasLlamada: editDiasLlamada } : prev));
       setMensaje('Datos guardados.');
     } catch {
       setMensaje('No se pudo guardar.');
@@ -403,6 +425,28 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                     </button>
                   </div>
                 )}
+
+                <div>
+                  <label className="etiqueta">Días para llamarle (ofrecer producto)</label>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                    {DIAS_SEMANA.map((dia) => (
+                      <button
+                        key={dia.valor}
+                        type="button"
+                        onClick={() => toggleDiaLlamada(dia.valor)}
+                        style={{
+                          width: 'auto',
+                          padding: '6px 10px',
+                          borderRadius: 20,
+                          background: editDiasLlamada.includes(dia.valor) ? '#1f1f1f' : '#f3f4f6',
+                          color: editDiasLlamada.includes(dia.valor) ? '#fff' : '#111',
+                        }}
+                      >
+                        {dia.etiqueta}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <button onClick={guardarDatosGenerales} disabled={guardando}>
                   {guardando ? 'Guardando...' : 'Guardar cambios'}

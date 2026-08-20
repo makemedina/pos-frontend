@@ -23,6 +23,8 @@ interface Props {
   lotesAntiguosCount?: number;
   onVerAnaliticaVentas?: () => void;
   clientesEnRiesgoCount?: number;
+  onVerLlamadasHoy?: () => void;
+  llamadasPendientesHoyCount?: number;
   mensajeGlobal?: string | null;
   onCerrarMensajeGlobal?: () => void;
 }
@@ -50,6 +52,8 @@ export function AdminHistorialVentas({
   lotesAntiguosCount = 0,
   onVerAnaliticaVentas,
   clientesEnRiesgoCount = 0,
+  onVerLlamadasHoy,
+  llamadasPendientesHoyCount = 0,
   mensajeGlobal,
   onCerrarMensajeGlobal,
 }: Props) {
@@ -213,6 +217,16 @@ export function AdminHistorialVentas({
             style={{ background: '#fff2f1', color: '#b91c1c', cursor: 'pointer' }}
           >
             🎯 Tienes {clientesEnRiesgoCount} cliente{clientesEnRiesgoCount !== 1 ? 's' : ''} en riesgo — toca para ver a quién llamarle
+          </div>
+        )}
+
+        {esInicio && llamadasPendientesHoyCount > 0 && (
+          <div
+            className="banner-mensaje"
+            onClick={onVerLlamadasHoy}
+            style={{ background: '#fff2f1', color: '#b91c1c', cursor: 'pointer' }}
+          >
+            📞 Tienes {llamadasPendientesHoyCount} llamada{llamadasPendientesHoyCount !== 1 ? 's' : ''} pendiente{llamadasPendientesHoyCount !== 1 ? 's' : ''} hoy — toca para ver
           </div>
         )}
 

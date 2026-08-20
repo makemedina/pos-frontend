@@ -9,6 +9,7 @@ import {
   confirmarCotizacion,
   obtenerAntiguedadStock,
   obtenerClientesEnRiesgo,
+  obtenerLlamadasDeHoy,
   obtenerSesionActual,
   hayTokenGuardado,
   type VarianteCatalogo,
@@ -39,6 +40,7 @@ import { AdminDashboard } from './AdminDashboard';
 import { AdminAjusteInventario } from './AdminAjusteInventario';
 import { AdminProductos } from './AdminProductos';
 import { AdminClientes } from './AdminClientes';
+import { AdminLlamadasHoy } from './AdminLlamadasHoy';
 import { AdminProveedores } from './AdminProveedores';
 import { AdminMovimientosInventario } from './AdminMovimientosInventario';
 import { AdminAntiguedadStock } from './AdminAntiguedadStock';
@@ -77,6 +79,7 @@ type Pantalla =
   | 'dashboard'
   | 'ajuste'
   | 'clientes'
+  | 'llamadasHoy'
   | 'movimientosInventario'
   | 'productos'
   | 'antiguedadStock'
@@ -157,6 +160,8 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
       return true; // cualquiera puede solicitar un ajuste; la autorizacion se exige al confirmar
     case 'clientes':
       return true; // cualquiera puede ver clientes; el switch de credito se oculta si no es admin
+    case 'llamadasHoy':
+      return true; // cualquiera puede ver a quien llamarle hoy
     case 'movimientosInventario':
       return !!usuario.permisos?.puedeVerCostos;
     case 'productos':
@@ -236,6 +241,10 @@ export default function App() {
   // normal para ellos -- se avisa apenas se entra, para saber a quien llamar.
   const [clientesEnRiesgoCount, setClientesEnRiesgoCount] = useState(0);
 
+  // Clientes/prospectos configurados para que se les hable HOY que
+  // todavia no se marcan como llamados -- checklist diario.
+  const [llamadasPendientesHoyCount, setLlamadasPendientesHoyCount] = useState(0);
+
   // Al arrancar, si hay un token guardado de una sesion anterior (ver
   // api.ts), se valida contra el servidor en vez de pedir login de nuevo
   // -- esto es lo que evita que en iOS, cada vez que la PWA vuelve de
@@ -263,6 +272,7 @@ export default function App() {
       if (usuario.rolBase === 'administrador' || usuario.permisos?.puedeVerCarteraGeneral) {
         cargarClientesEnRiesgoCount();
       }
+      cargarLlamadasPendientesHoyCount();
     }
   }, [usuario]);
 
@@ -351,6 +361,15 @@ export default function App() {
       setClientesEnRiesgoCount(clientes.length);
     } catch {
       // Sin conexion o sin permiso: se deja el contador como estaba.
+    }
+  }
+
+  async function cargarLlamadasPendientesHoyCount() {
+    try {
+      const llamadas = await obtenerLlamadasDeHoy();
+      setLlamadasPendientesHoyCount(llamadas.filter((l) => !l.hecha).length);
+    } catch {
+      // Sin conexion: se deja el contador como estaba.
     }
   }
 
@@ -682,6 +701,7 @@ export default function App() {
     if (pantallaActiva === 'clientesMenu') {
       return renderSubmenu('Clientes', [
         { pantalla: 'clientes', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Alta, edición y datos', clase: 'boton-flotante-cartera' },
+        { pantalla: 'llamadasHoy', icono: '📞', titulo: 'Llamadas de hoy', descripcion: 'A quién hablarle hoy para ofrecer producto', clase: 'boton-flotante-cartera' },
       ]);
     }
     if (pantallaActiva === 'cuentasPorCobrarMenu') {
@@ -825,6 +845,9 @@ export default function App() {
     if (pantallaActiva === 'clientes') {
       return <AdminClientes onCerrar={() => abrirPantalla('clientesMenu')} esAdmin={usuario.rolBase === 'administrador'} />;
     }
+    if (pantallaActiva === 'llamadasHoy') {
+      return <AdminLlamadasHoy onCerrar={() => abrirPantalla('clientesMenu')} />;
+    }
     if (pantallaActiva === 'movimientosInventario') {
       return <AdminMovimientosInventario onCerrar={() => abrirPantalla('inventarioMenu')} />;
     }
@@ -946,6 +969,8 @@ export default function App() {
         lotesAntiguosCount={lotesAntiguosCount}
         onVerAnaliticaVentas={() => abrirPantalla('analiticaVentas')}
         clientesEnRiesgoCount={clientesEnRiesgoCount}
+        onVerLlamadasHoy={() => abrirPantalla('llamadasHoy')}
+        llamadasPendientesHoyCount={llamadasPendientesHoyCount}
         mensajeGlobal={mensaje}
         onCerrarMensajeGlobal={() => setMensaje(null)}
       />
