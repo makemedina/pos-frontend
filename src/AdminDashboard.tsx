@@ -91,7 +91,9 @@ export function AdminDashboard({ onCerrar }: Props) {
   const filtroLabel = useMemo(() => {
     switch (periodo) {
       case 'dia': return 'Hoy';
+      case 'ayer': return 'Ayer';
       case 'semana': return 'Esta semana (lun-dom)';
+      case 'semana_pasada': return 'Semana pasada (lun-dom)';
       case 'mes': return 'Mes actual';
       case 'anio': return 'Año actual';
       case 'rango': return `Rango ${desde || '—'} / ${hasta || '—'}`;
@@ -195,7 +197,9 @@ export function AdminDashboard({ onCerrar }: Props) {
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
                 <option value="dia">Hoy</option>
+                <option value="ayer">Ayer</option>
                 <option value="semana">Esta semana</option>
+                <option value="semana_pasada">Semana pasada</option>
                 <option value="mes">Este mes</option>
                 <option value="anio">Este año</option>
                 <option value="rango">Personalizado</option>

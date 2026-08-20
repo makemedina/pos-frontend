@@ -1277,7 +1277,7 @@ export interface CompraHistorial {
 }
 
 export interface FiltrosHistorialCompras {
-  periodo?: 'todos' | 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
+  periodo?: 'todos' | 'dia' | 'ayer' | 'semana' | 'semana_pasada' | 'mes' | 'anio' | 'rango';
   desde?: string;
   hasta?: string;
   proveedorId?: string;
@@ -1325,7 +1325,7 @@ export interface ResumenMovimientosInventario {
 }
 
 export interface FiltrosMovimientosInventario {
-  periodo?: 'todos' | 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
+  periodo?: 'todos' | 'dia' | 'ayer' | 'semana' | 'semana_pasada' | 'mes' | 'anio' | 'rango';
   desde?: string;
   hasta?: string;
   productoId?: string;
@@ -1427,7 +1427,7 @@ export interface VentaHistorial {
 }
 
 export interface FiltrosHistorial {
-  periodo?: 'todos' | 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
+  periodo?: 'todos' | 'dia' | 'ayer' | 'semana' | 'semana_pasada' | 'mes' | 'anio' | 'rango';
   desde?: string;
   hasta?: string;
   clienteId?: string;

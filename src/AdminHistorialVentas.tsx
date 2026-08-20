@@ -27,7 +27,7 @@ interface Props {
   onCerrarMensajeGlobal?: () => void;
 }
 
-type Periodo = 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
+type Periodo = 'dia' | 'ayer' | 'semana' | 'semana_pasada' | 'mes' | 'anio' | 'rango';
 
 function formatDateInput(date: Date) {
   const year = date.getFullYear();
@@ -225,7 +225,9 @@ export function AdminHistorialVentas({
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
                 <option value="dia">Hoy</option>
+                <option value="ayer">Ayer</option>
                 <option value="semana">Esta semana</option>
+                <option value="semana_pasada">Semana pasada</option>
                 <option value="mes">Este mes</option>
                 <option value="anio">Este año</option>
                 <option value="rango">Personalizado</option>

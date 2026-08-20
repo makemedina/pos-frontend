@@ -13,7 +13,7 @@ interface Props {
   onCerrar: () => void;
 }
 
-type Periodo = 'dia' | 'semana' | 'mes' | 'anio' | 'rango';
+type Periodo = 'dia' | 'ayer' | 'semana' | 'semana_pasada' | 'mes' | 'anio' | 'rango';
 
 const ETIQUETAS_TIPO: Record<MovimientoInventario['tipo'], { texto: string; color: string }> = {
   entrada: { texto: 'Entrada (compra)', color: '#16a34a' },
@@ -127,7 +127,9 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
                 <option value="dia">Hoy</option>
+                <option value="ayer">Ayer</option>
                 <option value="semana">Esta semana</option>
+                <option value="semana_pasada">Semana pasada</option>
                 <option value="mes">Este mes</option>
                 <option value="anio">Este año</option>
                 <option value="rango">Personalizado</option>
