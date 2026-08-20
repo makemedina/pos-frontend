@@ -33,9 +33,22 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
   const bancoUsado = yaGuardado ? yaGuardado.saldoBancoContado : saldoBancoContadoEnVivo ?? 0;
 
   // Cuadre de efectivo (distinto de la balanza de abajo, que es todo el
-  // negocio): parte de lo que quedo contado ayer, suma lo que entro en
-  // efectivo hoy, resta lo que salio en efectivo hoy, y compara contra lo
-  // que se esta reportando. Publico -- no requiere permiso de utilidad.
+  // negocio). Publico -- no requiere permiso de utilidad.
+  //
+  // Para el corte de HOY (todavia no guardado): se usa saldoEfectivoSistema
+  // directo -- es un total que el backend lleva en vivo, actualizado por
+  // cada venta/gasto/pago real conforme pasa, y por eso SIEMPRE esta al
+  // corriente sin importar si algun dia anterior se le olvido a alguien
+  // guardar su corte. Antes se calculaba encadenando "lo contado ayer +
+  // movimientos de hoy", pero esa cadena se rompe apenas se salta un dia:
+  // "ayer" termina siendo el corte guardado mas reciente (que puede ser
+  // de hace varios dias), y todo lo que paso en los dias saltados de por
+  // medio nunca se resta ni se suma -- el corte de hoy queda descuadrado
+  // para siempre por ese hueco.
+  //
+  // Para un corte YA GUARDADO (reimprimir historico): saldoEfectivoSistema
+  // es el total de HOY, no el de esa fecha pasada, asi que ahi se sigue
+  // usando la cadena "efectivoAyer + movimientos de ese dia" como antes.
   const efectivoAyer = resumen.efectivoAyer ?? null;
   const ventasEfectivo = resumen.ventas.subtotalesPorMetodo.efectivo;
   const pagosClientesEfectivo = resumen.pagosClientes.efectivo;
@@ -43,8 +56,9 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
   const gastosEfectivo = resumen.gastos.subtotalesPorMetodo.efectivo;
   const pagosProveedoresEfectivo = resumen.pagosProveedores.efectivo;
   const depositosEfectivo = Number(resumen.depositosBanco.total ?? 0);
-  const efectivoEsperado =
-    efectivoAyer !== null
+  const efectivoEsperado = !yaGuardado
+    ? resumen.saldoEfectivoSistema
+    : efectivoAyer !== null
       ? efectivoAyer + ventasEfectivo + pagosClientesEfectivo - comprasEfectivo - gastosEfectivo - pagosProveedoresEfectivo - depositosEfectivo
       : null;
   const diferenciaEfectivo = efectivoEsperado !== null ? efectivoUsado - efectivoEsperado : null;
@@ -272,7 +286,23 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
 
       <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
         <h3>Cuadre de efectivo</h3>
-        {efectivoAyer === null ? (
+        {!yaGuardado ? (
+          <>
+            <div style={{ fontWeight: 700 }}>
+              Efectivo esperado (lo que lleva el sistema ahora mismo): {formatoMoneda(efectivoEsperado!)}
+            </div>
+            <div>
+              Efectivo que se está reportando (lo que vas escribiendo): <strong>{formatoMoneda(efectivoUsado)}</strong>
+            </div>
+            {Math.abs(diferenciaEfectivo ?? 0) < 0.01 ? (
+              <div style={{ color: '#16a34a', fontWeight: 600 }}>✓ Cuadra</div>
+            ) : (
+              <div className="texto-alerta" style={{ fontWeight: 600 }}>
+                ⚠ No cuadra. Diferencia: {formatoMoneda(diferenciaEfectivo)}
+              </div>
+            )}
+          </>
+        ) : efectivoAyer === null ? (
           <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
             No hay un corte anterior contra el cual cuadrar (este sería el primer corte guardado).
           </p>
@@ -289,7 +319,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
               Efectivo esperado: {formatoMoneda(efectivoEsperado!)}
             </div>
             <div>
-              Efectivo que se está reportando{!yaGuardado && ' (lo que vas escribiendo)'}: <strong>{formatoMoneda(efectivoUsado)}</strong>
+              Efectivo que se está reportando: <strong>{formatoMoneda(efectivoUsado)}</strong>
             </div>
             {Math.abs(diferenciaEfectivo ?? 0) < 0.01 ? (
               <div style={{ color: '#16a34a', fontWeight: 600 }}>✓ Cuadra</div>
