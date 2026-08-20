@@ -8,17 +8,29 @@ export const API_URL =
 
 // ---------- MANEJO DE SESION ----------
 // El backend ahora exige un token en cada llamada (Authorization: Bearer <token>).
-// Antes no existia ningun mecanismo de sesion; esto centraliza el token en
-// memoria y lo agrega automaticamente a cada fetch de este archivo.
+// Se guarda en localStorage (no solo en memoria) porque en iOS, cuando la
+// PWA pasa a segundo plano (cambias de app/ventana), el sistema mata el
+// proceso agresivamente para liberar memoria -- al volver, el JS arranca
+// de cero y una variable en memoria se pierde, pidiendo iniciar sesion de
+// nuevo aunque el token siga siendo valido en el servidor. localStorage
+// sobrevive a eso. App.tsx valida este token guardado contra /auth/me al
+// arrancar (obtenerSesionActual), en vez de confiar en el ciegamente.
+const TOKEN_STORAGE_KEY = 'pos_token';
 
-let tokenActual: string | null = null;
+let tokenActual: string | null = localStorage.getItem(TOKEN_STORAGE_KEY);
 
 export function guardarToken(token: string) {
   tokenActual = token;
+  localStorage.setItem(TOKEN_STORAGE_KEY, token);
 }
 
 export function limpiarToken() {
   tokenActual = null;
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+}
+
+export function hayTokenGuardado(): boolean {
+  return !!tokenActual;
 }
 
 export function headerAuth(): Record<string, string> {
@@ -73,6 +85,23 @@ export async function logout() {
   } finally {
     limpiarToken();
   }
+}
+
+/**
+ * Valida el token guardado en localStorage contra el servidor y regresa
+ * el usuario con sus permisos ACTUALES (por si cambiaron desde el ultimo
+ * login). Si el token ya no es valido (sesion expirada, token borrado a
+ * mano en el servidor, etc.), limpia el token guardado y lanza -- quien
+ * llame debe mostrar el login normal en ese caso.
+ */
+export async function obtenerSesionActual(): Promise<UsuarioSesion> {
+  const res = await fetch(`${API_URL}/auth/me`, { headers: headerAuth() });
+  if (!res.ok) {
+    limpiarToken();
+    throw new Error('Sesion invalida o expirada');
+  }
+  const data = await res.json();
+  return data.usuario;
 }
 
 // ---------- CATALOGO ----------

@@ -9,6 +9,8 @@ import {
   confirmarCotizacion,
   obtenerAntiguedadStock,
   obtenerClientesEnRiesgo,
+  obtenerSesionActual,
+  hayTokenGuardado,
   type VarianteCatalogo,
   type UsuarioSesion,
   type Cliente,
@@ -204,6 +206,11 @@ export default function App() {
   const [enLinea, setEnLinea] = useState(navigator.onLine);
   const [ventasPendientesCount, setVentasPendientesCount] = useState(0);
   const [usuario, setUsuario] = useState<UsuarioSesion | null>(null);
+  // Mientras se valida un token guardado en localStorage contra el
+  // servidor (ver useEffect de abajo), no se sabe todavia si mostrar el
+  // login o la app -- sin esto se ve un parpadeo del login antes de
+  // entrar directo, cada vez que se abre la PWA con sesion guardada.
+  const [validandoSesion, setValidandoSesion] = useState(hayTokenGuardado());
   const [menuAbierto, setMenuAbierto] = useState(false);
 
   // Cliente elegido ANTES de armar el carrito (ver SeleccionarClienteVenta),
@@ -227,6 +234,22 @@ export default function App() {
   // Clientes cuyo ritmo de compra o volumen reciente cayo por debajo de lo
   // normal para ellos -- se avisa apenas se entra, para saber a quien llamar.
   const [clientesEnRiesgoCount, setClientesEnRiesgoCount] = useState(0);
+
+  // Al arrancar, si hay un token guardado de una sesion anterior (ver
+  // api.ts), se valida contra el servidor en vez de pedir login de nuevo
+  // -- esto es lo que evita que en iOS, cada vez que la PWA vuelve de
+  // segundo plano y el JS arranca de cero, se pierda la sesion aunque el
+  // token siga siendo valido.
+  useEffect(() => {
+    if (!hayTokenGuardado()) return;
+    obtenerSesionActual()
+      .then(setUsuario)
+      .catch(() => {
+        // Token invalido/expirado -- ya se limpio en obtenerSesionActual().
+        // Se deja usuario en null para que se muestre el login normal.
+      })
+      .finally(() => setValidandoSesion(false));
+  }, []);
 
   useEffect(() => {
     if (usuario) {
@@ -601,6 +624,10 @@ export default function App() {
     setUltimosPrecios({});
     setCotizacionActivaId(null);
     setPantallaActiva('inicio');
+  }
+
+  if (validandoSesion) {
+    return null;
   }
 
   if (!usuario) {
