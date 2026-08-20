@@ -63,6 +63,16 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
       : null;
   const diferenciaEfectivo = efectivoEsperado !== null ? efectivoUsado - efectivoEsperado : null;
 
+  // Cuadre de banco: a diferencia de efectivo, aqui nunca hubo una cadena
+  // dia-a-dia -- siempre se comparo contra saldoBancoSistema (el total en
+  // vivo), asi que no hay nada que "romper" con un dia saltado. Pero
+  // tampoco se guarda un "banco esperado" historico en CorteCaja, asi que
+  // el cuadre automatico solo aplica al corte de HOY (no guardado todavia);
+  // al reimprimir un corte pasado, saldoBancoSistema seria el de HOY, no
+  // el de esa fecha, y no serviria para comparar.
+  const bancoEsperado = !yaGuardado ? resumen.saldoBancoSistema : null;
+  const diferenciaBanco = bancoEsperado !== null ? bancoUsado - bancoEsperado : null;
+
   return (
     <div id={elementId} style={{ display: 'grid', gap: '1rem', background: 'white' }}>
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -331,6 +341,25 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
           </>
         )}
       </div>
+
+      {bancoEsperado !== null && (
+        <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+          <h3>Cuadre de banco</h3>
+          <div style={{ fontWeight: 700 }}>
+            Banco esperado (lo que lleva el sistema ahora mismo): {formatoMoneda(bancoEsperado)}
+          </div>
+          <div>
+            Banco que se está reportando (lo que vas escribiendo): <strong>{formatoMoneda(bancoUsado)}</strong>
+          </div>
+          {Math.abs(diferenciaBanco ?? 0) < 0.01 ? (
+            <div style={{ color: '#16a34a', fontWeight: 600 }}>✓ Cuadra</div>
+          ) : (
+            <div className="texto-alerta" style={{ fontWeight: 600 }}>
+              ⚠ No cuadra. Diferencia: {formatoMoneda(diferenciaBanco)}
+            </div>
+          )}
+        </div>
+      )}
 
       {tieneUtilidad && (() => {
         const valorInventarioMostrado = yaGuardado ? yaGuardado.valorInventario : resumen.valorInventario!;
