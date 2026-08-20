@@ -335,8 +335,10 @@ export interface LlamadaHoy {
   id: string;
   nombre: string;
   telefono: string;
-  notas: string | null;
+  notasCliente: string | null;
   hecha: boolean;
+  notas: string;
+  hizoPedido: boolean;
 }
 
 export async function obtenerLlamadasDeHoy(): Promise<LlamadaHoy[]> {
@@ -348,11 +350,14 @@ export async function obtenerLlamadasDeHoy(): Promise<LlamadaHoy[]> {
   return res.json();
 }
 
-export async function marcarLlamadaCliente(id: string, hecha: boolean): Promise<void> {
+export async function actualizarLlamadaCliente(
+  id: string,
+  datos: { hecha?: boolean; notas?: string; hizoPedido?: boolean }
+): Promise<void> {
   const res = await fetch(`${API_URL}/clientes/${id}/llamadas/hoy`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ hecha }),
+    body: JSON.stringify(datos),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));

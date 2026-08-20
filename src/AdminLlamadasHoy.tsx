@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { obtenerLlamadasDeHoy, marcarLlamadaCliente, type LlamadaHoy } from './api';
+import { obtenerLlamadasDeHoy, actualizarLlamadaCliente, type LlamadaHoy } from './api';
 
 interface Props {
   onCerrar: () => void;
@@ -7,11 +7,22 @@ interface Props {
 
 const DIAS_NOMBRE = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
+// wa.me necesita el numero en formato internacional. Los telefonos de
+// clientes se capturan a 10 digitos (celular mexicano) sin lada pais --
+// se le antepone 52 si ya viene "limpio" a 10 digitos; si ya trae algo
+// distinto (ya tiene lada, espacios, etc.) se manda tal cual sin el 52
+// para no inventar un numero equivocado.
+function linkWhatsapp(telefono: string, mensaje: string) {
+  const soloDigitos = telefono.replace(/\D/g, '');
+  const numero = soloDigitos.length === 10 ? `52${soloDigitos}` : soloDigitos;
+  return `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+}
+
 export function AdminLlamadasHoy({ onCerrar }: Props) {
   const [llamadas, setLlamadas] = useState<LlamadaHoy[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
-  const [marcando, setMarcando] = useState<string | null>(null);
+  const [guardandoId, setGuardandoId] = useState<string | null>(null);
 
   useEffect(() => {
     cargar();
@@ -28,23 +39,94 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
     }
   }
 
-  async function toggle(cliente: LlamadaHoy) {
-    setMarcando(cliente.id);
-    // Optimista: se actualiza la pantalla de una vez, y se corrige si falla.
-    setLlamadas((prev) => prev.map((l) => (l.id === cliente.id ? { ...l, hecha: !l.hecha } : l)));
+  // Optimista para hecha/hizoPedido (feedback al toque); las notas se
+  // guardan al salir del campo (onBlur), no en cada letra.
+  async function actualizar(cliente: LlamadaHoy, datos: { hecha?: boolean; notas?: string; hizoPedido?: boolean }) {
+    setLlamadas((prev) => prev.map((l) => (l.id === cliente.id ? { ...l, ...datos } : l)));
+    setGuardandoId(cliente.id);
     try {
-      await marcarLlamadaCliente(cliente.id, !cliente.hecha);
+      await actualizarLlamadaCliente(cliente.id, datos);
     } catch {
-      setLlamadas((prev) => prev.map((l) => (l.id === cliente.id ? { ...l, hecha: cliente.hecha } : l)));
       setMensaje('No se pudo guardar. Intenta otra vez.');
+      cargar();
     } finally {
-      setMarcando(null);
+      setGuardandoId(null);
     }
   }
 
   const pendientes = llamadas.filter((l) => !l.hecha);
   const hechas = llamadas.filter((l) => l.hecha);
   const hoyNombre = DIAS_NOMBRE[new Date().getDay()];
+
+  function tarjeta(c: LlamadaHoy) {
+    return (
+      <div
+        key={c.id}
+        style={{
+          display: 'grid',
+          gap: 8,
+          border: 'none',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
+          padding: '0.75rem',
+          borderRadius: 14,
+          opacity: c.hecha ? 0.75 : 1,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, flex: 1, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={c.hecha}
+              disabled={guardandoId === c.id}
+              onChange={() => actualizar(c, { hecha: !c.hecha })}
+              style={{ marginTop: 3 }}
+            />
+            <span>
+              <strong style={{ textDecoration: c.hecha ? 'line-through' : 'none' }}>{c.nombre}</strong>
+              {c.notasCliente && <div style={{ fontSize: 12, color: '#6b7280' }}>{c.notasCliente}</div>}
+            </span>
+          </label>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <a
+            href={`tel:${c.telefono}`}
+            style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 10, background: '#f3f4f6', color: '#111', textDecoration: 'none', fontSize: 14 }}
+          >
+            📞 Llamar
+          </a>
+          <a
+            href={linkWhatsapp(c.telefono, `Hola ${c.nombre}, te habla Mr Carnes para ofrecerte producto.`)}
+            target="_blank"
+            rel="noreferrer"
+            style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 10, background: '#dcfce7', color: '#166534', textDecoration: 'none', fontSize: 14 }}
+          >
+            💬 WhatsApp
+          </a>
+        </div>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={c.hizoPedido}
+            disabled={guardandoId === c.id}
+            onChange={() => actualizar(c, { hizoPedido: !c.hizoPedido })}
+          />
+          Hizo pedido
+        </label>
+
+        <textarea
+          placeholder="Notas de esta llamada (qué dijo, cuándo volver a hablarle, etc.)"
+          defaultValue={c.notas}
+          onBlur={(e) => {
+            if (e.target.value !== c.notas) actualizar(c, { notas: e.target.value });
+          }}
+          rows={2}
+          style={{ fontSize: 13, resize: 'vertical' }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
@@ -73,70 +155,14 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
             {pendientes.length > 0 && (
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 <strong style={{ fontSize: 13, color: '#6b7280' }}>Por llamar ({pendientes.length})</strong>
-                {pendientes.map((c) => (
-                  <div
-                    key={c.id}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      border: 'none',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
-                      padding: '0.75rem',
-                      borderRadius: 14,
-                    }}
-                  >
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
-                        checked={c.hecha}
-                        disabled={marcando === c.id}
-                        onChange={() => toggle(c)}
-                      />
-                      <span>
-                        <strong>{c.nombre}</strong>
-                        {c.notas && <div style={{ fontSize: 12, color: '#6b7280' }}>{c.notas}</div>}
-                      </span>
-                    </label>
-                    <a href={`tel:${c.telefono}`} style={{ color: '#007aff', whiteSpace: 'nowrap' }}>
-                      {c.telefono}
-                    </a>
-                  </div>
-                ))}
+                {pendientes.map(tarjeta)}
               </div>
             )}
 
             {hechas.length > 0 && (
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 <strong style={{ fontSize: 13, color: '#6b7280' }}>Ya llamados ({hechas.length})</strong>
-                {hechas.map((c) => (
-                  <div
-                    key={c.id}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      border: 'none',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
-                      padding: '0.75rem',
-                      borderRadius: 14,
-                      opacity: 0.6,
-                    }}
-                  >
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
-                        checked={c.hecha}
-                        disabled={marcando === c.id}
-                        onChange={() => toggle(c)}
-                      />
-                      <strong style={{ textDecoration: 'line-through' }}>{c.nombre}</strong>
-                    </label>
-                    <a href={`tel:${c.telefono}`} style={{ color: '#007aff', whiteSpace: 'nowrap' }}>
-                      {c.telefono}
-                    </a>
-                  </div>
-                ))}
+                {hechas.map(tarjeta)}
               </div>
             )}
           </>
