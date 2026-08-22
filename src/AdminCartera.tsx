@@ -69,8 +69,12 @@ export function AdminCartera({ onCerrar }: Props) {
   const [notaElegida, setNotaElegida] = useState<NotaCartera | null>(null);
   const [saldoFavorDisponible, setSaldoFavorDisponible] = useState(0);
   const [pagos, setPagos] = useState<PagoNota[]>([]);
-  const [monto, setMonto] = useState('');
-  const [metodoPago, setMetodoPago] = useState('efectivo');
+  // El abono se puede repartir entre efectivo y transferencia (ej. $300
+  // en efectivo + $200 por transferencia), igual que el pago inicial de
+  // una venta nueva en Checkout.
+  const [montoEfectivo, setMontoEfectivo] = useState('');
+  const [montoTransferencia, setMontoTransferencia] = useState('');
+  const [montoSaldoFavor, setMontoSaldoFavor] = useState('');
 
   // Cancelar un pago ya registrado
   const [confirmandoCancelarPagoId, setConfirmandoCancelarPagoId] = useState<string | null>(null);
@@ -147,7 +151,9 @@ export function AdminCartera({ onCerrar }: Props) {
 
   async function abrirNota(n: NotaCartera) {
     setNotaElegida(n);
-    setMonto('');
+    setMontoEfectivo('');
+    setMontoTransferencia('');
+    setMontoSaldoFavor('');
     setMostrarPagoMultiple(false);
     setConfirmandoCancelarPagoId(null);
     setNivel('pagos');
@@ -275,21 +281,33 @@ export function AdminCartera({ onCerrar }: Props) {
     e.preventDefault();
     if (!notaElegida || guardandoPago) return;
 
+    const partes: { monto: number; metodoPago: string }[] = [];
+    if (Number(montoEfectivo) > 0) partes.push({ monto: Number(montoEfectivo), metodoPago: 'efectivo' });
+    if (Number(montoTransferencia) > 0) partes.push({ monto: Number(montoTransferencia), metodoPago: 'transferencia' });
+    if (Number(montoSaldoFavor) > 0) partes.push({ monto: Number(montoSaldoFavor), metodoPago: 'saldo_favor' });
+    if (partes.length === 0) {
+      setMensaje('Captura al menos un monto mayor a cero.');
+      return;
+    }
+    const montoTotal = partes.reduce((acc, p) => acc + p.monto, 0);
+
     setGuardandoPago(true);
     try {
-      const resultado = await registrarPagoVenta(notaElegida.id, Number(monto), metodoPago);
+      const resultado = await registrarPagoVenta(notaElegida.id, partes);
       setMensaje(`Pago registrado para la venta #${notaElegida.folio}`);
       setComprobanteActivo({
         folioNota: notaElegida.folio,
         clienteNombre: clienteElegido!.nombre,
         clienteTelefono: clienteElegido!.telefono,
-        monto: Number(monto),
-        metodoPago,
+        monto: montoTotal,
+        metodoPago: partes.map((p) => etiquetaMetodoPago(p.metodoPago)).join(', '),
         fecha: new Date().toLocaleString(),
         saldoNotaRestante: Number(resultado.saldoNotaRestante ?? 0),
         saldoTotalCliente: Number(resultado.saldoTotalCliente ?? 0),
       });
-      setMonto('');
+      setMontoEfectivo('');
+      setMontoTransferencia('');
+      setMontoSaldoFavor('');
       // Refresca la nota (saldo actualizado) y su historial de pagos. Si la
       // nota quedo pagada (o con saldo a favor) y "ver tambien pagadas" esta
       // apagado, ya no viene en notaData -- se usa el saldo que ya sabemos
@@ -908,28 +926,47 @@ export function AdminCartera({ onCerrar }: Props) {
             {notaElegida.saldoPendiente > 0 && (
               <form onSubmit={handlePago} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Registrar nuevo abono</h3>
+                <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+                  Saldo pendiente: {formatoMoneda(notaElegida.saldoPendiente)}. Se puede repartir entre efectivo
+                  y transferencia si el cliente paga con ambos.
+                </p>
                 <label>
-                  Monto (saldo pendiente: {formatoMoneda(notaElegida.saldoPendiente)})
+                  Efectivo
                   <input
-                    value={monto}
-                    onChange={(e) => setMonto(e.target.value)}
+                    value={montoEfectivo}
+                    onChange={(e) => setMontoEfectivo(e.target.value)}
                     type="number"
                     step="0.01"
-                    required
                   />
                 </label>
                 <label>
-                  Metodo de pago
-                  <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)}>
-                    <option value="efectivo">Efectivo</option>
-                    <option value="transferencia">Transferencia</option>
-                    {saldoFavorDisponible > 0 && (
-                      <option value="saldo_favor">
-                        Saldo a favor del cliente ({formatoMoneda(saldoFavorDisponible)} disponible)
-                      </option>
-                    )}
-                  </select>
+                  Transferencia
+                  <input
+                    value={montoTransferencia}
+                    onChange={(e) => setMontoTransferencia(e.target.value)}
+                    type="number"
+                    step="0.01"
+                  />
                 </label>
+                {saldoFavorDisponible > 0 && (
+                  <label>
+                    Saldo a favor del cliente ({formatoMoneda(saldoFavorDisponible)} disponible)
+                    <input
+                      value={montoSaldoFavor}
+                      onChange={(e) => setMontoSaldoFavor(e.target.value)}
+                      type="number"
+                      step="0.01"
+                    />
+                  </label>
+                )}
+                <div className="subtotal-linea">
+                  <span>Total a abonar</span>
+                  <strong>
+                    {formatoMoneda(
+                      (Number(montoEfectivo) || 0) + (Number(montoTransferencia) || 0) + (Number(montoSaldoFavor) || 0)
+                    )}
+                  </strong>
+                </div>
                 <button type="submit" disabled={guardandoPago}>
                   {guardandoPago ? 'Guardando...' : 'Guardar pago'}
                 </button>

@@ -1590,11 +1590,13 @@ export async function obtenerPagosDeNota(ventaId: string): Promise<PagoNota[]> {
   return res.json();
 }
 
-export async function registrarPagoVenta(ventaId: string, monto: number, metodoPago: string) {
+// pagos: uno o mas {monto, metodoPago} -- permite repartir un abono
+// entre varios metodos (ej. parte en efectivo y parte por transferencia).
+export async function registrarPagoVenta(ventaId: string, pagos: { monto: number; metodoPago: string }[]) {
   const res = await fetch(`${API_URL}/ventas/${ventaId}/pagos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ monto, metodoPago }),
+    body: JSON.stringify({ pagos }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw { ...data, status: res.status };
