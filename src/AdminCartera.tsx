@@ -57,10 +57,12 @@ export function AdminCartera({ onCerrar }: Props) {
   const [notas, setNotas] = useState<NotaCartera[]>([]);
   const [verPagadas, setVerPagadas] = useState(false);
 
-  // Pago repartido entre varias notas (desde el nivel de notas)
+  // Pago repartido entre varias notas (desde el nivel de notas). El
+  // importe recibido tambien se puede repartir entre efectivo y
+  // transferencia, igual que el abono a una sola nota.
   const [mostrarPagoMultiple, setMostrarPagoMultiple] = useState(false);
-  const [metodoPagoMultiple, setMetodoPagoMultiple] = useState('efectivo');
-  const [montoPagoMultiple, setMontoPagoMultiple] = useState('');
+  const [efectivoPagoMultiple, setEfectivoPagoMultiple] = useState('');
+  const [transferenciaPagoMultiple, setTransferenciaPagoMultiple] = useState('');
   const [asignacionesPago, setAsignacionesPago] = useState<Record<string, string>>({});
   const [guardandoPagoMultiple, setGuardandoPagoMultiple] = useState(false);
   const [guardandoPago, setGuardandoPago] = useState(false);
@@ -180,15 +182,16 @@ export function AdminCartera({ onCerrar }: Props) {
 
   function abrirPagoMultiple() {
     setAsignacionesPago({});
-    setMetodoPagoMultiple('efectivo');
-    setMontoPagoMultiple('');
+    setEfectivoPagoMultiple('');
+    setTransferenciaPagoMultiple('');
     setMostrarPagoMultiple(true);
   }
 
   function cerrarPagoMultiple() {
     setMostrarPagoMultiple(false);
     setAsignacionesPago({});
-    setMontoPagoMultiple('');
+    setEfectivoPagoMultiple('');
+    setTransferenciaPagoMultiple('');
   }
 
   function actualizarAsignacion(notaId: string, valor: string) {
@@ -213,7 +216,7 @@ export function AdminCartera({ onCerrar }: Props) {
         return resto;
       }
       const quedanSinMarcar = notasPendientesPago.some((m) => m.id !== n.id && !(m.id in prev));
-      const restante = Number(montoPagoMultiple || 0) - totalAsignadoPago;
+      const restante = montoPagoMultipleTotal - totalAsignadoPago;
       const monto = !quedanSinMarcar && restante > n.saldoPendiente ? restante : n.saldoPendiente;
       return { ...prev, [n.id]: String(monto) };
     });
@@ -224,7 +227,8 @@ export function AdminCartera({ onCerrar }: Props) {
     (acc, n) => acc + (Number(asignacionesPago[n.id]) || 0),
     0
   );
-  const restantePorDistribuir = Number(montoPagoMultiple || 0) - totalAsignadoPago;
+  const montoPagoMultipleTotal = (Number(efectivoPagoMultiple) || 0) + (Number(transferenciaPagoMultiple) || 0);
+  const restantePorDistribuir = montoPagoMultipleTotal - totalAsignadoPago;
 
   async function handlePagoMultiple(e: React.FormEvent) {
     e.preventDefault();
@@ -239,15 +243,25 @@ export function AdminCartera({ onCerrar }: Props) {
       return;
     }
 
+    const pagos = [
+      { monto: Number(efectivoPagoMultiple) || 0, metodoPago: 'efectivo' },
+      { monto: Number(transferenciaPagoMultiple) || 0, metodoPago: 'transferencia' },
+    ].filter((p) => p.monto > 0);
+
+    if (pagos.length === 0) {
+      setMensaje('Captura un monto mayor a cero en efectivo o transferencia.');
+      return;
+    }
+
     setGuardandoPagoMultiple(true);
     try {
-      const resultado = await registrarPagoMultiNota(clienteElegido.id, asignaciones, metodoPagoMultiple);
+      const resultado = await registrarPagoMultiNota(clienteElegido.id, asignaciones, pagos);
       setComprobanteActivo({
         folioNota: resultado.detalle.map((d) => d.folio).join(', '),
         clienteNombre: clienteElegido.nombre,
         clienteTelefono: clienteElegido.telefono,
         monto: resultado.totalPagado,
-        metodoPago: metodoPagoMultiple,
+        metodoPago: pagos.map((p) => etiquetaMetodoPago(p.metodoPago)).join(', '),
         fecha: new Date().toLocaleString(),
         saldoNotaRestante: 0,
         saldoTotalCliente: resultado.saldoTotalCliente,
@@ -678,19 +692,27 @@ export function AdminCartera({ onCerrar }: Props) {
                   <button type="button" onClick={cerrarPagoMultiple}>Cancelar</button>
                 </div>
 
+                <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+                  Importe del pago recibido — se puede repartir entre efectivo y transferencia si el cliente paga con ambos.
+                </p>
+
                 <label>
-                  Metodo de pago
-                  <select value={metodoPagoMultiple} onChange={(e) => setMetodoPagoMultiple(e.target.value)}>
-                    <option value="efectivo">Efectivo</option>
-                    <option value="transferencia">Transferencia</option>
-                  </select>
+                  Efectivo
+                  <input
+                    value={efectivoPagoMultiple}
+                    onChange={(e) => setEfectivoPagoMultiple(e.target.value)}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                  />
                 </label>
 
                 <label>
-                  Importe del pago recibido
+                  Transferencia
                   <input
-                    value={montoPagoMultiple}
-                    onChange={(e) => setMontoPagoMultiple(e.target.value)}
+                    value={transferenciaPagoMultiple}
+                    onChange={(e) => setTransferenciaPagoMultiple(e.target.value)}
                     type="number"
                     step="0.01"
                     min="0"
@@ -754,12 +776,12 @@ export function AdminCartera({ onCerrar }: Props) {
                 </div>
                 {restantePorDistribuir < 0 && (
                   <p style={{ fontSize: 12, color: '#b91c1c', margin: 0 }}>
-                    Asignaste más de lo que dice el importe del pago recibido.
+                    Asignaste más de lo que dice el importe del pago recibido (efectivo + transferencia).
                   </p>
                 )}
-                {restantePorDistribuir > 0 && notasPendientesPago.every((n) => n.id in asignacionesPago) && (
+                {restantePorDistribuir > 0 && (
                   <p style={{ fontSize: 12, color: '#b91c1c', margin: 0 }}>
-                    Este sobrante no se va a registrar en ningún lado — súmalo al monto de alguna nota si es parte del pago (ej. quedará como saldo a favor).
+                    Falta repartir este importe entre efectivo y transferencia, o asignarlo a alguna nota — el efectivo + transferencia debe cuadrar con el total asignado.
                   </p>
                 )}
 
@@ -768,7 +790,10 @@ export function AdminCartera({ onCerrar }: Props) {
                   <span>{formatoMoneda(totalAsignadoPago)}</span>
                 </div>
 
-                <button type="submit" disabled={totalAsignadoPago <= 0 || guardandoPagoMultiple}>
+                <button
+                  type="submit"
+                  disabled={totalAsignadoPago <= 0 || Math.abs(restantePorDistribuir) > 0.01 || guardandoPagoMultiple}
+                >
                   {guardandoPagoMultiple ? 'Guardando...' : 'Registrar pago'}
                 </button>
               </form>

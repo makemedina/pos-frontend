@@ -1636,15 +1636,18 @@ export interface ResultadoPagoMultiNota {
   saldoTotalCliente: number;
 }
 
+// pagos: uno o mas {monto, metodoPago} -- el pago recibido tambien se
+// puede repartir entre efectivo y transferencia, igual que un abono a una
+// sola nota.
 export async function registrarPagoMultiNota(
   clienteId: string,
   asignaciones: AsignacionPagoMultiple[],
-  metodoPago: string
+  pagos: { monto: number; metodoPago: string }[]
 ): Promise<ResultadoPagoMultiNota> {
   const res = await fetch(`${API_URL}/cartera/clientes/${clienteId}/pagos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ asignaciones, metodoPago }),
+    body: JSON.stringify({ asignaciones, pagos }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw { ...data, status: res.status };
