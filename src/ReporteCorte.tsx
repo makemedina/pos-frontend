@@ -294,6 +294,37 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
         </div>
       )}
 
+      {/* Igual que cuentasPorPagar/cartera: es el saldo pendiente a HOY, no
+          el que habia el dia de un corte pasado -- solo se muestra para el
+          corte de hoy todavia no guardado. */}
+      {!yaGuardado && resumen.facturasPendientesPorProveedor.length > 0 && (
+        <div style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <h3 style={{ margin: 0 }}>Facturas pendientes a proveedores</h3>
+            <strong>{formatoMoneda(resumen.cuentasPorPagar)}</strong>
+          </div>
+          {resumen.facturasPendientesPorProveedor.map((grupo) => (
+            <div key={grupo.proveedorId} style={{ display: 'grid', gap: '0.35rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
+                <span>{grupo.proveedorNombre}</span>
+                <span>{formatoMoneda(grupo.subtotal)}</span>
+              </div>
+              {grupo.facturas.map((f) => (
+                <div
+                  key={f.id}
+                  style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#6b7280', paddingLeft: 8 }}
+                >
+                  <span>
+                    {f.numeroFactura || 'Sin factura'} · {new Date(f.fecha).toLocaleDateString()} · {f.diasAntiguedad} día{f.diasAntiguedad !== 1 ? 's' : ''}
+                  </span>
+                  <span>{formatoMoneda(f.saldoPendiente)}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
       <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
         <h3>Cuadre de efectivo</h3>
         {!yaGuardado ? (

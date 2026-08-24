@@ -1124,6 +1124,21 @@ export interface CompraCanceladaCorte {
   canceladaPor: string;
 }
 
+export interface FacturaPendientePorProveedor {
+  proveedorId: string;
+  proveedorNombre: string;
+  subtotal: number;
+  facturas: {
+    id: string;
+    numeroFactura: string | null;
+    fecha: string;
+    fechaVencimiento: string | null;
+    total: number;
+    saldoPendiente: number;
+    diasAntiguedad: number;
+  }[];
+}
+
 export interface ResumenCorteDia {
   yaExisteCorteHoy: boolean;
   corteExistente: {
@@ -1176,6 +1191,7 @@ export interface ResumenCorteDia {
   };
   cartera: number;
   cuentasPorPagar: number;
+  facturasPendientesPorProveedor: FacturaPendientePorProveedor[];
   saldoBancoSistema: number;
   saldoEfectivoSistema: number;
   canceladas: { ventas: VentaCanceladaCorte[]; compras: CompraCanceladaCorte[] };
