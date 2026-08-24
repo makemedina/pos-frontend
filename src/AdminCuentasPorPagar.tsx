@@ -8,6 +8,7 @@ import {
   type FacturaPendiente,
   type PagoCompraHistorial,
 } from './api';
+import { ComprobantePagoModal, type DatosComprobantePago } from './ComprobantePagoModal';
 
 interface Props {
   onCerrar: () => void;
@@ -40,6 +41,11 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
   const [asignacionesPago, setAsignacionesPago] = useState<Record<string, string>>({});
   const [guardandoPagoMultiple, setGuardandoPagoMultiple] = useState(false);
   const [guardandoPago, setGuardandoPago] = useState(false);
+
+  // Comprobante que se muestra SOLO cuando un pago deja una factura en
+  // $0 (a diferencia de Cartera, aqui no se muestra en cada abono -- el
+  // usuario solo pidio recibo al liquidar).
+  const [comprobanteActivo, setComprobanteActivo] = useState<DatosComprobantePago | null>(null);
 
   // Nivel 3: historial de abonos de una factura + formulario de abono individual
   const [facturaElegida, setFacturaElegida] = useState<FacturaPendiente | null>(null);
@@ -161,10 +167,38 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
 
     setGuardandoPagoMultiple(true);
     try {
-      await registrarPagoMultiCompra(proveedorElegido.id, asignaciones, metodoPagoMultiple);
+      const resultado = await registrarPagoMultiCompra(proveedorElegido.id, asignaciones, metodoPagoMultiple);
       setMensaje(`Pago registrado para ${proveedorElegido.nombre}`);
+      const liquidadas = resultado.detalle.filter((d) => d.saldoFacturaRestante <= 0);
       cerrarPagoMultiple();
       await cargar();
+      if (liquidadas.length > 0) {
+        const saldoTotalProveedor = facturas
+          .filter((f) => f.proveedor.id === proveedorElegido.id && !liquidadas.some((d) => d.compraId === f.id))
+          .reduce((acc, f) => acc + f.saldoPendiente, 0);
+        setComprobanteActivo({
+          folioNota: liquidadas.map((d) => d.numeroFactura || 'sin número').join(', '),
+          clienteNombre: proveedorElegido.nombre,
+          clienteTelefono: proveedorElegido.telefono ?? undefined,
+          monto: liquidadas.reduce((acc, d) => acc + d.monto, 0),
+          metodoPago: metodoPagoMultiple,
+          fecha: new Date().toLocaleString(),
+          saldoNotaRestante: 0,
+          saldoTotalCliente: saldoTotalProveedor,
+          detalleNotas:
+            liquidadas.length > 1
+              ? liquidadas.map((d) => ({
+                  folio: d.numeroFactura || 'sin número',
+                  monto: d.monto,
+                  saldoRestante: d.saldoFacturaRestante,
+                }))
+              : undefined,
+          entidadLabel: 'Proveedor',
+          tituloDocumento: 'Factura',
+          etiquetaSaldoTotal: 'Saldo total al proveedor',
+          nombreArchivo: 'pago-proveedor',
+        });
+      }
     } catch (err: any) {
       setMensaje(err.error || 'No se pudo registrar el pago.');
     } finally {
@@ -198,9 +232,10 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     e.preventDefault();
     if (!facturaElegida || guardandoPago) return;
 
+    const montoPagado = Number(monto);
     setGuardandoPago(true);
     try {
-      await registrarPagoCompra(facturaElegida.id, Number(monto), metodoPago);
+      await registrarPagoCompra(facturaElegida.id, montoPagado, metodoPago);
       setMensaje(`Pago registrado para ${facturaElegida.proveedor.nombre}`);
       setMonto('');
       // Refresca el saldo de la factura y su historial de pagos
@@ -213,8 +248,25 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
       setPagos(pagosData);
       setFacturaElegida(facturaActualizada);
       if (!facturaActualizada) {
-        // Ya quedo saldada, ya no aparece en pendientes -- regresamos a la
-        // lista de facturas del proveedor.
+        // Ya quedo saldada, ya no aparece en pendientes -- comprobante de
+        // liquidacion, y regresamos a la lista de facturas del proveedor.
+        const saldoTotalProveedor = facturasData
+          .filter((f) => f.proveedor.id === facturaElegida.proveedor.id)
+          .reduce((acc, f) => acc + f.saldoPendiente, 0);
+        setComprobanteActivo({
+          folioNota: facturaElegida.numeroFactura || 'sin número',
+          clienteNombre: facturaElegida.proveedor.nombre,
+          clienteTelefono: facturaElegida.proveedor.telefono ?? undefined,
+          monto: montoPagado,
+          metodoPago,
+          fecha: new Date().toLocaleString(),
+          saldoNotaRestante: 0,
+          saldoTotalCliente: saldoTotalProveedor,
+          entidadLabel: 'Proveedor',
+          tituloDocumento: 'Factura',
+          etiquetaSaldoTotal: 'Saldo total al proveedor',
+          nombreArchivo: 'pago-proveedor',
+        });
         volverAFacturas();
       }
     } catch (err: any) {
@@ -495,6 +547,10 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
           </>
         )}
       </div>
+
+      {comprobanteActivo && (
+        <ComprobantePagoModal datos={comprobanteActivo} onCerrar={() => setComprobanteActivo(null)} />
+      )}
     </div>
   );
 }

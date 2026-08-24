@@ -15,7 +15,15 @@ export interface DatosComprobantePago {
   saldoTotalCliente: number;
   // Cuando el pago se repartio entre varias notas, se muestra el
   // desglose por nota en vez del renglon unico de "saldo restante".
-  detalleNotas?: { folio: number; monto: number; saldoRestante: number }[];
+  detalleNotas?: { folio: number | string; monto: number; saldoRestante: number }[];
+  // Este mismo comprobante tambien se usa para pagos a proveedores (ver
+  // AdminCuentasPorPagar.tsx) -- estas etiquetas cambian el texto fijo
+  // ("Cliente" -> "Proveedor", "Nota" -> "Factura", etc.) sin duplicar
+  // todo el componente. Si no se pasan, se comportan como antes (cliente).
+  entidadLabel?: string;
+  tituloDocumento?: string;
+  etiquetaSaldoTotal?: string;
+  nombreArchivo?: string;
 }
 
 interface Props {
@@ -26,6 +34,10 @@ interface Props {
 const ELEMENT_ID = 'comprobante-pago-render';
 
 export function ComprobantePagoModal({ datos, onCerrar }: Props) {
+  const entidadLabel = datos.entidadLabel ?? 'Cliente';
+  const tituloDocumento = datos.tituloDocumento ?? 'Nota';
+  const etiquetaSaldoTotal = datos.etiquetaSaldoTotal ?? 'Saldo total del cliente';
+  const nombreArchivo = datos.nombreArchivo ?? 'abono';
   const [config, setConfig] = useState<Configuracion | null>(null);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -59,7 +71,7 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
   async function compartirImagenLista() {
     if (!imagenBlob) return;
     try {
-      await compartirArchivo(imagenBlob, `abono-${datos.folioNota}.png`, 'image/png');
+      await compartirArchivo(imagenBlob, `${nombreArchivo}-${datos.folioNota}.png`, 'image/png');
     } catch (err: any) {
       if (!(err instanceof CompartirCanceladoError)) {
         setMensaje(err?.message || 'No se pudo compartir la imagen.');
@@ -82,7 +94,7 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
   async function compartirPdfListo() {
     if (!pdfBlob) return;
     try {
-      await compartirArchivo(pdfBlob, `abono-${datos.folioNota}.pdf`, 'application/pdf');
+      await compartirArchivo(pdfBlob, `${nombreArchivo}-${datos.folioNota}.pdf`, 'application/pdf');
     } catch (err: any) {
       if (!(err instanceof CompartirCanceladoError)) {
         setMensaje(err?.message || 'No se pudo compartir el PDF.');
@@ -135,11 +147,15 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
               <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
 
               <div style={{ textAlign: 'center', fontWeight: 700 }}>COMPROBANTE DE PAGO</div>
-              <div>{datos.detalleNotas ? `Notas #${datos.folioNota}` : `Nota #${datos.folioNota}`}</div>
+              <div>
+                {datos.detalleNotas
+                  ? `${tituloDocumento}s #${datos.folioNota}`
+                  : `${tituloDocumento} #${datos.folioNota}`}
+              </div>
               <div>{datos.fecha}</div>
 
               <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
-              <div>Cliente: {datos.clienteNombre}</div>
+              <div>{entidadLabel}: {datos.clienteNombre}</div>
               {datos.clienteTelefono && <div>Tel: {datos.clienteTelefono}</div>}
 
               <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
@@ -152,22 +168,22 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
               <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
               {datos.detalleNotas ? (
                 <>
-                  <div style={{ fontWeight: 700, marginBottom: 4 }}>Desglose por nota</div>
+                  <div style={{ fontWeight: 700, marginBottom: 4 }}>Desglose por {tituloDocumento.toLowerCase()}</div>
                   {datos.detalleNotas.map((d) => (
                     <div key={d.folio} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Nota #{d.folio} (abonado {formatoMoneda(d.monto)})</span>
+                      <span>{tituloDocumento} #{d.folio} (abonado {formatoMoneda(d.monto)})</span>
                       <span>Saldo: {formatoMoneda(d.saldoRestante)}</span>
                     </div>
                   ))}
                 </>
               ) : (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Saldo restante de esta nota</span>
+                  <span>Saldo restante de esta {tituloDocumento.toLowerCase()}</span>
                   <span>{formatoMoneda(datos.saldoNotaRestante)}</span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, marginTop: 4 }}>
-                <span>Saldo total del cliente</span>
+                <span>{etiquetaSaldoTotal}</span>
                 <span>{formatoMoneda(datos.saldoTotalCliente)}</span>
               </div>
 
