@@ -428,6 +428,9 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
 
                 <div>
                   <label className="etiqueta">Días para llamarle (ofrecer producto)</label>
+                  <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 4px' }}>
+                    Si no eliges ninguno, el sistema los sugiere solo cuando detecta que este cliente compra seguido el mismo día de la semana.
+                  </p>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
                     {DIAS_SEMANA.map((dia) => (
                       <button
