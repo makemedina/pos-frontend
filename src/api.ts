@@ -1000,6 +1000,7 @@ export interface Configuracion {
   logoBase64: string | null;
   telefono: string;
   direccion: string;
+  direccionEntrega: string;
   notasNegocio: string;
   mostrarDatosCliente: boolean;
   encabezadoRecibo: string;
