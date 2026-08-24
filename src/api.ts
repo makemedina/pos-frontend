@@ -1569,6 +1569,26 @@ export async function obtenerResumenCartera(): Promise<ClienteCartera[]> {
   return res.json();
 }
 
+export interface NotaAntigua {
+  id: string;
+  folio: number;
+  clienteId: string;
+  clienteNombre: string;
+  clienteTelefono: string;
+  saldoPendiente: number;
+  fecha: string;
+  diasAntiguedad: number;
+}
+
+export async function obtenerNotasAntiguas(): Promise<NotaAntigua[]> {
+  const res = await fetch(`${API_URL}/cartera/notas-antiguas`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar las notas antiguas');
+  }
+  return res.json();
+}
+
 export async function obtenerNotasCliente(clienteId: string, incluirPagadas: boolean): Promise<NotaCartera[]> {
   const res = await fetch(
     `${API_URL}/cartera/clientes/${clienteId}/notas?incluirPagadas=${incluirPagadas}`,

@@ -25,6 +25,8 @@ interface Props {
   clientesEnRiesgoCount?: number;
   onVerLlamadasHoy?: () => void;
   llamadasPendientesHoyCount?: number;
+  onVerNotasAntiguas?: () => void;
+  notasAntiguasCount?: number;
   mensajeGlobal?: string | null;
   onCerrarMensajeGlobal?: () => void;
 }
@@ -54,6 +56,8 @@ export function AdminHistorialVentas({
   clientesEnRiesgoCount = 0,
   onVerLlamadasHoy,
   llamadasPendientesHoyCount = 0,
+  onVerNotasAntiguas,
+  notasAntiguasCount = 0,
   mensajeGlobal,
   onCerrarMensajeGlobal,
 }: Props) {
@@ -227,6 +231,16 @@ export function AdminHistorialVentas({
             style={{ background: '#fff2f1', color: '#b91c1c', cursor: 'pointer' }}
           >
             📞 Tienes {llamadasPendientesHoyCount} llamada{llamadasPendientesHoyCount !== 1 ? 's' : ''} pendiente{llamadasPendientesHoyCount !== 1 ? 's' : ''} hoy — toca para ver
+          </div>
+        )}
+
+        {esInicio && notasAntiguasCount > 0 && (
+          <div
+            className="banner-mensaje"
+            onClick={onVerNotasAntiguas}
+            style={{ background: '#fff2f1', color: '#b91c1c', cursor: 'pointer' }}
+          >
+            📆 Tienes {notasAntiguasCount} nota{notasAntiguasCount !== 1 ? 's' : ''} con más de 7 días sin liquidarse — toca para ver
           </div>
         )}
 

@@ -9,6 +9,7 @@ import {
   confirmarCotizacion,
   obtenerAntiguedadStock,
   obtenerClientesEnRiesgo,
+  obtenerNotasAntiguas,
   obtenerLlamadasDeHoy,
   obtenerSesionActual,
   hayTokenGuardado,
@@ -44,6 +45,7 @@ import { AdminLlamadasHoy } from './AdminLlamadasHoy';
 import { AdminProveedores } from './AdminProveedores';
 import { AdminMovimientosInventario } from './AdminMovimientosInventario';
 import { AdminAntiguedadStock } from './AdminAntiguedadStock';
+import { AdminNotasAntiguas } from './AdminNotasAntiguas';
 import { AdminAnaliticaVentas } from './AdminAnaliticaVentas';
 import { AdminHistorialVentas } from './AdminHistorialVentas';
 import { AdminHistorialCortes } from './AdminHistorialCortes';
@@ -71,6 +73,7 @@ type Pantalla =
   | 'cotizacionesPendientes'
   | 'compra'
   | 'cartera'
+  | 'notasAntiguas'
   | 'cuentas'
   | 'usuarios'
   | 'gastos'
@@ -129,6 +132,7 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
     case 'compra':
       return !!usuario.permisos?.puedeRegistrarCompras;
     case 'cartera':
+    case 'notasAntiguas':
     case 'cuentas':
     case 'facturasPendientes':
       return !!usuario.permisos?.puedeVerCarteraGeneral;
@@ -245,6 +249,10 @@ export default function App() {
   // todavia no se marcan como llamados -- checklist diario.
   const [llamadasPendientesHoyCount, setLlamadasPendientesHoyCount] = useState(0);
 
+  // Notas a credito con saldo pendiente que llevan mas de una semana sin
+  // liquidarse -- se avisa apenas se entra, igual que clientes en riesgo.
+  const [notasAntiguasCount, setNotasAntiguasCount] = useState(0);
+
   // Al arrancar, si hay un token guardado de una sesion anterior (ver
   // api.ts), se valida contra el servidor en vez de pedir login de nuevo
   // -- esto es lo que evita que en iOS, cada vez que la PWA vuelve de
@@ -271,6 +279,7 @@ export default function App() {
       }
       if (usuario.rolBase === 'administrador' || usuario.permisos?.puedeVerCarteraGeneral) {
         cargarClientesEnRiesgoCount();
+        cargarNotasAntiguasCount();
       }
       cargarLlamadasPendientesHoyCount();
     }
@@ -359,6 +368,15 @@ export default function App() {
     try {
       const clientes = await obtenerClientesEnRiesgo();
       setClientesEnRiesgoCount(clientes.length);
+    } catch {
+      // Sin conexion o sin permiso: se deja el contador como estaba.
+    }
+  }
+
+  async function cargarNotasAntiguasCount() {
+    try {
+      const notas = await obtenerNotasAntiguas();
+      setNotasAntiguasCount(notas.length);
     } catch {
       // Sin conexion o sin permiso: se deja el contador como estaba.
     }
@@ -707,6 +725,7 @@ export default function App() {
     if (pantallaActiva === 'cuentasPorCobrarMenu') {
       return renderSubmenu('Cuentas por Cobrar', [
         { pantalla: 'cartera', icono: '💵', titulo: 'Cartera', descripcion: 'Clientes con saldo pendiente', clase: 'boton-flotante-cartera' },
+        { pantalla: 'notasAntiguas', icono: '📆', titulo: 'Notas antiguas', descripcion: 'Notas con más de 7 días sin liquidarse', clase: 'boton-flotante-cartera' },
       ]);
     }
     if (pantallaActiva === 'cuentasPorPagarMenu') {
@@ -756,6 +775,9 @@ export default function App() {
     }
     if (pantallaActiva === 'cartera') {
       return <AdminCartera onCerrar={() => abrirPantalla('cuentasPorCobrarMenu')} />;
+    }
+    if (pantallaActiva === 'notasAntiguas') {
+      return <AdminNotasAntiguas onCerrar={() => abrirPantalla('cuentasPorCobrarMenu')} />;
     }
     if (pantallaActiva === 'cuentas') {
       return <AdminCuentasPorPagar onCerrar={() => abrirPantalla('cuentasPorPagarMenu')} />;
@@ -971,6 +993,8 @@ export default function App() {
         clientesEnRiesgoCount={clientesEnRiesgoCount}
         onVerLlamadasHoy={() => abrirPantalla('llamadasHoy')}
         llamadasPendientesHoyCount={llamadasPendientesHoyCount}
+        onVerNotasAntiguas={() => abrirPantalla('notasAntiguas')}
+        notasAntiguasCount={notasAntiguasCount}
         mensajeGlobal={mensaje}
         onCerrarMensajeGlobal={() => setMensaje(null)}
       />
