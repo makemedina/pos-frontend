@@ -116,6 +116,13 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
     return p.producto.toLowerCase().includes(q) || p.marca.toLowerCase().includes(q);
   });
 
+  // Valor del stock que se ve en la lista (segun filtros activos), valuado
+  // a costo de compra -- suma cantidad disponible x costo de cada lote.
+  const valorInventarioCosto = productosVisibles.reduce(
+    (acc, p) => acc + p.lotes.reduce((accLote, l) => accLote + l.cantidadDisponible * l.costoUnitario, 0),
+    0
+  );
+
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
@@ -145,6 +152,22 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
               value={busquedaProducto}
               onChange={(e) => setBusquedaProducto(e.target.value)}
             />
+
+            {!cargando && (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: 10,
+                  background: '#f8fafc',
+                  fontWeight: 700,
+                }}
+              >
+                <span>Valor de inventario (costo)</span>
+                <span>{formatoMoneda(valorInventarioCosto)}</span>
+              </div>
+            )}
 
             {cargando ? (
               <p>Cargando...</p>
