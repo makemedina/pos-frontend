@@ -29,6 +29,7 @@ export function AdminCartera({ onCerrar }: Props) {
   const [nivel, setNivel] = useState<Nivel>('clientes');
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [busquedaCartera, setBusquedaCartera] = useState('');
+  const [ocultarSinSaldo, setOcultarSinSaldo] = useState(false);
   const [comprobanteActivo, setComprobanteActivo] = useState<DatosComprobantePago | null>(null);
   const [exportando, setExportando] = useState(false);
   const [cargando, setCargando] = useState(true);
@@ -99,7 +100,7 @@ export function AdminCartera({ onCerrar }: Props) {
   useEffect(() => {
     setImagenCarteraBlob(null);
     setPdfCarteraBlob(null);
-  }, [busquedaCartera, clientes]);
+  }, [busquedaCartera, ocultarSinSaldo, clientes]);
 
   // Mismo criterio para el reporte de un cliente especifico: si cambian
   // sus notas (otro cliente, se prendio/apago "ver pagadas", se registro
@@ -397,9 +398,10 @@ export function AdminCartera({ onCerrar }: Props) {
     }
   }
 
-  const clientesFiltrados = clientes.filter(
-    (c) => !busquedaCartera.trim() || c.nombre.toLowerCase().includes(busquedaCartera.trim().toLowerCase())
-  );
+  const clientesFiltrados = clientes.filter((c) => {
+    if (ocultarSinSaldo && c.saldoTotal === 0) return false;
+    return !busquedaCartera.trim() || c.nombre.toLowerCase().includes(busquedaCartera.trim().toLowerCase());
+  });
   const totalCartera = clientesFiltrados.reduce((acc, c) => acc + c.saldoTotal, 0);
 
   async function exportar() {
@@ -623,6 +625,14 @@ export function AdminCartera({ onCerrar }: Props) {
               value={busquedaCartera}
               onChange={(e) => setBusquedaCartera(e.target.value)}
             />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
+              <input
+                type="checkbox"
+                checked={ocultarSinSaldo}
+                onChange={(e) => setOcultarSinSaldo(e.target.checked)}
+              />
+              Ocultar clientes sin saldo en cartera
+            </label>
             <div id={ELEMENT_ID_REPORTE_CARTERA} style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
               <div style={{ display: 'grid', gap: '0.75rem' }}>
                 {clientesFiltrados.length === 0 && <p style={{ color: '#6b7280' }}>No hay clientes que coincidan.</p>}
@@ -663,7 +673,7 @@ export function AdminCartera({ onCerrar }: Props) {
                     fontWeight: 700,
                   }}
                 >
-                  <span>{busquedaCartera.trim() ? 'Total filtrado' : 'Total en cartera'}</span>
+                  <span>{busquedaCartera.trim() || ocultarSinSaldo ? 'Total filtrado' : 'Total en cartera'}</span>
                   <span>{formatoMoneda(totalCartera)}</span>
                 </div>
               )}
