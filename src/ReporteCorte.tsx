@@ -32,6 +32,14 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
   const efectivoUsado = yaGuardado ? yaGuardado.efectivoContado : efectivoContadoEnVivo ?? 0;
   const bancoUsado = yaGuardado ? yaGuardado.saldoBancoContado : saldoBancoContadoEnVivo ?? 0;
 
+  // Para el corte de HOY, el saldo pendiente a proveedores en vivo; para
+  // uno ya guardado, la fotografia que se guardo ese dia (no las
+  // facturas pendientes de HOY).
+  const facturasPendientesMostrar = yaGuardado
+    ? yaGuardado.facturasPendientesPorProveedor
+    : resumen.facturasPendientesPorProveedor;
+  const totalFacturasPendientesMostrar = facturasPendientesMostrar.reduce((acc, g) => acc + g.subtotal, 0);
+
   // Cuadre de efectivo (distinto de la balanza de abajo, que es todo el
   // negocio). Publico -- no requiere permiso de utilidad.
   //
@@ -294,16 +302,17 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
         </div>
       )}
 
-      {/* Igual que cuentasPorPagar/cartera: es el saldo pendiente a HOY, no
-          el que habia el dia de un corte pasado -- solo se muestra para el
-          corte de hoy todavia no guardado. */}
-      {!yaGuardado && resumen.facturasPendientesPorProveedor.length > 0 && (
+      {/* Para el corte de HOY (todavia no guardado) es el saldo pendiente
+          en vivo; para un corte ya guardado es la fotografia de las
+          facturas pendientes que se guardo justo ESE dia -- no se
+          recalcula con las facturas de hoy. */}
+      {facturasPendientesMostrar.length > 0 && (
         <div style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <h3 style={{ margin: 0 }}>Facturas pendientes a proveedores</h3>
-            <strong>{formatoMoneda(resumen.cuentasPorPagar)}</strong>
+            <strong>{formatoMoneda(totalFacturasPendientesMostrar)}</strong>
           </div>
-          {resumen.facturasPendientesPorProveedor.map((grupo) => (
+          {facturasPendientesMostrar.map((grupo) => (
             <div key={grupo.proveedorId} style={{ display: 'grid', gap: '0.35rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}>
                 <span>{grupo.proveedorNombre}</span>

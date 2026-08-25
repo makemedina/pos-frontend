@@ -1161,6 +1161,7 @@ export interface ResumenCorteDia {
     valorInventario: number;
     balanzaTotal: number;
     observacion: string | null;
+    facturasPendientesPorProveedor: FacturaPendientePorProveedor[];
   } | null;
   ventas: {
     total: number;
