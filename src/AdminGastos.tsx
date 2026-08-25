@@ -20,6 +20,7 @@ interface Gasto {
   registradoPor: { nombre: string };
   cancelado: boolean;
   canceladoEn: string | null;
+  fotoComprobanteKey: string | null;
 }
 
 interface Props {
@@ -35,7 +36,12 @@ export function AdminGastos({ onCerrar }: Props) {
   const [monto, setMonto] = useState('');
   const [metodoPago, setMetodoPago] = useState('efectivo');
   const [categoriaId, setCategoriaId] = useState('');
+  const [fotoComprobante, setFotoComprobante] = useState<File | null>(null);
+  const [previaFoto, setPreviaFoto] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [comprobanteAbierto, setComprobanteAbierto] = useState<string | null>(null);
+  const [cargandoComprobante, setCargandoComprobante] = useState(false);
 
   const [busquedaProveedor, setBusquedaProveedor] = useState('');
   const [resultadosProveedor, setResultadosProveedor] = useState<Proveedor[]>([]);
@@ -153,23 +159,41 @@ export function AdminGastos({ onCerrar }: Props) {
     }
   }
 
+  function elegirFotoComprobante(e: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0] ?? null;
+    setFotoComprobante(archivo);
+    setPreviaFoto((anterior) => {
+      if (anterior) URL.revokeObjectURL(anterior);
+      return archivo ? URL.createObjectURL(archivo) : null;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!categoriaId) {
       setMensaje('Elige una categoría antes de guardar.');
       return;
     }
+    if (!fotoComprobante) {
+      setMensaje('Sube una foto del comprobante antes de guardar.');
+      return;
+    }
+    setGuardando(true);
     try {
+      const cuerpo = new FormData();
+      cuerpo.append('categoriaId', categoriaId);
+      if (proveedorElegido) cuerpo.append('proveedorId', proveedorElegido.id);
+      cuerpo.append('concepto', concepto);
+      cuerpo.append('monto', monto);
+      cuerpo.append('metodoPago', metodoPago);
+      cuerpo.append('foto', fotoComprobante);
+
+      // Sin Content-Type manual: el navegador lo pone solo (con el boundary
+      // correcto) al mandar un FormData con multipart/form-data.
       const res = await fetch(`${API_URL}/gastos`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...headerAuth() },
-        body: JSON.stringify({
-          categoriaId,
-          proveedorId: proveedorElegido?.id,
-          concepto,
-          monto: Number(monto),
-          metodoPago,
-        }),
+        headers: headerAuth(),
+        body: cuerpo,
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'No se pudo guardar');
@@ -177,10 +201,34 @@ export function AdminGastos({ onCerrar }: Props) {
       setConcepto('');
       setMonto('');
       setProveedorElegido(null);
+      if (previaFoto) URL.revokeObjectURL(previaFoto);
+      setFotoComprobante(null);
+      setPreviaFoto(null);
       cargar();
     } catch (err: any) {
       setMensaje(err.message || 'No se pudo registrar el gasto');
+    } finally {
+      setGuardando(false);
     }
+  }
+
+  async function verComprobante(gastoId: string) {
+    setCargandoComprobante(true);
+    try {
+      const res = await fetch(`${API_URL}/gastos/${gastoId}/comprobante`, { headers: headerAuth() });
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      setComprobanteAbierto(URL.createObjectURL(blob));
+    } catch {
+      setMensaje('No se pudo cargar la foto del comprobante.');
+    } finally {
+      setCargandoComprobante(false);
+    }
+  }
+
+  function cerrarComprobante() {
+    if (comprobanteAbierto) URL.revokeObjectURL(comprobanteAbierto);
+    setComprobanteAbierto(null);
   }
 
   async function exportar() {
@@ -322,7 +370,19 @@ export function AdminGastos({ onCerrar }: Props) {
               </>
             )}
 
-            <button type="submit">Guardar gasto</button>
+            <label className="etiqueta">Foto del comprobante (obligatoria)</label>
+            <input type="file" accept="image/*" capture="environment" onChange={elegirFotoComprobante} />
+            {previaFoto && (
+              <img
+                src={previaFoto}
+                alt="Comprobante"
+                style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'contain' }}
+              />
+            )}
+
+            <button type="submit" disabled={guardando}>
+              {guardando ? 'Guardando...' : 'Guardar gasto'}
+            </button>
           </form>
         )}
 
@@ -349,6 +409,17 @@ export function AdminGastos({ onCerrar }: Props) {
                       <small>{gasto.registradoPor.nombre}</small>
                     </div>
                   </div>
+
+                  {gasto.fotoComprobanteKey && (
+                    <button
+                      className="boton-secundario"
+                      onClick={() => verComprobante(gasto.id)}
+                      disabled={cargandoComprobante}
+                      style={{ width: '100%', marginTop: 8 }}
+                    >
+                      🧾 Ver comprobante
+                    </button>
+                  )}
 
                   {gasto.cancelado ? (
                     <div className="aviso-alerta" style={{ marginTop: 8 }}>
@@ -398,6 +469,18 @@ export function AdminGastos({ onCerrar }: Props) {
           </>
         )}
       </div>
+
+      {comprobanteAbierto && (
+        <div className="modal-fondo" onClick={cerrarComprobante} style={{ zIndex: 40 }}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <p className="titulo">Comprobante</p>
+              <button className="boton-cerrar" onClick={cerrarComprobante}>✕</button>
+            </div>
+            <img src={comprobanteAbierto} alt="Comprobante" style={{ maxWidth: '100%', borderRadius: 8 }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
