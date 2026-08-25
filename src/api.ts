@@ -293,6 +293,9 @@ export interface ClienteConSaldo {
   nombre: string;
   telefono: string;
   direccion: string | null;
+  // Adonde se le entrega la mercancia -- si esta vacia, se asume que es
+  // la misma que "direccion" (algunos clientes reciben en su negocio).
+  direccionEntrega: string | null;
   permiteVentaCredito: boolean;
   saldoInicial: number;
   saldoTotal: number;
@@ -365,7 +368,9 @@ export async function actualizarLlamadaCliente(
   }
 }
 
-export async function crearClienteCompleto(datos: { nombre: string; telefono: string; direccion?: string }): Promise<Cliente> {
+export async function crearClienteCompleto(
+  datos: { nombre: string; telefono: string; direccion?: string; direccionEntrega?: string }
+): Promise<Cliente> {
   const res = await fetch(`${API_URL}/clientes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
@@ -438,7 +443,13 @@ export async function cargarFacturasIniciales(
 
 export async function actualizarCliente(
   id: string,
-  datos: { nombre?: string; telefono?: string; direccion?: string; permiteVentaCredito?: boolean }
+  datos: {
+    nombre?: string;
+    telefono?: string;
+    direccion?: string;
+    direccionEntrega?: string;
+    permiteVentaCredito?: boolean;
+  }
 ): Promise<ClienteConSaldo> {
   const res = await fetch(`${API_URL}/clientes/${id}`, {
     method: 'PUT',
@@ -1000,7 +1011,6 @@ export interface Configuracion {
   logoBase64: string | null;
   telefono: string;
   direccion: string;
-  direccionEntrega: string;
   notasNegocio: string;
   mostrarDatosCliente: boolean;
   encabezadoRecibo: string;

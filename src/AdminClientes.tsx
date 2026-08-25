@@ -52,6 +52,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [nombreNuevo, setNombreNuevo] = useState('');
   const [telefonoNuevo, setTelefonoNuevo] = useState('');
   const [direccionNueva, setDireccionNueva] = useState('');
+  const [direccionEntregaNueva, setDireccionEntregaNueva] = useState('');
 
   const [clienteId, setClienteId] = useState<string | null>(null);
   const [cliente, setCliente] = useState<ClienteConSaldo | null>(null);
@@ -61,6 +62,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [editNombre, setEditNombre] = useState('');
   const [editTelefono, setEditTelefono] = useState('');
   const [editDireccion, setEditDireccion] = useState('');
+  const [editDireccionEntrega, setEditDireccionEntrega] = useState('');
+  const [entregaIgualQueNegocio, setEntregaIgualQueNegocio] = useState(true);
   const [editPermiteCredito, setEditPermiteCredito] = useState(true);
   const [editDiasLlamada, setEditDiasLlamada] = useState<number[]>([]);
   const [guardando, setGuardando] = useState(false);
@@ -110,10 +113,16 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   async function crearNuevoCliente() {
     if (!nombreNuevo || !telefonoNuevo) return;
     try {
-      await crearClienteCompleto({ nombre: nombreNuevo, telefono: telefonoNuevo, direccion: direccionNueva || undefined });
+      await crearClienteCompleto({
+        nombre: nombreNuevo,
+        telefono: telefonoNuevo,
+        direccion: direccionNueva || undefined,
+        direccionEntrega: direccionEntregaNueva || undefined,
+      });
       setNombreNuevo('');
       setTelefonoNuevo('');
       setDireccionNueva('');
+      setDireccionEntregaNueva('');
       setMostrarAlta(false);
       cargarLista();
     } catch {
@@ -150,6 +159,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       setEditNombre(data.nombre);
       setEditTelefono(data.telefono);
       setEditDireccion(data.direccion || '');
+      setEditDireccionEntrega(data.direccionEntrega || '');
+      setEntregaIgualQueNegocio(!data.direccionEntrega);
       setEditPermiteCredito(data.permiteVentaCredito);
       setEditDiasLlamada(data.diasLlamada || []);
     } catch {
@@ -161,6 +172,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         setEditNombre(enLista.nombre);
         setEditTelefono(enLista.telefono);
         setEditDireccion(enLista.direccion || '');
+        setEditDireccionEntrega(enLista.direccionEntrega || '');
+        setEntregaIgualQueNegocio(!enLista.direccionEntrega);
         setEditPermiteCredito(enLista.permiteVentaCredito);
         setMensaje('Sin conexión: datos guardados localmente. Transacciones y movimientos no están disponibles.');
       } else {
@@ -183,7 +196,12 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
     if (!clienteId) return;
     setGuardando(true);
     try {
-      const datos: any = { nombre: editNombre, telefono: editTelefono, direccion: editDireccion };
+      const datos: any = {
+        nombre: editNombre,
+        telefono: editTelefono,
+        direccion: editDireccion,
+        direccionEntrega: entregaIgualQueNegocio ? '' : editDireccionEntrega,
+      };
       if (esAdmin) datos.permiteVentaCredito = editPermiteCredito;
       const [actualizado] = await Promise.all([
         actualizarCliente(clienteId, datos),
@@ -264,6 +282,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
           Nombre: c.nombre,
           Telefono: c.telefono,
           Domicilio: c.direccion || '',
+          'Direccion de entrega': c.direccionEntrega || c.direccion || '',
           'Permite credito': c.permiteVentaCredito ? 'Si' : 'No',
           'Saldo total': c.saldoTotal,
         })),
@@ -308,7 +327,12 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
               <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <input placeholder="Nombre" value={nombreNuevo} onChange={(e) => setNombreNuevo(e.target.value)} />
                 <input placeholder="Teléfono" value={telefonoNuevo} onChange={(e) => setTelefonoNuevo(e.target.value)} />
-                <input placeholder="Domicilio (opcional)" value={direccionNueva} onChange={(e) => setDireccionNueva(e.target.value)} />
+                <input placeholder="Domicilio del negocio (opcional)" value={direccionNueva} onChange={(e) => setDireccionNueva(e.target.value)} />
+                <input
+                  placeholder="Dirección de entrega de mercancía (si es distinta)"
+                  value={direccionEntregaNueva}
+                  onChange={(e) => setDireccionEntregaNueva(e.target.value)}
+                />
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={crearNuevoCliente}>Guardar</button>
                   <button onClick={() => setMostrarAlta(false)}>Cancelar</button>
@@ -410,9 +434,28 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                   <input value={editTelefono} onChange={(e) => setEditTelefono(e.target.value)} />
                 </label>
                 <label>
-                  Domicilio
+                  Domicilio (dirección del negocio)
                   <input value={editDireccion} onChange={(e) => setEditDireccion(e.target.value)} />
                 </label>
+
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
+                  <input
+                    type="checkbox"
+                    checked={entregaIgualQueNegocio}
+                    onChange={(e) => setEntregaIgualQueNegocio(e.target.checked)}
+                  />
+                  Recibe la mercancía en el mismo domicilio del negocio
+                </label>
+
+                {!entregaIgualQueNegocio && (
+                  <label>
+                    Dirección de entrega de mercancía
+                    <input
+                      value={editDireccionEntrega}
+                      onChange={(e) => setEditDireccionEntrega(e.target.value)}
+                    />
+                  </label>
+                )}
 
                 {esAdmin && (
                   <div className="fila-switch">

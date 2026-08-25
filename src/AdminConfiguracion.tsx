@@ -57,7 +57,6 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
         logoBase64: config.logoBase64,
         telefono: config.telefono,
         direccion: config.direccion,
-        direccionEntrega: config.direccionEntrega,
         notasNegocio: config.notasNegocio,
       });
       setConfig(actualizado);
@@ -140,16 +139,8 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
               </label>
 
               <label>
-                Dirección del negocio (aparece en el recibo)
+                Dirección
                 <input value={config.direccion} onChange={(e) => actualizar('direccion', e.target.value)} />
-              </label>
-
-              <label>
-                Dirección de entrega de mercancía (para proveedores, uso interno)
-                <input
-                  value={config.direccionEntrega}
-                  onChange={(e) => actualizar('direccionEntrega', e.target.value)}
-                />
               </label>
 
               <label>
