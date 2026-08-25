@@ -371,7 +371,9 @@ export function AdminGastos({ onCerrar }: Props) {
             )}
 
             <label className="etiqueta">Foto del comprobante (obligatoria)</label>
-            <input type="file" accept="image/*" capture="environment" onChange={elegirFotoComprobante} />
+            {/* Sin "capture": asi el navegador ofrece elegir entre tomar
+                foto o subir de la galeria, en vez de forzar la camara. */}
+            <input type="file" accept="image/*" onChange={elegirFotoComprobante} />
             {previaFoto && (
               <img
                 src={previaFoto}
