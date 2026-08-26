@@ -741,11 +741,24 @@ export interface CrearCompraPayload {
   metodoPagoInicial?: string;
 }
 
-export async function registrarCompra(payload: CrearCompraPayload) {
+// La foto de la factura es obligatoria -- se manda como multipart/form-data
+// en vez de JSON. "items" viaja como un campo de texto con JSON.stringify.
+export async function registrarCompra(payload: CrearCompraPayload, fotoFactura: File) {
+  const cuerpo = new FormData();
+  cuerpo.append('proveedorId', payload.proveedorId);
+  if (payload.numeroFactura) cuerpo.append('numeroFactura', payload.numeroFactura);
+  if (payload.fechaVencimiento) cuerpo.append('fechaVencimiento', payload.fechaVencimiento);
+  cuerpo.append('items', JSON.stringify(payload.items));
+  if (payload.pagoInicial !== undefined) cuerpo.append('pagoInicial', String(payload.pagoInicial));
+  if (payload.metodoPagoInicial) cuerpo.append('metodoPagoInicial', payload.metodoPagoInicial);
+  cuerpo.append('foto', fotoFactura);
+
+  // Sin Content-Type manual: el navegador lo pone solo (con el boundary
+  // correcto) al mandar un FormData con multipart/form-data.
   const res = await fetch(`${API_URL}/compras`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify(payload),
+    headers: headerAuth(),
+    body: cuerpo,
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -1319,6 +1332,7 @@ export interface CompraDetalle {
   estadoPago: string;
   cancelada: boolean;
   canceladaEn: string | null;
+  fotoFacturaKey: string | null;
   proveedor: { id: string; nombre: string; telefono: string | null };
   metodosPago: string[];
   items: ItemCompraDetalle[];

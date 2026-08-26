@@ -40,6 +40,11 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
   const [items, setItems] = useState<ItemCompraLocal[]>([]);
   const [mostrarBuscadorProducto, setMostrarBuscadorProducto] = useState(false);
 
+  const [fotoFactura, setFotoFactura] = useState<File | null>(null);
+  const [previaFoto, setPreviaFoto] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+  const [mensaje, setMensaje] = useState<string | null>(null);
+
   const total = items.reduce((acc, i) => acc + i.cantidad * i.costoUnitario, 0);
   const saldoPendiente = total - pagoInicial;
 
@@ -81,23 +86,46 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
     setItems((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function elegirFotoFactura(e: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0] ?? null;
+    setFotoFactura(archivo);
+    setPreviaFoto((anterior) => {
+      if (anterior) URL.revokeObjectURL(anterior);
+      return archivo ? URL.createObjectURL(archivo) : null;
+    });
+  }
+
   async function guardar() {
     if (!proveedorSeleccionado || items.length === 0) return;
+    if (!fotoFactura) {
+      setMensaje('Sube una foto de la factura antes de guardar.');
+      return;
+    }
 
-    await registrarCompra({
-      proveedorId: proveedorSeleccionado.id,
-      numeroFactura: numeroFactura || undefined,
-      fechaVencimiento: fechaVencimiento || undefined,
-      items: items.map((i) => ({
-        varianteId: i.varianteId,
-        cantidad: i.cantidad,
-        costoUnitario: i.costoUnitario,
-      })),
-      pagoInicial: pagoInicial || undefined,
-      metodoPagoInicial: pagoInicial > 0 ? metodoPagoInicial : undefined,
-    });
+    setGuardando(true);
+    try {
+      await registrarCompra(
+        {
+          proveedorId: proveedorSeleccionado.id,
+          numeroFactura: numeroFactura || undefined,
+          fechaVencimiento: fechaVencimiento || undefined,
+          items: items.map((i) => ({
+            varianteId: i.varianteId,
+            cantidad: i.cantidad,
+            costoUnitario: i.costoUnitario,
+          })),
+          pagoInicial: pagoInicial || undefined,
+          metodoPagoInicial: pagoInicial > 0 ? metodoPagoInicial : undefined,
+        },
+        fotoFactura
+      );
 
-    onCompletada(`Compra registrada por ${formatoMoneda(total)}`);
+      onCompletada(`Compra registrada por ${formatoMoneda(total)}`);
+    } catch (err: any) {
+      setMensaje(err.message || 'No se pudo registrar la compra');
+    } finally {
+      setGuardando(false);
+    }
   }
 
   return (
@@ -107,6 +135,8 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
           <p className="titulo">Nueva compra</p>
           <button className="boton-cerrar" onClick={onCerrar}>X</button>
         </div>
+
+        {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         <label className="etiqueta">Proveedor</label>
         {proveedorSeleccionado ? (
@@ -240,12 +270,51 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
           <strong>{formatoMoneda(total)}</strong>
         </div>
 
+        <label className="etiqueta">Foto de la factura (obligatoria)</label>
+        {/* El <input type="file"> nativo queda oculto y lo dispara este
+            botón grande -- en computadora el input solo se ve como un
+            texto gris chiquito, facil de no notar. Sin "capture": en
+            celular el navegador ofrece elegir entre tomar foto o subir
+            de la galeria, en vez de forzar la camara. */}
+        <label
+          htmlFor="foto-factura-compra"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            border: '2px dashed #c7c7cc',
+            borderRadius: 12,
+            padding: '1.25rem',
+            cursor: 'pointer',
+            color: '#007aff',
+            fontWeight: 600,
+            textAlign: 'center',
+          }}
+        >
+          {fotoFactura ? `📎 ${fotoFactura.name} (toca para cambiarla)` : '📷 Toca para elegir o tomar la foto'}
+        </label>
+        <input
+          id="foto-factura-compra"
+          type="file"
+          accept="image/*"
+          onChange={elegirFotoFactura}
+          style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+        />
+        {previaFoto && (
+          <img
+            src={previaFoto}
+            alt="Factura"
+            style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'contain' }}
+          />
+        )}
+
         <button
           className="boton-primario"
-          disabled={!proveedorSeleccionado || items.length === 0}
+          disabled={!proveedorSeleccionado || items.length === 0 || guardando}
           onClick={guardar}
         >
-          Registrar compra
+          {guardando ? 'Guardando...' : 'Registrar compra'}
         </button>
       </div>
 

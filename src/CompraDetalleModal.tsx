@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
-import { obtenerDetalleCompra, cancelarCompra, corregirCompraACredito, type CompraDetalle } from './api';
+import { obtenerDetalleCompra, cancelarCompra, corregirCompraACredito, API_URL, headerAuth, type CompraDetalle } from './api';
 import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
 
 interface Props {
@@ -30,6 +30,8 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
   const [autorizadoPin, setAutorizadoPin] = useState('');
   const [cancelando, setCancelando] = useState(false);
   const [corrigiendo, setCorrigiendo] = useState(false);
+  const [facturaAbierta, setFacturaAbierta] = useState<string | null>(null);
+  const [cargandoFactura, setCargandoFactura] = useState(false);
 
   useEffect(() => {
     obtenerDetalleCompra(compraId)
@@ -86,6 +88,25 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
         setMensaje(err?.message || 'No se pudo compartir el PDF.');
       }
     }
+  }
+
+  async function verFactura() {
+    setCargandoFactura(true);
+    try {
+      const res = await fetch(`${API_URL}/compras/${compraId}/factura`, { headers: headerAuth() });
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      setFacturaAbierta(URL.createObjectURL(blob));
+    } catch {
+      setMensaje('No se pudo cargar la foto de la factura.');
+    } finally {
+      setCargandoFactura(false);
+    }
+  }
+
+  function cerrarFactura() {
+    if (facturaAbierta) URL.revokeObjectURL(facturaAbierta);
+    setFacturaAbierta(null);
   }
 
   async function corregirACredito() {
@@ -189,6 +210,17 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
               </div>
             )}
 
+            {compra.fotoFacturaKey && (
+              <button
+                className="boton-secundario"
+                onClick={verFactura}
+                disabled={cargandoFactura}
+                style={{ width: '100%', marginTop: 8 }}
+              >
+                {cargandoFactura ? 'Cargando...' : '🧾 Ver foto de la factura'}
+              </button>
+            )}
+
             {!compra.cancelada && compra.metodosPago.length > 0 && esHoy(compra.fecha) && (
               <button
                 className="boton-secundario"
@@ -269,6 +301,18 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
           </div>
         )}
       </div>
+
+      {facturaAbierta && (
+        <div className="modal-fondo" onClick={cerrarFactura} style={{ zIndex: 40 }}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <p className="titulo">Factura</p>
+              <button className="boton-cerrar" onClick={cerrarFactura}>✕</button>
+            </div>
+            <img src={facturaAbierta} alt="Factura" style={{ maxWidth: '100%', borderRadius: 8 }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
