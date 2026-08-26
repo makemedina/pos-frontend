@@ -371,9 +371,38 @@ export function AdminGastos({ onCerrar }: Props) {
             )}
 
             <label className="etiqueta">Foto del comprobante (obligatoria)</label>
-            {/* Sin "capture": asi el navegador ofrece elegir entre tomar
-                foto o subir de la galeria, en vez de forzar la camara. */}
-            <input type="file" accept="image/*" onChange={elegirFotoComprobante} />
+            {/* El <input type="file"> nativo queda oculto y se dispara desde
+                este botón grande de verdad -- en computadora el input solo
+                se ve como un texto gris chiquito ("Seleccionar archivo") que
+                es facil no notar; asi siempre hay algo obviamente clickeable
+                sin importar el navegador. Sin "capture": en celular el
+                navegador ofrece elegir entre tomar foto o subir de la
+                galeria, en vez de forzar la camara. */}
+            <label
+              htmlFor="foto-comprobante-gasto"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                border: '2px dashed #c7c7cc',
+                borderRadius: 12,
+                padding: '1.25rem',
+                cursor: 'pointer',
+                color: '#007aff',
+                fontWeight: 600,
+                textAlign: 'center',
+              }}
+            >
+              {fotoComprobante ? `📎 ${fotoComprobante.name} (toca para cambiarla)` : '📷 Toca para elegir o tomar la foto'}
+            </label>
+            <input
+              id="foto-comprobante-gasto"
+              type="file"
+              accept="image/*"
+              onChange={elegirFotoComprobante}
+              style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+            />
             {previaFoto && (
               <img
                 src={previaFoto}
