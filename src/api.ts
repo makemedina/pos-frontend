@@ -300,6 +300,10 @@ export interface ClienteConSaldo {
   saldoInicial: number;
   saldoTotal: number;
   diasLlamada?: number[];
+  // Compro algo (con al menos un producto, no cancelada) en los ultimos
+  // 30 dias -- no cuenta la carga inicial de saldo heredado.
+  ultimaCompra: string | null;
+  activo: boolean;
 }
 
 export async function obtenerClientesConSaldo(filtro: 'todos' | 'conDeuda' | 'sinDeuda'): Promise<ClienteConSaldo[]> {

@@ -41,6 +41,7 @@ const DIAS_SEMANA = [
 export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [filtro, setFiltro] = useState<Filtro>('todos');
   const [busquedaCliente, setBusquedaCliente] = useState('');
+  const [soloActivos, setSoloActivos] = useState(true);
   const [clientes, setClientes] = useState<ClienteConSaldo[]>([]);
   const [cargandoLista, setCargandoLista] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -259,6 +260,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   }
 
   const clientesFiltrados = clientes.filter((c) => {
+    if (soloActivos && !c.activo) return false;
     if (!busquedaCliente.trim()) return true;
     const q = busquedaCliente.trim().toLowerCase();
     return c.nombre.toLowerCase().includes(q) || c.telefono.includes(busquedaCliente.trim());
@@ -322,6 +324,11 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 <button onClick={() => setMostrarImportar(true)}>📋 Importar lista</button>
               </div>
             </div>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
+              <input type="checkbox" checked={soloActivos} onChange={(e) => setSoloActivos(e.target.checked)} />
+              Solo clientes activos (compraron en el último mes)
+            </label>
 
             {mostrarAlta && (
               <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
