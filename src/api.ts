@@ -1604,6 +1604,30 @@ export interface PagoNota {
   cancelado: boolean;
   canceladoEn: string | null;
   registradoPor: { nombre: string };
+  grupoPagoId: string | null;
+}
+
+export interface ComprobantePagoReconstruido {
+  folioNota: number | string;
+  clienteNombre: string;
+  clienteTelefono: string | null;
+  monto: number;
+  metodoPago: string;
+  fecha: string;
+  saldoNotaRestante: number;
+  saldoTotalCliente: number;
+  detalleNotas?: { folio: number; monto: number; saldoRestante: number }[];
+}
+
+// Reconstruye el comprobante COMPLETO tal como se genero la primera vez
+// (un abono a una sola nota repartido en varios metodos, o un pago
+// repartido entre varias notas) -- a diferencia de reimprimir solo la
+// parte de una nota individual.
+export async function obtenerComprobantePagoPorGrupo(grupoPagoId: string): Promise<ComprobantePagoReconstruido> {
+  const res = await fetch(`${API_URL}/cartera/comprobante-pago/${grupoPagoId}`, { headers: headerAuth() });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
 }
 
 export async function obtenerResumenCartera(): Promise<ClienteCartera[]> {

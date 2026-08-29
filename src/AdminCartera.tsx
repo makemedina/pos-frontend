@@ -11,6 +11,7 @@ import {
   registrarPagoMultiNota,
   cancelarPagoVenta,
   obtenerSaldoAFavor,
+  obtenerComprobantePagoPorGrupo,
   type ClienteCartera,
   type NotaCartera,
   type PagoNota,
@@ -290,6 +291,38 @@ export function AdminCartera({ onCerrar }: Props) {
     setNotaElegida(null);
     setPagos([]);
     cargarNotas();
+  }
+
+  // Reimprime el comprobante tal como se genero la primera vez -- si el
+  // pago se repartio entre varias notas, se reconstruye ese desglose
+  // completo (no solo la parte de la nota que se esta viendo). Los pagos
+  // de antes de que existiera grupoPagoId no tienen ese dato, asi que
+  // caen al comportamiento viejo: solo la parte de esta nota.
+  async function reimprimirComprobante(p: PagoNota) {
+    if (p.grupoPagoId) {
+      try {
+        const reconstruido = await obtenerComprobantePagoPorGrupo(p.grupoPagoId);
+        setComprobanteActivo({
+          ...reconstruido,
+          clienteTelefono: reconstruido.clienteTelefono ?? undefined,
+          fecha: new Date(reconstruido.fecha).toLocaleString(),
+        });
+        return;
+      } catch {
+        setMensaje('No se pudo reconstruir el comprobante completo, se muestra solo esta nota.');
+      }
+    }
+    if (!notaElegida || !clienteElegido) return;
+    setComprobanteActivo({
+      folioNota: notaElegida.folio,
+      clienteNombre: clienteElegido.nombre,
+      clienteTelefono: clienteElegido.telefono,
+      monto: p.monto,
+      metodoPago: p.metodoPago,
+      fecha: new Date(p.fecha).toLocaleString(),
+      saldoNotaRestante: notaElegida.saldoPendiente,
+      saldoTotalCliente: clienteElegido.saldoTotal,
+    });
   }
 
   async function handlePago(e: React.FormEvent) {
@@ -895,20 +928,7 @@ export function AdminCartera({ onCerrar }: Props) {
                   ) : (
                     <button
                       className="boton-secundario"
-                      onClick={() =>
-                        notaElegida &&
-                        clienteElegido &&
-                        setComprobanteActivo({
-                          folioNota: notaElegida.folio,
-                          clienteNombre: clienteElegido.nombre,
-                          clienteTelefono: clienteElegido.telefono,
-                          monto: p.monto,
-                          metodoPago: p.metodoPago,
-                          fecha: new Date(p.fecha).toLocaleString(),
-                          saldoNotaRestante: notaElegida.saldoPendiente,
-                          saldoTotalCliente: clienteElegido.saldoTotal,
-                        })
-                      }
+                      onClick={() => reimprimirComprobante(p)}
                       style={{ marginTop: 6, width: '100%' }}
                     >
                       🧾 Reimprimir comprobante
