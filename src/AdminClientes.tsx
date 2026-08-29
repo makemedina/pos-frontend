@@ -266,6 +266,9 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
     return c.nombre.toLowerCase().includes(q) || c.telefono.includes(busquedaCliente.trim());
   });
 
+  const totalActivos = clientes.filter((c) => c.activo).length;
+  const totalInactivos = clientes.length - totalActivos;
+
   const ventasFiltradas = ventas.filter((v) => {
     if (!busquedaProducto.trim()) return true;
     const q = busquedaProducto.trim().toLowerCase();
@@ -329,6 +332,9 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
               <input type="checkbox" checked={soloActivos} onChange={(e) => setSoloActivos(e.target.checked)} />
               Solo clientes activos (compraron en el último mes)
             </label>
+            <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+              {totalActivos} activo{totalActivos !== 1 ? 's' : ''} · {totalInactivos} inactivo{totalInactivos !== 1 ? 's' : ''}
+            </p>
 
             {mostrarAlta && (
               <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>

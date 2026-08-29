@@ -243,6 +243,30 @@ export function AdminHerramientas({ onCerrar }: Props) {
     }
   }
 
+  // ---------- Corregir estados de pago desincronizados ----------
+  const [corrigiendoEstados, setCorrigiendoEstados] = useState(false);
+
+  async function corregirEstadosPago() {
+    setCorrigiendoEstados(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/corregir-estados-pago`, {
+        method: 'POST',
+        headers: headerAuth(),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'No se pudo corregir.');
+      setMensaje(
+        data.ventasCorregidas === 0 && data.comprasCorregidas === 0
+          ? `Se revisaron ${data.ventasRevisadas} notas y ${data.comprasRevisadas} facturas — ninguna tenía el estado desincronizado.`
+          : `Se corrigieron ${data.ventasCorregidas} nota(s) y ${data.comprasCorregidas} factura(s) que decían "Saldo $0.00" sin marcar "Pagada".`
+      );
+    } catch (err: any) {
+      setMensaje(err.message);
+    } finally {
+      setCorrigiendoEstados(false);
+    }
+  }
+
   // ---------- Importar lista de proveedores ----------
   const [textoProveedores, setTextoProveedores] = useState('');
   const [importandoProveedores, setImportandoProveedores] = useState(false);
@@ -396,6 +420,21 @@ export function AdminHerramientas({ onCerrar }: Props) {
               {migrando ? 'Migrando...' : 'Migrar saldos antiguos a notas'}
             </button>
           </div>
+        </div>
+
+        {/* ---------- Corregir estados de pago desincronizados ---------- */}
+        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+          <h3>🩹 Corregir notas/facturas con "Saldo $0.00" que no dicen "Pagada"</h3>
+          <p style={{ fontSize: 13, color: '#6b7280' }}>
+            Un residuo diminuto de punto flotante en abonos parciales encadenados podía dejar
+            el saldo pendiente en algo como $0.00000000003 en vez de exactamente $0 — se ve
+            como "$0.00" en pantalla, pero la nota se quedaba marcada "parcial" para siempre en
+            vez de "pagada". Ya está corregido para los abonos nuevos; este botón corrige,
+            de una sola vez, las notas y facturas que quedaron mal desde antes.
+          </p>
+          <button onClick={corregirEstadosPago} disabled={corrigiendoEstados}>
+            {corrigiendoEstados ? 'Revisando...' : 'Revisar y corregir'}
+          </button>
         </div>
 
         {/* ---------- Reset / borrado de datos (zona de peligro) ---------- */}
