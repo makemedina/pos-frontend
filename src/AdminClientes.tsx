@@ -23,6 +23,14 @@ interface Props {
   esAdmin: boolean;
 }
 
+// No hay forma de "autocompletar" o validar la direccion contra Maps sin
+// una API de pago de Google -- esto abre una busqueda de Maps con el
+// texto tal cual se escribio, para poder confirmar a simple vista que el
+// pin cae donde debe antes de guardar.
+function linkGoogleMaps(direccion: string) {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`;
+}
+
 type Filtro = 'todos' | 'conDeuda' | 'sinDeuda';
 type Pestana = 'datos' | 'transacciones' | 'movimientos';
 
@@ -341,11 +349,21 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 <input placeholder="Nombre" value={nombreNuevo} onChange={(e) => setNombreNuevo(e.target.value)} />
                 <input placeholder="Teléfono" value={telefonoNuevo} onChange={(e) => setTelefonoNuevo(e.target.value)} />
                 <input placeholder="Domicilio del negocio (opcional)" value={direccionNueva} onChange={(e) => setDireccionNueva(e.target.value)} />
+                {direccionNueva.trim() && (
+                  <a href={linkGoogleMaps(direccionNueva)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, justifySelf: 'start' }}>
+                    🗺️ Corroborar en Google Maps
+                  </a>
+                )}
                 <input
                   placeholder="Dirección de entrega de mercancía (si es distinta)"
                   value={direccionEntregaNueva}
                   onChange={(e) => setDireccionEntregaNueva(e.target.value)}
                 />
+                {direccionEntregaNueva.trim() && (
+                  <a href={linkGoogleMaps(direccionEntregaNueva)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, justifySelf: 'start' }}>
+                    🗺️ Corroborar en Google Maps
+                  </a>
+                )}
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={crearNuevoCliente}>Guardar</button>
                   <button onClick={() => setMostrarAlta(false)}>Cancelar</button>
@@ -450,6 +468,16 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                   Domicilio (dirección del negocio)
                   <input value={editDireccion} onChange={(e) => setEditDireccion(e.target.value)} />
                 </label>
+                {editDireccion.trim() && (
+                  <a
+                    href={linkGoogleMaps(editDireccion)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 13, justifySelf: 'start' }}
+                  >
+                    🗺️ Corroborar en Google Maps
+                  </a>
+                )}
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
                   <input
@@ -461,13 +489,25 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 </label>
 
                 {!entregaIgualQueNegocio && (
-                  <label>
-                    Dirección de entrega de mercancía
-                    <input
-                      value={editDireccionEntrega}
-                      onChange={(e) => setEditDireccionEntrega(e.target.value)}
-                    />
-                  </label>
+                  <>
+                    <label>
+                      Dirección de entrega de mercancía
+                      <input
+                        value={editDireccionEntrega}
+                        onChange={(e) => setEditDireccionEntrega(e.target.value)}
+                      />
+                    </label>
+                    {editDireccionEntrega.trim() && (
+                      <a
+                        href={linkGoogleMaps(editDireccionEntrega)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: 13, justifySelf: 'start' }}
+                      >
+                        🗺️ Corroborar en Google Maps
+                      </a>
+                    )}
+                  </>
                 )}
 
                 {esAdmin && (
