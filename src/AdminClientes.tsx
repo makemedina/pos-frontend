@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoDireccion } from './formato';
 import {
   obtenerClientesConSaldo,
   obtenerClienteDetalle,
@@ -31,6 +31,93 @@ function linkGoogleMaps(direccion: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`;
 }
 
+interface CamposDireccion {
+  calle: string;
+  colonia: string;
+  ciudad: string;
+  estado: string;
+  codigoPostal: string;
+}
+
+const DIRECCION_VACIA: CamposDireccion = { calle: '', colonia: '', ciudad: '', estado: '', codigoPostal: '' };
+
+function direccionEstaVacia(d: CamposDireccion) {
+  return !d.calle.trim() && !d.colonia.trim() && !d.ciudad.trim() && !d.estado.trim() && !d.codigoPostal.trim();
+}
+
+function direccionNegocioDe(c: {
+  calle: string | null;
+  colonia: string | null;
+  ciudad: string | null;
+  estado: string | null;
+  codigoPostal: string | null;
+}): CamposDireccion {
+  return {
+    calle: c.calle || '',
+    colonia: c.colonia || '',
+    ciudad: c.ciudad || '',
+    estado: c.estado || '',
+    codigoPostal: c.codigoPostal || '',
+  };
+}
+
+function direccionEntregaDe(c: {
+  calleEntrega: string | null;
+  coloniaEntrega: string | null;
+  ciudadEntrega: string | null;
+  estadoEntrega: string | null;
+  codigoPostalEntrega: string | null;
+}): CamposDireccion {
+  return {
+    calle: c.calleEntrega || '',
+    colonia: c.coloniaEntrega || '',
+    ciudad: c.ciudadEntrega || '',
+    estado: c.estadoEntrega || '',
+    codigoPostal: c.codigoPostalEntrega || '',
+  };
+}
+
+// Formulario de una direccion, separada en partes -- se usa dos veces
+// (domicilio del negocio y direccion de entrega) tanto al dar de alta
+// como al editar, asi que se factoriza en vez de repetir 5 inputs x 4.
+function FormularioDireccion({
+  valores,
+  onChange,
+}: {
+  valores: CamposDireccion;
+  onChange: (valores: CamposDireccion) => void;
+}) {
+  function set(campo: keyof CamposDireccion, valor: string) {
+    onChange({ ...valores, [campo]: valor });
+  }
+
+  return (
+    <div style={{ display: 'grid', gap: 8 }}>
+      <input placeholder="Calle y número" value={valores.calle} onChange={(e) => set('calle', e.target.value)} />
+      <input placeholder="Colonia" value={valores.colonia} onChange={(e) => set('colonia', e.target.value)} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <input placeholder="Ciudad" value={valores.ciudad} onChange={(e) => set('ciudad', e.target.value)} />
+        <input placeholder="Estado" value={valores.estado} onChange={(e) => set('estado', e.target.value)} />
+      </div>
+      <input
+        placeholder="Código postal"
+        value={valores.codigoPostal}
+        onChange={(e) => set('codigoPostal', e.target.value)}
+      />
+      {!direccionEstaVacia(valores) && (
+        <a
+          href={linkGoogleMaps(formatoDireccion(valores))}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontSize: 13, justifySelf: 'start' }}
+        >
+          🗺️ Corroborar en Google Maps
+        </a>
+      )}
+    </div>
+  );
+}
+
 type Filtro = 'todos' | 'conDeuda' | 'sinDeuda';
 type Pestana = 'datos' | 'transacciones' | 'movimientos';
 
@@ -60,8 +147,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
 
   const [nombreNuevo, setNombreNuevo] = useState('');
   const [telefonoNuevo, setTelefonoNuevo] = useState('');
-  const [direccionNueva, setDireccionNueva] = useState('');
-  const [direccionEntregaNueva, setDireccionEntregaNueva] = useState('');
+  const [direccionNegocioNueva, setDireccionNegocioNueva] = useState<CamposDireccion>(DIRECCION_VACIA);
+  const [direccionEntregaNueva, setDireccionEntregaNueva] = useState<CamposDireccion>(DIRECCION_VACIA);
 
   const [clienteId, setClienteId] = useState<string | null>(null);
   const [cliente, setCliente] = useState<ClienteConSaldo | null>(null);
@@ -70,8 +157,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   // Edicion de datos generales
   const [editNombre, setEditNombre] = useState('');
   const [editTelefono, setEditTelefono] = useState('');
-  const [editDireccion, setEditDireccion] = useState('');
-  const [editDireccionEntrega, setEditDireccionEntrega] = useState('');
+  const [editDireccionNegocio, setEditDireccionNegocio] = useState<CamposDireccion>(DIRECCION_VACIA);
+  const [editDireccionEntrega, setEditDireccionEntrega] = useState<CamposDireccion>(DIRECCION_VACIA);
   const [entregaIgualQueNegocio, setEntregaIgualQueNegocio] = useState(true);
   const [editPermiteCredito, setEditPermiteCredito] = useState(true);
   const [editDiasLlamada, setEditDiasLlamada] = useState<number[]>([]);
@@ -125,13 +212,21 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       await crearClienteCompleto({
         nombre: nombreNuevo,
         telefono: telefonoNuevo,
-        direccion: direccionNueva || undefined,
-        direccionEntrega: direccionEntregaNueva || undefined,
+        calle: direccionNegocioNueva.calle || undefined,
+        colonia: direccionNegocioNueva.colonia || undefined,
+        ciudad: direccionNegocioNueva.ciudad || undefined,
+        estado: direccionNegocioNueva.estado || undefined,
+        codigoPostal: direccionNegocioNueva.codigoPostal || undefined,
+        calleEntrega: direccionEntregaNueva.calle || undefined,
+        coloniaEntrega: direccionEntregaNueva.colonia || undefined,
+        ciudadEntrega: direccionEntregaNueva.ciudad || undefined,
+        estadoEntrega: direccionEntregaNueva.estado || undefined,
+        codigoPostalEntrega: direccionEntregaNueva.codigoPostal || undefined,
       });
       setNombreNuevo('');
       setTelefonoNuevo('');
-      setDireccionNueva('');
-      setDireccionEntregaNueva('');
+      setDireccionNegocioNueva(DIRECCION_VACIA);
+      setDireccionEntregaNueva(DIRECCION_VACIA);
       setMostrarAlta(false);
       cargarLista();
     } catch {
@@ -167,9 +262,10 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       setCliente(data);
       setEditNombre(data.nombre);
       setEditTelefono(data.telefono);
-      setEditDireccion(data.direccion || '');
-      setEditDireccionEntrega(data.direccionEntrega || '');
-      setEntregaIgualQueNegocio(!data.direccionEntrega);
+      setEditDireccionNegocio(direccionNegocioDe(data));
+      const entregaCargada = direccionEntregaDe(data);
+      setEditDireccionEntrega(entregaCargada);
+      setEntregaIgualQueNegocio(direccionEstaVacia(entregaCargada));
       setEditPermiteCredito(data.permiteVentaCredito);
       setEditDiasLlamada(data.diasLlamada || []);
     } catch {
@@ -180,9 +276,10 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         setCliente(enLista);
         setEditNombre(enLista.nombre);
         setEditTelefono(enLista.telefono);
-        setEditDireccion(enLista.direccion || '');
-        setEditDireccionEntrega(enLista.direccionEntrega || '');
-        setEntregaIgualQueNegocio(!enLista.direccionEntrega);
+        setEditDireccionNegocio(direccionNegocioDe(enLista));
+        const entregaCache = direccionEntregaDe(enLista);
+        setEditDireccionEntrega(entregaCache);
+        setEntregaIgualQueNegocio(direccionEstaVacia(entregaCache));
         setEditPermiteCredito(enLista.permiteVentaCredito);
         setMensaje('Sin conexión: datos guardados localmente. Transacciones y movimientos no están disponibles.');
       } else {
@@ -205,11 +302,20 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
     if (!clienteId) return;
     setGuardando(true);
     try {
+      const entregaAGuardar = entregaIgualQueNegocio ? DIRECCION_VACIA : editDireccionEntrega;
       const datos: any = {
         nombre: editNombre,
         telefono: editTelefono,
-        direccion: editDireccion,
-        direccionEntrega: entregaIgualQueNegocio ? '' : editDireccionEntrega,
+        calle: editDireccionNegocio.calle,
+        colonia: editDireccionNegocio.colonia,
+        ciudad: editDireccionNegocio.ciudad,
+        estado: editDireccionNegocio.estado,
+        codigoPostal: editDireccionNegocio.codigoPostal,
+        calleEntrega: entregaAGuardar.calle,
+        coloniaEntrega: entregaAGuardar.colonia,
+        ciudadEntrega: entregaAGuardar.ciudad,
+        estadoEntrega: entregaAGuardar.estado,
+        codigoPostalEntrega: entregaAGuardar.codigoPostal,
       };
       if (esAdmin) datos.permiteVentaCredito = editPermiteCredito;
       const [actualizado] = await Promise.all([
@@ -294,8 +400,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         clientes.map((c) => ({
           Nombre: c.nombre,
           Telefono: c.telefono,
-          Domicilio: c.direccion || '',
-          'Direccion de entrega': c.direccionEntrega || c.direccion || '',
+          Domicilio: formatoDireccion(c),
+          'Direccion de entrega': formatoDireccion(direccionEntregaDe(c)) || formatoDireccion(c),
           'Permite credito': c.permiteVentaCredito ? 'Si' : 'No',
           'Saldo total': c.saldoTotal,
         })),
@@ -348,22 +454,12 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
               <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <input placeholder="Nombre" value={nombreNuevo} onChange={(e) => setNombreNuevo(e.target.value)} />
                 <input placeholder="Teléfono" value={telefonoNuevo} onChange={(e) => setTelefonoNuevo(e.target.value)} />
-                <input placeholder="Domicilio del negocio (opcional)" value={direccionNueva} onChange={(e) => setDireccionNueva(e.target.value)} />
-                {direccionNueva.trim() && (
-                  <a href={linkGoogleMaps(direccionNueva)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, justifySelf: 'start' }}>
-                    🗺️ Corroborar en Google Maps
-                  </a>
-                )}
-                <input
-                  placeholder="Dirección de entrega de mercancía (si es distinta)"
-                  value={direccionEntregaNueva}
-                  onChange={(e) => setDireccionEntregaNueva(e.target.value)}
-                />
-                {direccionEntregaNueva.trim() && (
-                  <a href={linkGoogleMaps(direccionEntregaNueva)} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, justifySelf: 'start' }}>
-                    🗺️ Corroborar en Google Maps
-                  </a>
-                )}
+                <label className="etiqueta">Domicilio del negocio (opcional)</label>
+                <FormularioDireccion valores={direccionNegocioNueva} onChange={setDireccionNegocioNueva} />
+
+                <label className="etiqueta">Dirección de entrega de mercancía (si es distinta)</label>
+                <FormularioDireccion valores={direccionEntregaNueva} onChange={setDireccionEntregaNueva} />
+
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={crearNuevoCliente}>Guardar</button>
                   <button onClick={() => setMostrarAlta(false)}>Cancelar</button>
@@ -464,20 +560,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                   Teléfono
                   <input value={editTelefono} onChange={(e) => setEditTelefono(e.target.value)} />
                 </label>
-                <label>
-                  Domicilio (dirección del negocio)
-                  <input value={editDireccion} onChange={(e) => setEditDireccion(e.target.value)} />
-                </label>
-                {editDireccion.trim() && (
-                  <a
-                    href={linkGoogleMaps(editDireccion)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ fontSize: 13, justifySelf: 'start' }}
-                  >
-                    🗺️ Corroborar en Google Maps
-                  </a>
-                )}
+                <label className="etiqueta">Domicilio (dirección del negocio)</label>
+                <FormularioDireccion valores={editDireccionNegocio} onChange={setEditDireccionNegocio} />
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
                   <input
@@ -490,23 +574,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
 
                 {!entregaIgualQueNegocio && (
                   <>
-                    <label>
-                      Dirección de entrega de mercancía
-                      <input
-                        value={editDireccionEntrega}
-                        onChange={(e) => setEditDireccionEntrega(e.target.value)}
-                      />
-                    </label>
-                    {editDireccionEntrega.trim() && (
-                      <a
-                        href={linkGoogleMaps(editDireccionEntrega)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ fontSize: 13, justifySelf: 'start' }}
-                      >
-                        🗺️ Corroborar en Google Maps
-                      </a>
-                    )}
+                    <label className="etiqueta">Dirección de entrega de mercancía</label>
+                    <FormularioDireccion valores={editDireccionEntrega} onChange={setEditDireccionEntrega} />
                   </>
                 )}
 

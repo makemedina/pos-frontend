@@ -29,3 +29,19 @@ const ETIQUETAS_METODO_PAGO: Record<string, string> = {
 export function etiquetaMetodoPago(metodoPago: string): string {
   return ETIQUETAS_METODO_PAGO[metodoPago] ?? metodoPago;
 }
+
+// Junta calle, colonia, ciudad, estado y codigo postal en una sola linea
+// para mostrarla o mandarla a Google Maps -- omite las partes vacias en
+// vez de dejar comas sueltas (ej. si solo hay calle y ciudad, no se ve
+// "Calle 123, , Culiacan, , ").
+export function formatoDireccion(partes: {
+  calle?: string | null;
+  colonia?: string | null;
+  ciudad?: string | null;
+  estado?: string | null;
+  codigoPostal?: string | null;
+}): string {
+  return [partes.calle, partes.colonia, partes.ciudad, partes.estado, partes.codigoPostal]
+    .filter((p) => p && p.trim())
+    .join(', ');
+}

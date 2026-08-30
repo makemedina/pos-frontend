@@ -288,14 +288,25 @@ export async function crearClienteRapido(nombre: string, telefono: string): Prom
   return res.json();
 }
 
-export interface ClienteConSaldo {
+export interface DireccionCampos {
+  calle: string | null;
+  colonia: string | null;
+  ciudad: string | null;
+  estado: string | null;
+  codigoPostal: string | null;
+}
+
+export interface ClienteConSaldo extends DireccionCampos {
   id: string;
   nombre: string;
   telefono: string;
-  direccion: string | null;
   // Adonde se le entrega la mercancia -- si esta vacia, se asume que es
-  // la misma que "direccion" (algunos clientes reciben en su negocio).
-  direccionEntrega: string | null;
+  // la misma que la de arriba (algunos clientes reciben en su negocio).
+  calleEntrega: string | null;
+  coloniaEntrega: string | null;
+  ciudadEntrega: string | null;
+  estadoEntrega: string | null;
+  codigoPostalEntrega: string | null;
   permiteVentaCredito: boolean;
   saldoInicial: number;
   saldoTotal: number;
@@ -372,8 +383,21 @@ export async function actualizarLlamadaCliente(
   }
 }
 
+export interface DireccionInput {
+  calle?: string;
+  colonia?: string;
+  ciudad?: string;
+  estado?: string;
+  codigoPostal?: string;
+  calleEntrega?: string;
+  coloniaEntrega?: string;
+  ciudadEntrega?: string;
+  estadoEntrega?: string;
+  codigoPostalEntrega?: string;
+}
+
 export async function crearClienteCompleto(
-  datos: { nombre: string; telefono: string; direccion?: string; direccionEntrega?: string }
+  datos: { nombre: string; telefono: string } & DireccionInput
 ): Promise<Cliente> {
   const res = await fetch(`${API_URL}/clientes`, {
     method: 'POST',
@@ -447,13 +471,7 @@ export async function cargarFacturasIniciales(
 
 export async function actualizarCliente(
   id: string,
-  datos: {
-    nombre?: string;
-    telefono?: string;
-    direccion?: string;
-    direccionEntrega?: string;
-    permiteVentaCredito?: boolean;
-  }
+  datos: { nombre?: string; telefono?: string; permiteVentaCredito?: boolean } & DireccionInput
 ): Promise<ClienteConSaldo> {
   const res = await fetch(`${API_URL}/clientes/${id}`, {
     method: 'PUT',
