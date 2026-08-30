@@ -299,6 +299,7 @@ export interface DireccionCampos {
 export interface ClienteConSaldo extends DireccionCampos {
   id: string;
   nombre: string;
+  nombreContacto: string | null;
   telefono: string;
   // Adonde se le entrega la mercancia -- si esta vacia, se asume que es
   // la misma que la de arriba (algunos clientes reciben en su negocio).
@@ -397,7 +398,7 @@ export interface DireccionInput {
 }
 
 export async function crearClienteCompleto(
-  datos: { nombre: string; telefono: string } & DireccionInput
+  datos: { nombre: string; telefono: string; nombreContacto?: string } & DireccionInput
 ): Promise<Cliente> {
   const res = await fetch(`${API_URL}/clientes`, {
     method: 'POST',
@@ -471,7 +472,12 @@ export async function cargarFacturasIniciales(
 
 export async function actualizarCliente(
   id: string,
-  datos: { nombre?: string; telefono?: string; permiteVentaCredito?: boolean } & DireccionInput
+  datos: {
+    nombre?: string;
+    nombreContacto?: string;
+    telefono?: string;
+    permiteVentaCredito?: boolean;
+  } & DireccionInput
 ): Promise<ClienteConSaldo> {
   const res = await fetch(`${API_URL}/clientes/${id}`, {
     method: 'PUT',

@@ -146,6 +146,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [importando, setImportando] = useState(false);
 
   const [nombreNuevo, setNombreNuevo] = useState('');
+  const [nombreContactoNuevo, setNombreContactoNuevo] = useState('');
   const [telefonoNuevo, setTelefonoNuevo] = useState('');
   const [direccionNegocioNueva, setDireccionNegocioNueva] = useState<CamposDireccion>(DIRECCION_VACIA);
   const [direccionEntregaNueva, setDireccionEntregaNueva] = useState<CamposDireccion>(DIRECCION_VACIA);
@@ -156,6 +157,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
 
   // Edicion de datos generales
   const [editNombre, setEditNombre] = useState('');
+  const [editNombreContacto, setEditNombreContacto] = useState('');
   const [editTelefono, setEditTelefono] = useState('');
   const [editDireccionNegocio, setEditDireccionNegocio] = useState<CamposDireccion>(DIRECCION_VACIA);
   const [editDireccionEntrega, setEditDireccionEntrega] = useState<CamposDireccion>(DIRECCION_VACIA);
@@ -211,6 +213,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
     try {
       await crearClienteCompleto({
         nombre: nombreNuevo,
+        nombreContacto: nombreContactoNuevo || undefined,
         telefono: telefonoNuevo,
         calle: direccionNegocioNueva.calle || undefined,
         colonia: direccionNegocioNueva.colonia || undefined,
@@ -224,6 +227,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         codigoPostalEntrega: direccionEntregaNueva.codigoPostal || undefined,
       });
       setNombreNuevo('');
+      setNombreContactoNuevo('');
       setTelefonoNuevo('');
       setDireccionNegocioNueva(DIRECCION_VACIA);
       setDireccionEntregaNueva(DIRECCION_VACIA);
@@ -261,6 +265,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       const data = await obtenerClienteDetalle(id);
       setCliente(data);
       setEditNombre(data.nombre);
+      setEditNombreContacto(data.nombreContacto || '');
       setEditTelefono(data.telefono);
       setEditDireccionNegocio(direccionNegocioDe(data));
       const entregaCargada = direccionEntregaDe(data);
@@ -275,6 +280,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       if (enLista) {
         setCliente(enLista);
         setEditNombre(enLista.nombre);
+        setEditNombreContacto(enLista.nombreContacto || '');
         setEditTelefono(enLista.telefono);
         setEditDireccionNegocio(direccionNegocioDe(enLista));
         const entregaCache = direccionEntregaDe(enLista);
@@ -305,6 +311,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       const entregaAGuardar = entregaIgualQueNegocio ? DIRECCION_VACIA : editDireccionEntrega;
       const datos: any = {
         nombre: editNombre,
+        nombreContacto: editNombreContacto,
         telefono: editTelefono,
         calle: editDireccionNegocio.calle,
         colonia: editDireccionNegocio.colonia,
@@ -452,7 +459,12 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
 
             {mostrarAlta && (
               <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-                <input placeholder="Nombre" value={nombreNuevo} onChange={(e) => setNombreNuevo(e.target.value)} />
+                <input placeholder="Nombre del negocio" value={nombreNuevo} onChange={(e) => setNombreNuevo(e.target.value)} />
+                <input
+                  placeholder="Nombre del contacto (opcional)"
+                  value={nombreContactoNuevo}
+                  onChange={(e) => setNombreContactoNuevo(e.target.value)}
+                />
                 <input placeholder="Teléfono" value={telefonoNuevo} onChange={(e) => setTelefonoNuevo(e.target.value)} />
                 <label className="etiqueta">Domicilio del negocio (opcional)</label>
                 <FormularioDireccion valores={direccionNegocioNueva} onChange={setDireccionNegocioNueva} />
@@ -553,8 +565,12 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
             {pestana === 'datos' && (
               <div style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <label>
-                  Nombre
+                  Nombre del negocio
                   <input value={editNombre} onChange={(e) => setEditNombre(e.target.value)} />
+                </label>
+                <label>
+                  Nombre del contacto (opcional)
+                  <input value={editNombreContacto} onChange={(e) => setEditNombreContacto(e.target.value)} />
                 </label>
                 <label>
                   Teléfono
