@@ -355,7 +355,7 @@ export function AdminHistorialVentas({
                       {new Date(v.fecha).toLocaleString()}
                     </div>
                     <div style={{ fontSize: 13 }}>
-                      {v.cliente.nombre} · {v.cliente.telefono}
+                      <span style={{ fontSize: 16, fontWeight: 700 }}>{v.cliente.nombre}</span> · {v.cliente.telefono}
                     </div>
                     <div style={{ fontSize: 12, color: '#6b7280' }}>
                       Vendio: {v.vendedor.nombre} · {v.metodosPago.map(etiquetaMetodoPago).join(', ') || 'sin pago registrado'}
