@@ -1749,6 +1749,51 @@ export async function cancelarPagoVenta(
   return data;
 }
 
+export interface NotaDeGrupoPago {
+  ventaId: string;
+  folio: number;
+  monto: number;
+  cancelado: boolean;
+}
+
+export interface GrupoPagoCliente {
+  grupoKey: string;
+  fecha: string;
+  metodosPago: string[];
+  montoTotal: number;
+  notas: NotaDeGrupoPago[];
+  registradoPor: string;
+  cancelado: boolean;
+}
+
+// Todos los pagos que un cliente ha hecho, sin importar a que nota(s)
+// hayan cubierto -- un solo pago puede aparecer repartido entre varias
+// notas, agrupado por grupoKey.
+export async function obtenerPagosDeCliente(clienteId: string): Promise<GrupoPagoCliente[]> {
+  const res = await fetch(`${API_URL}/cartera/clientes/${clienteId}/pagos`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los pagos del cliente');
+  }
+  return res.json();
+}
+
+// Cancela TODOS los renglones de un mismo pago (grupoKey), aunque hayan
+// cubierto varias notas -- revierte cada una.
+export async function cancelarGrupoPago(
+  grupoKey: string,
+  autorizacion?: { telefono: string; pin: string }
+) {
+  const res = await fetch(`${API_URL}/cartera/grupos-pago/${grupoKey}/cancelar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(autorizacion ?? {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}
+
 export interface AsignacionPagoMultiple {
   ventaId: string;
   monto: number;

@@ -7,6 +7,8 @@ import {
   obtenerResumenCartera,
   obtenerNotasCliente,
   obtenerPagosDeNota,
+  obtenerPagosDeCliente,
+  cancelarGrupoPago,
   registrarPagoVenta,
   registrarPagoMultiNota,
   cancelarPagoVenta,
@@ -15,13 +17,14 @@ import {
   type ClienteCartera,
   type NotaCartera,
   type PagoNota,
+  type GrupoPagoCliente,
 } from './api';
 
 interface Props {
   onCerrar: () => void;
 }
 
-type Nivel = 'clientes' | 'notas' | 'pagos';
+type Nivel = 'clientes' | 'notas' | 'pagos' | 'historialPagos';
 
 const ELEMENT_ID_REPORTE_CARTERA = 'cartera-reporte';
 const ELEMENT_ID_REPORTE_NOTAS_CLIENTE = 'cartera-notas-cliente-reporte';
@@ -86,6 +89,17 @@ export function AdminCartera({ onCerrar }: Props) {
   const [autorizadoPorTelefonoPago, setAutorizadoPorTelefonoPago] = useState('');
   const [autorizadoPinPago, setAutorizadoPinPago] = useState('');
   const [cancelandoPago, setCancelandoPago] = useState(false);
+
+  // Nivel "historialPagos": TODOS los pagos que ha hecho el cliente, sin
+  // importar a que nota(s) hayan cubierto -- para poder cancelar un pago
+  // completo (todas las notas que abarco) desde un solo lugar, en vez de
+  // tener que entrar nota por nota.
+  const [gruposPago, setGruposPago] = useState<GrupoPagoCliente[]>([]);
+  const [confirmandoCancelarGrupoKey, setConfirmandoCancelarGrupoKey] = useState<string | null>(null);
+  const [necesitaAutorizacionGrupo, setNecesitaAutorizacionGrupo] = useState(false);
+  const [autorizadoPorTelefonoGrupo, setAutorizadoPorTelefonoGrupo] = useState('');
+  const [autorizadoPinGrupo, setAutorizadoPinGrupo] = useState('');
+  const [cancelandoGrupo, setCancelandoGrupo] = useState(false);
 
   useEffect(() => {
     cargarClientes();
@@ -291,6 +305,66 @@ export function AdminCartera({ onCerrar }: Props) {
     setNotaElegida(null);
     setPagos([]);
     cargarNotas();
+  }
+
+  async function abrirHistorialPagos() {
+    if (!clienteElegido) return;
+    setConfirmandoCancelarGrupoKey(null);
+    setNivel('historialPagos');
+    setCargando(true);
+    try {
+      const data = await obtenerPagosDeCliente(clienteElegido.id);
+      setGruposPago(data);
+    } catch {
+      setMensaje('No se pudo cargar el historial de pagos del cliente.');
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  function volverANotasDesdeHistorial() {
+    setNivel('notas');
+    setGruposPago([]);
+    cargarNotas();
+  }
+
+  function pedirCancelarGrupo(grupoKey: string) {
+    setConfirmandoCancelarGrupoKey(grupoKey);
+    setNecesitaAutorizacionGrupo(false);
+    setAutorizadoPorTelefonoGrupo('');
+    setAutorizadoPinGrupo('');
+  }
+
+  async function confirmarCancelarGrupo(grupoKey: string) {
+    if (!clienteElegido) return;
+    setCancelandoGrupo(true);
+    try {
+      await cancelarGrupoPago(
+        grupoKey,
+        necesitaAutorizacionGrupo
+          ? { telefono: autorizadoPorTelefonoGrupo, pin: autorizadoPinGrupo }
+          : undefined
+      );
+      setMensaje('Pago cancelado. Las notas que cubría vuelven a quedar con saldo pendiente.');
+      setConfirmandoCancelarGrupoKey(null);
+      setNecesitaAutorizacionGrupo(false);
+      setAutorizadoPorTelefonoGrupo('');
+      setAutorizadoPinGrupo('');
+      const data = await obtenerPagosDeCliente(clienteElegido.id);
+      setGruposPago(data);
+    } catch (err: any) {
+      if (err.code === 'REQUIERE_AUTORIZACION') {
+        setNecesitaAutorizacionGrupo(true);
+        setMensaje('Este pago (o parte de el) es de un día anterior: se necesita el teléfono y PIN de un administrador para cancelarlo.');
+      } else if (err.code === 'PAGO_YA_CANCELADO') {
+        setMensaje('Este pago ya estaba cancelado.');
+        setConfirmandoCancelarGrupoKey(null);
+      } else {
+        setMensaje('No se pudo cancelar el pago.');
+      }
+    } finally {
+      setCancelandoGrupo(false);
+    }
   }
 
   // Reimprime el comprobante tal como se genero la primera vez -- si el
@@ -597,6 +671,7 @@ export function AdminCartera({ onCerrar }: Props) {
             {nivel === 'clientes' && 'Cartera'}
             {nivel === 'notas' && `Notas de ${clienteElegido?.nombre}`}
             {nivel === 'pagos' && `Venta #${notaElegida?.folio}`}
+            {nivel === 'historialPagos' && `Pagos de ${clienteElegido?.nombre}`}
           </h2>
           <div style={{ display: 'flex', gap: 8 }}>
             {nivel === 'clientes' && clientesFiltrados.length > 0 && (
@@ -719,11 +794,16 @@ export function AdminCartera({ onCerrar }: Props) {
           <>
             <button onClick={volverAClientes} style={{ justifySelf: 'start' }}>← Todos los clientes</button>
 
-            {!mostrarPagoMultiple && notasPendientesPago.length > 0 && (
-              <button onClick={abrirPagoMultiple} style={{ justifySelf: 'start' }}>
-                + Agregar pago
+            <div style={{ display: 'flex', gap: 8 }}>
+              {!mostrarPagoMultiple && notasPendientesPago.length > 0 && (
+                <button onClick={abrirPagoMultiple} style={{ justifySelf: 'start' }}>
+                  + Agregar pago
+                </button>
+              )}
+              <button onClick={abrirHistorialPagos} className="boton-secundario" style={{ justifySelf: 'start' }}>
+                📋 Ver todos los pagos
               </button>
-            )}
+            </div>
 
             {mostrarPagoMultiple && (
               <form
@@ -1027,6 +1107,92 @@ export function AdminCartera({ onCerrar }: Props) {
                 </button>
               </form>
             )}
+          </>
+        )}
+
+        {/* ---------- HISTORIAL DE PAGOS DEL CLIENTE (todas las notas) ---------- */}
+        {!cargando && nivel === 'historialPagos' && clienteElegido && (
+          <>
+            <button onClick={volverANotasDesdeHistorial} style={{ justifySelf: 'start' }}>← Notas de {clienteElegido.nombre}</button>
+
+            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+              Todos los pagos que {clienteElegido.nombre} ha entregado, aunque hayan cubierto varias notas a la
+              vez. Cancelar uno revierte TODAS las notas que cubrió.
+            </p>
+
+            <div style={{ display: 'grid', gap: '0.5rem' }}>
+              {gruposPago.length === 0 && <p style={{ color: '#6b7280' }}>Este cliente aún no ha hecho ningún pago.</p>}
+              {gruposPago.map((g) => (
+                <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>
+                      {new Date(g.fecha).toLocaleString()} · {g.metodosPago.map(etiquetaMetodoPago).join(' + ') || '—'}
+                      <br />
+                      <small style={{ color: '#6b7280' }}>Registró: {g.registradoPor}</small>
+                    </span>
+                    <strong style={g.cancelado ? { textDecoration: 'line-through', color: '#9ca3af' } : undefined}>
+                      {formatoMoneda(g.montoTotal)}
+                    </strong>
+                  </div>
+
+                  <div style={{ marginTop: 6, fontSize: 13, color: '#6b7280' }}>
+                    Cubrió{g.notas.length > 1 ? ` ${g.notas.length} notas` : ' 1 nota'}:{' '}
+                    {g.notas.map((n, idx) => (
+                      <span key={n.ventaId + idx} style={n.cancelado ? { textDecoration: 'line-through' } : undefined}>
+                        #{n.folio} ({formatoMoneda(n.monto)}){idx < g.notas.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}
+                  </div>
+
+                  {g.cancelado && (
+                    <div className="aviso-alerta" style={{ marginTop: 6 }}>
+                      ❌ Cancelado
+                    </div>
+                  )}
+
+                  {!g.cancelado &&
+                    (confirmandoCancelarGrupoKey === g.grupoKey ? (
+                      <div className="bloque-autorizacion" style={{ marginTop: 6 }}>
+                        <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                          ¿Seguro que quieres cancelar este pago? Se revertirán TODAS las notas que cubrió.
+                          No se puede deshacer.
+                        </p>
+                        {necesitaAutorizacionGrupo && (
+                          <>
+                            <input
+                              placeholder="Teléfono del administrador"
+                              value={autorizadoPorTelefonoGrupo}
+                              onChange={(e) => setAutorizadoPorTelefonoGrupo(e.target.value)}
+                            />
+                            <input
+                              placeholder="PIN"
+                              type="password"
+                              value={autorizadoPinGrupo}
+                              onChange={(e) => setAutorizadoPinGrupo(e.target.value)}
+                            />
+                          </>
+                        )}
+                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                          <button onClick={() => confirmarCancelarGrupo(g.grupoKey)} disabled={cancelandoGrupo} style={{ flex: 1 }}>
+                            {cancelandoGrupo ? 'Cancelando...' : 'Sí, cancelar'}
+                          </button>
+                          <button onClick={() => setConfirmandoCancelarGrupoKey(null)} style={{ flex: 1 }}>
+                            No, regresar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        className="boton-secundario"
+                        onClick={() => pedirCancelarGrupo(g.grupoKey)}
+                        style={{ marginTop: 6, width: '100%', background: '#fff2f1', color: '#b91c1c' }}
+                      >
+                        🗑️ Cancelar este pago
+                      </button>
+                    ))}
+                </div>
+              ))}
+            </div>
           </>
         )}
       </div>
