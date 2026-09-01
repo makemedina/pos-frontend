@@ -891,6 +891,51 @@ export async function cancelarPagoCompra(
   return data;
 }
 
+export interface FacturaDeGrupoPago {
+  compraId: string;
+  numeroFactura: string | null;
+  monto: number;
+  cancelado: boolean;
+}
+
+export interface GrupoPagoProveedor {
+  grupoKey: string;
+  fecha: string;
+  metodosPago: string[];
+  montoTotal: number;
+  facturas: FacturaDeGrupoPago[];
+  registradoPor: string;
+  cancelado: boolean;
+}
+
+// Todos los pagos que se le han entregado a un proveedor, sin importar a
+// que factura(s) hayan cubierto -- un solo pago puede aparecer repartido
+// entre varias facturas, agrupado por grupoKey.
+export async function obtenerPagosDeProveedor(proveedorId: string): Promise<GrupoPagoProveedor[]> {
+  const res = await fetch(`${API_URL}/proveedores/${proveedorId}/pagos`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los pagos del proveedor');
+  }
+  return res.json();
+}
+
+// Cancela TODOS los renglones de un mismo pago (grupoKey), aunque hayan
+// cubierto varias facturas -- revierte cada una.
+export async function cancelarGrupoPagoCompra(
+  grupoKey: string,
+  autorizacion?: { telefono: string; pin: string }
+) {
+  const res = await fetch(`${API_URL}/compras/grupos-pago/${grupoKey}/cancelar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(autorizacion ?? {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}
+
 // ---------- INVENTARIO (ajustes/merma) ----------
 
 export interface LoteInventario {

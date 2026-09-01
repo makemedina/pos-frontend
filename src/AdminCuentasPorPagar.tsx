@@ -6,8 +6,11 @@ import {
   registrarPagoCompra,
   registrarPagoMultiCompra,
   cancelarPagoCompra,
+  obtenerPagosDeProveedor,
+  cancelarGrupoPagoCompra,
   type FacturaPendiente,
   type PagoCompraHistorial,
+  type GrupoPagoProveedor,
 } from './api';
 import { ComprobantePagoModal, type DatosComprobantePago } from './ComprobantePagoModal';
 
@@ -23,7 +26,7 @@ interface ProveedorResumen {
   facturasConSaldo: number;
 }
 
-type Nivel = 'proveedores' | 'facturas' | 'pagos';
+type Nivel = 'proveedores' | 'facturas' | 'pagos' | 'historialPagos';
 
 export function AdminCuentasPorPagar({ onCerrar }: Props) {
   const [nivel, setNivel] = useState<Nivel>('proveedores');
@@ -60,6 +63,17 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
   const [autorizadoPorTelefonoPago, setAutorizadoPorTelefonoPago] = useState('');
   const [autorizadoPinPago, setAutorizadoPinPago] = useState('');
   const [cancelandoPago, setCancelandoPago] = useState(false);
+
+  // Nivel "historialPagos": TODOS los pagos que se le han entregado a un
+  // proveedor, sin importar a que factura(s) hayan cubierto -- para poder
+  // cancelar un pago completo (todas las facturas que abarco) desde un
+  // solo lugar, en vez de tener que entrar factura por factura.
+  const [gruposPago, setGruposPago] = useState<GrupoPagoProveedor[]>([]);
+  const [confirmandoCancelarGrupoKey, setConfirmandoCancelarGrupoKey] = useState<string | null>(null);
+  const [necesitaAutorizacionGrupo, setNecesitaAutorizacionGrupo] = useState(false);
+  const [autorizadoPorTelefonoGrupo, setAutorizadoPorTelefonoGrupo] = useState('');
+  const [autorizadoPinGrupo, setAutorizadoPinGrupo] = useState('');
+  const [cancelandoGrupo, setCancelandoGrupo] = useState(false);
 
   useEffect(() => {
     cargar();
@@ -234,6 +248,66 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     cargar();
   }
 
+  async function abrirHistorialPagos() {
+    if (!proveedorElegido) return;
+    setConfirmandoCancelarGrupoKey(null);
+    setNivel('historialPagos');
+    setCargando(true);
+    try {
+      const data = await obtenerPagosDeProveedor(proveedorElegido.id);
+      setGruposPago(data);
+    } catch {
+      setMensaje('No se pudo cargar el historial de pagos del proveedor.');
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  function volverAFacturasDesdeHistorial() {
+    setNivel('facturas');
+    setGruposPago([]);
+    cargar();
+  }
+
+  function pedirCancelarGrupo(grupoKey: string) {
+    setConfirmandoCancelarGrupoKey(grupoKey);
+    setNecesitaAutorizacionGrupo(false);
+    setAutorizadoPorTelefonoGrupo('');
+    setAutorizadoPinGrupo('');
+  }
+
+  async function confirmarCancelarGrupo(grupoKey: string) {
+    if (!proveedorElegido) return;
+    setCancelandoGrupo(true);
+    try {
+      await cancelarGrupoPagoCompra(
+        grupoKey,
+        necesitaAutorizacionGrupo
+          ? { telefono: autorizadoPorTelefonoGrupo, pin: autorizadoPinGrupo }
+          : undefined
+      );
+      setMensaje('Pago cancelado. Las facturas que cubría vuelven a quedar con saldo pendiente.');
+      setConfirmandoCancelarGrupoKey(null);
+      setNecesitaAutorizacionGrupo(false);
+      setAutorizadoPorTelefonoGrupo('');
+      setAutorizadoPinGrupo('');
+      const data = await obtenerPagosDeProveedor(proveedorElegido.id);
+      setGruposPago(data);
+    } catch (err: any) {
+      if (err.code === 'REQUIERE_AUTORIZACION') {
+        setNecesitaAutorizacionGrupo(true);
+        setMensaje('Este pago (o parte de el) es de un día anterior: se necesita el teléfono y PIN de un administrador para cancelarlo.');
+      } else if (err.code === 'PAGO_YA_CANCELADO') {
+        setMensaje('Este pago ya estaba cancelado.');
+        setConfirmandoCancelarGrupoKey(null);
+      } else {
+        setMensaje('No se pudo cancelar el pago.');
+      }
+    } finally {
+      setCancelandoGrupo(false);
+    }
+  }
+
   async function handlePago(e: React.FormEvent) {
     e.preventDefault();
     if (!facturaElegida || guardandoPago) return;
@@ -341,6 +415,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
             {nivel === 'proveedores' && 'Cuentas por pagar'}
             {nivel === 'facturas' && `Facturas de ${proveedorElegido?.nombre}`}
             {nivel === 'pagos' && `Factura de ${facturaElegida?.proveedor.nombre}`}
+            {nivel === 'historialPagos' && `Pagos de ${proveedorElegido?.nombre}`}
           </h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
@@ -405,11 +480,16 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
           <>
             <button onClick={volverAProveedores} style={{ justifySelf: 'start' }}>← Todos los proveedores</button>
 
-            {!mostrarPagoMultiple && facturasDelProveedor.length > 0 && (
-              <button onClick={abrirPagoMultiple} style={{ justifySelf: 'start' }}>
-                + Agregar pago
+            <div style={{ display: 'flex', gap: 8 }}>
+              {!mostrarPagoMultiple && facturasDelProveedor.length > 0 && (
+                <button onClick={abrirPagoMultiple} style={{ justifySelf: 'start' }}>
+                  + Agregar pago
+                </button>
+              )}
+              <button onClick={abrirHistorialPagos} className="boton-secundario" style={{ justifySelf: 'start' }}>
+                📋 Ver todos los pagos
               </button>
-            )}
+            </div>
 
             {mostrarPagoMultiple && (
               <form
@@ -647,6 +727,92 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                 </button>
               </form>
             )}
+          </>
+        )}
+
+        {/* ---------- HISTORIAL DE PAGOS DEL PROVEEDOR (todas las facturas) ---------- */}
+        {!cargando && nivel === 'historialPagos' && proveedorElegido && (
+          <>
+            <button onClick={volverAFacturasDesdeHistorial} style={{ justifySelf: 'start' }}>← Facturas de {proveedorElegido.nombre}</button>
+
+            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+              Todos los pagos que se le han entregado a {proveedorElegido.nombre}, aunque hayan cubierto varias
+              facturas a la vez. Cancelar uno revierte TODAS las facturas que cubrió.
+            </p>
+
+            <div style={{ display: 'grid', gap: '0.5rem' }}>
+              {gruposPago.length === 0 && <p style={{ color: '#6b7280' }}>Aún no se le ha hecho ningún pago a este proveedor.</p>}
+              {gruposPago.map((g) => (
+                <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>
+                      {new Date(g.fecha).toLocaleString()} · {g.metodosPago.join(' + ') || '—'}
+                      <br />
+                      <small style={{ color: '#6b7280' }}>Registró: {g.registradoPor}</small>
+                    </span>
+                    <strong style={g.cancelado ? { textDecoration: 'line-through', color: '#9ca3af' } : undefined}>
+                      {formatoMoneda(g.montoTotal)}
+                    </strong>
+                  </div>
+
+                  <div style={{ marginTop: 6, fontSize: 13, color: '#6b7280' }}>
+                    Cubrió{g.facturas.length > 1 ? ` ${g.facturas.length} facturas` : ' 1 factura'}:{' '}
+                    {g.facturas.map((f, idx) => (
+                      <span key={f.compraId + idx} style={f.cancelado ? { textDecoration: 'line-through' } : undefined}>
+                        {f.numeroFactura || 'sin número'} ({formatoMoneda(f.monto)}){idx < g.facturas.length - 1 ? ', ' : ''}
+                      </span>
+                    ))}
+                  </div>
+
+                  {g.cancelado && (
+                    <div className="aviso-alerta" style={{ marginTop: 6 }}>
+                      ❌ Cancelado
+                    </div>
+                  )}
+
+                  {!g.cancelado &&
+                    (confirmandoCancelarGrupoKey === g.grupoKey ? (
+                      <div className="bloque-autorizacion" style={{ marginTop: 6 }}>
+                        <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                          ¿Seguro que quieres cancelar este pago? Se revertirán TODAS las facturas que cubrió.
+                          No se puede deshacer.
+                        </p>
+                        {necesitaAutorizacionGrupo && (
+                          <>
+                            <input
+                              placeholder="Teléfono del administrador"
+                              value={autorizadoPorTelefonoGrupo}
+                              onChange={(e) => setAutorizadoPorTelefonoGrupo(e.target.value)}
+                            />
+                            <input
+                              placeholder="PIN"
+                              type="password"
+                              value={autorizadoPinGrupo}
+                              onChange={(e) => setAutorizadoPinGrupo(e.target.value)}
+                            />
+                          </>
+                        )}
+                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                          <button onClick={() => confirmarCancelarGrupo(g.grupoKey)} disabled={cancelandoGrupo} style={{ flex: 1 }}>
+                            {cancelandoGrupo ? 'Cancelando...' : 'Sí, cancelar'}
+                          </button>
+                          <button onClick={() => setConfirmandoCancelarGrupoKey(null)} style={{ flex: 1 }}>
+                            No, regresar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        className="boton-secundario"
+                        onClick={() => pedirCancelarGrupo(g.grupoKey)}
+                        style={{ marginTop: 6, width: '100%', background: '#fff2f1', color: '#b91c1c' }}
+                      >
+                        🗑️ Cancelar este pago
+                      </button>
+                    ))}
+                </div>
+              ))}
+            </div>
           </>
         )}
       </div>
