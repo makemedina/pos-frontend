@@ -862,6 +862,8 @@ export interface PagoCompraHistorial {
   monto: number;
   metodoPago: string;
   fecha: string;
+  cancelado: boolean;
+  canceladoEn: string | null;
   registradoPor: { nombre: string };
 }
 
@@ -872,6 +874,21 @@ export async function obtenerPagosDeCompra(compraId: string): Promise<PagoCompra
     throw new Error(data.error || 'No se pudo cargar el historial de pagos');
   }
   return res.json();
+}
+
+export async function cancelarPagoCompra(
+  compraId: string,
+  pagoId: string,
+  autorizacion?: { telefono: string; pin: string }
+) {
+  const res = await fetch(`${API_URL}/compras/${compraId}/pagos/${pagoId}/cancelar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(autorizacion ?? {}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
 }
 
 // ---------- INVENTARIO (ajustes/merma) ----------

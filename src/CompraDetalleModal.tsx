@@ -1,6 +1,16 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
-import { obtenerDetalleCompra, cancelarCompra, corregirCompraACredito, API_URL, headerAuth, type CompraDetalle } from './api';
+import {
+  obtenerDetalleCompra,
+  cancelarCompra,
+  corregirCompraACredito,
+  obtenerPagosDeCompra,
+  cancelarPagoCompra,
+  API_URL,
+  headerAuth,
+  type CompraDetalle,
+  type PagoCompraHistorial,
+} from './api';
 import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
 
 interface Props {
@@ -33,12 +43,69 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
   const [facturaAbierta, setFacturaAbierta] = useState<string | null>(null);
   const [cargandoFactura, setCargandoFactura] = useState(false);
 
+  // Historial de abonos de esta compra, para poder cancelar uno que se
+  // haya capturado con el metodo de pago equivocado (p.ej. efectivo en vez
+  // de transferencia), aunque la factura ya no sea de hoy.
+  const [pagos, setPagos] = useState<PagoCompraHistorial[]>([]);
+  const [confirmandoCancelarPagoId, setConfirmandoCancelarPagoId] = useState<string | null>(null);
+  const [necesitaAutorizacionPago, setNecesitaAutorizacionPago] = useState(false);
+  const [autorizadoPorTelefonoPago, setAutorizadoPorTelefonoPago] = useState('');
+  const [autorizadoPinPago, setAutorizadoPinPago] = useState('');
+  const [cancelandoPago, setCancelandoPago] = useState(false);
+
   useEffect(() => {
     obtenerDetalleCompra(compraId)
       .then(setCompra)
       .catch(() => setMensaje('No se pudo cargar el detalle de la compra.'))
       .finally(() => setCargando(false));
+    obtenerPagosDeCompra(compraId)
+      .then(setPagos)
+      .catch(() => {});
   }, [compraId]);
+
+  function pedirCancelarPago(pagoId: string) {
+    setConfirmandoCancelarPagoId(pagoId);
+    setNecesitaAutorizacionPago(false);
+    setAutorizadoPorTelefonoPago('');
+    setAutorizadoPinPago('');
+  }
+
+  async function confirmarCancelarPago(pagoId: string) {
+    setCancelandoPago(true);
+    try {
+      await cancelarPagoCompra(
+        compraId,
+        pagoId,
+        necesitaAutorizacionPago
+          ? { telefono: autorizadoPorTelefonoPago, pin: autorizadoPinPago }
+          : undefined
+      );
+      setMensaje('Pago cancelado.');
+      setConfirmandoCancelarPagoId(null);
+      setNecesitaAutorizacionPago(false);
+      setAutorizadoPorTelefonoPago('');
+      setAutorizadoPinPago('');
+      const [compraActualizada, pagosData] = await Promise.all([
+        obtenerDetalleCompra(compraId),
+        obtenerPagosDeCompra(compraId),
+      ]);
+      setCompra(compraActualizada);
+      setPagos(pagosData);
+      onCancelada?.();
+    } catch (err: any) {
+      if (err.code === 'REQUIERE_AUTORIZACION') {
+        setNecesitaAutorizacionPago(true);
+        setMensaje('Este pago es de un día anterior: se necesita el teléfono y PIN de un administrador para cancelarlo.');
+      } else if (err.code === 'PAGO_YA_CANCELADO') {
+        setMensaje('Este pago ya estaba cancelado.');
+        setConfirmandoCancelarPagoId(null);
+      } else {
+        setMensaje(err.error || 'No se pudo cancelar el pago.');
+      }
+    } finally {
+      setCancelandoPago(false);
+    }
+  }
 
   // Generar y compartir van separados a proposito: en el celular, si se
   // llama a compartir() justo despues de generar la imagen (que tarda un
@@ -207,6 +274,74 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
               <div className="aviso-alerta" style={{ marginTop: 8 }}>
                 ❌ Esta compra fue cancelada{compra.canceladaEn ? ` el ${new Date(compra.canceladaEn).toLocaleString()}` : ''}.
                 El inventario que había agregado ya se puso en cero.
+              </div>
+            )}
+
+            {!compra.cancelada && pagos.length > 0 && (
+              <div style={{ marginTop: 12 }}>
+                <h3 style={{ fontSize: 15, marginBottom: 6 }}>Historial de abonos</h3>
+                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                  {pagos.map((p) => (
+                    <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>
+                          {new Date(p.fecha).toLocaleDateString()} · {new Date(p.fecha).toLocaleTimeString()} · {p.metodoPago}
+                          <br />
+                          <small style={{ color: '#6b7280' }}>Registró: {p.registradoPor.nombre}</small>
+                        </span>
+                        <strong style={p.cancelado ? { textDecoration: 'line-through', color: '#9ca3af' } : undefined}>
+                          {formatoMoneda(p.monto)}
+                        </strong>
+                      </div>
+
+                      {p.cancelado && (
+                        <div className="aviso-alerta" style={{ marginTop: 6 }}>
+                          ❌ Cancelado{p.canceladoEn ? ` el ${new Date(p.canceladoEn).toLocaleString()}` : ''}
+                        </div>
+                      )}
+
+                      {!p.cancelado &&
+                        (confirmandoCancelarPagoId === p.id ? (
+                          <div className="bloque-autorizacion" style={{ marginTop: 6 }}>
+                            <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                              ¿Seguro que quieres cancelar este pago? No se puede deshacer.
+                            </p>
+                            {necesitaAutorizacionPago && (
+                              <>
+                                <input
+                                  placeholder="Teléfono del administrador"
+                                  value={autorizadoPorTelefonoPago}
+                                  onChange={(e) => setAutorizadoPorTelefonoPago(e.target.value)}
+                                />
+                                <input
+                                  placeholder="PIN"
+                                  type="password"
+                                  value={autorizadoPinPago}
+                                  onChange={(e) => setAutorizadoPinPago(e.target.value)}
+                                />
+                              </>
+                            )}
+                            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                              <button onClick={() => confirmarCancelarPago(p.id)} disabled={cancelandoPago} style={{ flex: 1 }}>
+                                {cancelandoPago ? 'Cancelando...' : 'Sí, cancelar'}
+                              </button>
+                              <button onClick={() => setConfirmandoCancelarPagoId(null)} style={{ flex: 1 }}>
+                                No, regresar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            className="boton-secundario"
+                            onClick={() => pedirCancelarPago(p.id)}
+                            style={{ marginTop: 6, width: '100%', background: '#fff2f1', color: '#b91c1c' }}
+                          >
+                            🗑️ Cancelar pago
+                          </button>
+                        ))}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
