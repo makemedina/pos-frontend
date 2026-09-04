@@ -5,6 +5,7 @@ import {
   obtenerCostosProveedor,
   guardarCostoProveedor,
   eliminarCostoProveedor,
+  obtenerUltimoCostoCompra,
   type VarianteBusqueda,
   type CostoProveedorProducto,
 } from './api';
@@ -25,9 +26,15 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
   const [varianteElegida, setVarianteElegida] = useState<VarianteBusqueda | null>(null);
   const [costoNuevo, setCostoNuevo] = useState('');
   const [guardando, setGuardando] = useState(false);
+  // Ultimo costo con el que se le compro esta variante a este proveedor
+  // (segun el historial real de Compras) -- se usa para precargar el
+  // campo de costo como sugerencia, en vez de partir de $0.
+  const [ultimaCompra, setUltimaCompra] = useState<{ costo: number; fecha: string } | null>(null);
+  const [cargandoUltimaCompra, setCargandoUltimaCompra] = useState(false);
 
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [costoEdicion, setCostoEdicion] = useState('');
+  const [ultimaCompraEdicion, setUltimaCompraEdicion] = useState<{ costo: number; fecha: string } | null>(null);
 
   useEffect(() => {
     cargar();
@@ -53,11 +60,22 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
     setResultados(await buscarVariantes(valor));
   }
 
-  function elegirVariante(v: VarianteBusqueda) {
+  async function elegirVariante(v: VarianteBusqueda) {
     setVarianteElegida(v);
     setResultados([]);
     setBusqueda('');
     setCostoNuevo('');
+    setUltimaCompra(null);
+    setCargandoUltimaCompra(true);
+    try {
+      const ultimo = await obtenerUltimoCostoCompra(proveedorId, v.id);
+      setUltimaCompra(ultimo);
+      if (ultimo) setCostoNuevo(String(ultimo.costo));
+    } catch {
+      // Si falla, no pasa nada -- el usuario sigue pudiendo capturar el costo a mano.
+    } finally {
+      setCargandoUltimaCompra(false);
+    }
   }
 
   async function agregarCosto() {
@@ -80,9 +98,15 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
     }
   }
 
-  function empezarEdicion(c: CostoProveedorProducto) {
+  async function empezarEdicion(c: CostoProveedorProducto) {
     setEditandoId(c.varianteId);
     setCostoEdicion(String(c.costo));
+    setUltimaCompraEdicion(null);
+    try {
+      setUltimaCompraEdicion(await obtenerUltimoCostoCompra(proveedorId, c.varianteId));
+    } catch {
+      // Informativo -- si falla, se sigue pudiendo editar a mano.
+    }
   }
 
   async function guardarEdicion(varianteId: string) {
@@ -133,23 +157,38 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
               onChange={(e) => buscar(e.target.value)}
             />
           ) : (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <div style={{ flex: 1, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.5rem 0.75rem', borderRadius: 10 }}>
-                <strong>{varianteElegida.producto.nombre}</strong> · {varianteElegida.marca}
+            <div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{ flex: 1, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.5rem 0.75rem', borderRadius: 10 }}>
+                  <strong>{varianteElegida.producto.nombre}</strong> · {varianteElegida.marca}
+                </div>
+                <input
+                  type="number"
+                  placeholder="Costo"
+                  value={costoNuevo}
+                  onChange={(e) => setCostoNuevo(e.target.value)}
+                  style={{ width: 110 }}
+                />
+                <button onClick={agregarCosto} disabled={guardando} style={{ width: 'auto', padding: '0 14px' }}>
+                  Guardar
+                </button>
+                <button
+                  onClick={() => {
+                    setVarianteElegida(null);
+                    setUltimaCompra(null);
+                  }}
+                  style={{ width: 'auto', padding: '0 14px' }}
+                >
+                  Cancelar
+                </button>
               </div>
-              <input
-                type="number"
-                placeholder="Costo"
-                value={costoNuevo}
-                onChange={(e) => setCostoNuevo(e.target.value)}
-                style={{ width: 110 }}
-              />
-              <button onClick={agregarCosto} disabled={guardando} style={{ width: 'auto', padding: '0 14px' }}>
-                Guardar
-              </button>
-              <button onClick={() => setVarianteElegida(null)} style={{ width: 'auto', padding: '0 14px' }}>
-                Cancelar
-              </button>
+              <p style={{ fontSize: 12, color: '#6b7280', margin: '4px 0 0' }}>
+                {cargandoUltimaCompra
+                  ? 'Buscando el último costo de compra...'
+                  : ultimaCompra
+                    ? `Se precargó el último costo con el que se le compró: ${formatoMoneda(ultimaCompra.costo)} (${new Date(ultimaCompra.fecha).toLocaleDateString()}). Puedes ajustarlo.`
+                    : 'Este proveedor no tiene compras registradas de este producto todavía.'}
+              </p>
             </div>
           )}
 
@@ -175,33 +214,49 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
         ) : (
           <div style={{ display: 'grid', gap: '0.5rem' }}>
             {costos.map((c) => (
-              <div key={c.varianteId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-                <div>
-                  <strong>{c.producto}</strong>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>{c.marca}</div>
+              <div key={c.varianteId} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <strong>{c.producto}</strong>
+                    <div style={{ fontSize: 13, color: '#6b7280' }}>{c.marca}</div>
+                  </div>
+                  {editandoId === c.varianteId ? (
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        value={costoEdicion}
+                        onChange={(e) => setCostoEdicion(e.target.value)}
+                        style={{ width: 100 }}
+                      />
+                      <button onClick={() => guardarEdicion(c.varianteId)} style={{ width: 'auto', padding: '0 12px' }}>Guardar</button>
+                      <button onClick={() => setEditandoId(null)} style={{ width: 'auto', padding: '0 12px' }}>Cancelar</button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                      <strong>{formatoMoneda(c.costo)}</strong>
+                      <button onClick={() => empezarEdicion(c)} style={{ width: 'auto', padding: '0 12px' }}>Editar</button>
+                      <button
+                        onClick={() => eliminar(c.varianteId)}
+                        style={{ width: 'auto', padding: '0 12px', background: '#fff2f1', color: '#b91c1c' }}
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {editandoId === c.varianteId ? (
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <input
-                      type="number"
-                      value={costoEdicion}
-                      onChange={(e) => setCostoEdicion(e.target.value)}
-                      style={{ width: 100 }}
-                    />
-                    <button onClick={() => guardarEdicion(c.varianteId)} style={{ width: 'auto', padding: '0 12px' }}>Guardar</button>
-                    <button onClick={() => setEditandoId(null)} style={{ width: 'auto', padding: '0 12px' }}>Cancelar</button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <strong>{formatoMoneda(c.costo)}</strong>
-                    <button onClick={() => empezarEdicion(c)} style={{ width: 'auto', padding: '0 12px' }}>Editar</button>
-                    <button
-                      onClick={() => eliminar(c.varianteId)}
-                      style={{ width: 'auto', padding: '0 12px', background: '#fff2f1', color: '#b91c1c' }}
-                    >
-                      Quitar
-                    </button>
-                  </div>
+                {editandoId === c.varianteId && ultimaCompraEdicion && (
+                  <p style={{ fontSize: 12, color: '#6b7280', margin: '6px 0 0' }}>
+                    Último costo de compra: {formatoMoneda(ultimaCompraEdicion.costo)} (
+                    {new Date(ultimaCompraEdicion.fecha).toLocaleDateString()}){' '}
+                    {ultimaCompraEdicion.costo !== Number(costoEdicion) && (
+                      <button
+                        onClick={() => setCostoEdicion(String(ultimaCompraEdicion.costo))}
+                        style={{ width: 'auto', padding: '0 8px', fontSize: 12 }}
+                      >
+                        Usar este
+                      </button>
+                    )}
+                  </p>
                 )}
               </div>
             ))}

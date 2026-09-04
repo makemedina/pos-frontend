@@ -752,6 +752,29 @@ export async function eliminarCostoProveedor(proveedorId: string, varianteId: st
   }
 }
 
+export interface UltimoCostoCompra {
+  costo: number;
+  fecha: string;
+}
+
+// El costo con el que se compro por ultima vez esta variante a este
+// proveedor, segun el historial real de Compras -- para sugerirlo como
+// punto de partida al agregar/actualizar el costo de referencia. null si
+// nunca se le ha comprado esta variante a este proveedor.
+export async function obtenerUltimoCostoCompra(
+  proveedorId: string,
+  varianteId: string
+): Promise<UltimoCostoCompra | null> {
+  const res = await fetch(`${API_URL}/proveedores/${proveedorId}/costos/${varianteId}/ultima-compra`, {
+    headers: headerAuth(),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo consultar el último costo de compra');
+  }
+  return res.json();
+}
+
 // ---------- COMPRAS ----------
 
 export interface ItemCompraPayload {
