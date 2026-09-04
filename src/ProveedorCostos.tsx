@@ -219,6 +219,9 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
                   <div>
                     <strong>{c.producto}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>{c.marca}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>
+                      Guardado el {new Date(c.actualizadoEn).toLocaleDateString()}
+                    </div>
                   </div>
                   {editandoId === c.varianteId ? (
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
