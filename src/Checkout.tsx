@@ -17,6 +17,10 @@ interface Props {
     autorizadoPin?: string;
     motivoAutorizacion?: string;
   }) => void;
+  // true mientras la venta se esta mandando al servidor -- deshabilita el
+  // boton de confirmar para que un doble click (o un click de mas por
+  // conexion lenta) no genere dos ventas identicas.
+  guardandoVenta?: boolean;
   onEnviarCotizacion: () => void;
   enviandoCotizacion?: boolean;
   cotizacionEnviada?: boolean;
@@ -33,6 +37,7 @@ export function Checkout({
   cliente,
   onCambiarCliente,
   onConfirmar,
+  guardandoVenta,
   onEnviarCotizacion,
   enviandoCotizacion,
   cotizacionEnviada,
@@ -111,6 +116,7 @@ export function Checkout({
   }
 
   function confirmar() {
+    if (guardandoVenta) return;
     setErrorMontos(null);
 
     if (!esCredito && diferenciaContado > 0.01) {
@@ -308,8 +314,8 @@ export function Checkout({
               : '📤 Enviar cotización'}
         </button>
 
-        <button className="boton-primario" onClick={confirmar}>
-          ✅ Confirmar venta
+        <button className="boton-primario" onClick={confirmar} disabled={!!guardandoVenta}>
+          {guardandoVenta ? 'Guardando...' : '✅ Confirmar venta'}
         </button>
       </div>
     </div>

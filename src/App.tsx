@@ -210,6 +210,7 @@ export default function App() {
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [errorVenta, setErrorVenta] = useState<string | null>(null);
+  const [guardandoVenta, setGuardandoVenta] = useState(false);
   const [reciboActivo, setReciboActivo] = useState<DatosRecibo | null>(null);
   const [busquedaProducto, setBusquedaProducto] = useState('');
   const [varianteParaAjuste, setVarianteParaAjuste] = useState<{ id: string; producto: string; marca: string } | null>(null);
@@ -464,6 +465,12 @@ export default function App() {
     autorizadoPin?: string;
     motivoAutorizacion?: string;
   }) {
+    // Evita que un doble click (o un click de mas mientras la primera
+    // peticion sigue esperando respuesta, ej. conexion lenta) mande dos
+    // ventas identicas -- el boton "Confirmar venta" se deshabilita
+    // mientras esta en vuelo (ver guardandoVenta en Checkout).
+    if (guardandoVenta) return;
+    setGuardandoVenta(true);
     setErrorVenta(null);
     const algunaLineaRequiereAutorizacion = carrito.some(
       (i) => i.costoLote !== null && i.precioUnitario < i.costoLote
@@ -626,6 +633,8 @@ export default function App() {
       } else {
         setErrorVenta('Ocurrio un error al registrar la venta.');
       }
+    } finally {
+      setGuardandoVenta(false);
     }
   }
 
@@ -1055,6 +1064,7 @@ export default function App() {
           cliente={clienteVenta}
           onCambiarCliente={cambiarClienteVenta}
           onConfirmar={confirmarVenta}
+          guardandoVenta={guardandoVenta}
           onEnviarCotizacion={enviarCotizacion}
           enviandoCotizacion={enviandoCotizacion}
           cotizacionEnviada={cotizacionActivaId !== null}
