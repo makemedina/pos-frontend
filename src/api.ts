@@ -1276,24 +1276,16 @@ export interface FacturaPendientePorProveedor {
   }[];
 }
 
-export type EstadoCorte = 'efectivo' | 'banco' | 'conciliado';
-
 export interface ResumenCorteDia {
   yaExisteCorteHoy: boolean;
   corteExistente: {
     id: string;
-    // En que paso va: 'efectivo' = falta capturar banco; 'banco' = falta
-    // conciliar; 'conciliado' = corte cerrado, ya no se puede tocar desde
-    // aqui (hay que corregirlo desde el historico).
-    estado: EstadoCorte;
     efectivoContado: number;
-    // null mientras no se ha hecho el paso 2 (capturar banco).
-    saldoBancoContado: number | null;
-    // Tal como quedaron capturados ESE dia (no se recalculan con datos de
-    // hoy) -- null hasta que se hace el paso 3 (conciliar).
-    utilidadDia: number | null;
-    valorInventario: number | null;
-    balanzaTotal: number | null;
+    saldoBancoContado: number;
+    // Tal como quedaron capturados ESE dia (no se recalculan con datos de hoy).
+    utilidadDia: number;
+    valorInventario: number;
+    balanzaTotal: number;
     observacion: string | null;
     facturasPendientesPorProveedor: FacturaPendientePorProveedor[];
   } | null;
@@ -1365,39 +1357,16 @@ export async function obtenerCorteDelDia(fecha?: string): Promise<ResumenCorteDi
   return res.json();
 }
 
-// Paso 1: guarda cuanto efectivo se contó (crea el corte del día si
-// todavía no existe, o lo recaptura si sigue abierto).
-export async function guardarEfectivoCorte(efectivoContado: number, fecha?: string, observacion?: string) {
-  const res = await fetch(`${API_URL}/corte/caja/efectivo`, {
+export async function guardarCorte(
+  efectivoContado: number,
+  saldoBancoContado: number,
+  fecha?: string,
+  observacion?: string
+) {
+  const res = await fetch(`${API_URL}/corte/caja`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ efectivoContado, fecha, observacion }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw { ...data, status: res.status };
-  return data;
-}
-
-// Paso 2: guarda cuanto hay en banco, sobre un corte que ya tiene el
-// efectivo capturado.
-export async function guardarBancoCorte(saldoBancoContado: number, fecha?: string, observacion?: string) {
-  const res = await fetch(`${API_URL}/corte/caja/banco`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ saldoBancoContado, fecha, observacion }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw { ...data, status: res.status };
-  return data;
-}
-
-// Paso 3: con efectivo y banco ya capturados, calcula la utilidad/balanza
-// del día y cierra el corte.
-export async function conciliarCorte(fecha?: string) {
-  const res = await fetch(`${API_URL}/corte/caja/conciliar`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ fecha }),
+    body: JSON.stringify({ efectivoContado, saldoBancoContado, fecha, observacion }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw { ...data, status: res.status };
@@ -1407,15 +1376,14 @@ export async function conciliarCorte(fecha?: string) {
 export interface CorteHistorico {
   id: string;
   fecha: string;
-  estado: EstadoCorte;
   efectivoContado: number;
-  saldoBancoContado: number | null;
+  saldoBancoContado: number;
   registradoPor: string;
   actualizadoEn: string;
-  utilidadDia?: number | null;
-  gastosDia?: number | null;
-  valorInventario?: number | null;
-  balanzaTotal?: number | null;
+  utilidadDia?: number;
+  gastosDia?: number;
+  valorInventario?: number;
+  balanzaTotal?: number;
   balanzaEsperada?: number | null;
   diferenciaCuadre?: number | null;
   observacion: string | null;

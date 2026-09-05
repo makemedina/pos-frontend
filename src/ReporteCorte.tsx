@@ -24,26 +24,19 @@ interface Props {
 export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoBancoContadoEnVivo }: Props) {
   const tieneUtilidad = resumen.utilidadDia !== undefined;
 
-  const corteExistente = resumen.corteExistente;
-  // El corte ahora se captura en 3 pasos (efectivo -> banco -> conciliar).
-  // "Conciliado" = ya se hizo el paso 3: de ahi en adelante se muestran
-  // EXACTAMENTE los montos con los que se cerro ese dia, no se recalculan
-  // con datos de hoy. Mientras no este conciliado (nada guardado todavia,
-  // o ya se guardo efectivo y/o banco pero falta cerrar), se sigue
-  // mostrando en vivo con lo que el usuario vaya escribiendo en cada paso.
-  const estaConciliado = corteExistente?.estado === 'conciliado';
-  // efectivoContado siempre esta presente una vez que existe el corte (es
-  // el paso 1, obligatorio para crearlo); saldoBancoContado puede seguir
-  // siendo null si todavia no se hace el paso 2 -- ahi se usa lo que se
-  // vaya escribiendo en ese paso.
-  const efectivoUsado = corteExistente ? corteExistente.efectivoContado : efectivoContadoEnVivo ?? 0;
-  const bancoUsado = corteExistente?.saldoBancoContado ?? saldoBancoContadoEnVivo ?? 0;
+  // Si ya existe un corte guardado para esta fecha (hoy o un dia pasado),
+  // se muestran EXACTAMENTE los montos con los que se guardo ese dia --
+  // no se recalculan con datos de hoy. Si no (el corte de HOY todavia no
+  // se guarda), se usa lo que el usuario vaya escribiendo en el formulario.
+  const yaGuardado = resumen.corteExistente;
+  const efectivoUsado = yaGuardado ? yaGuardado.efectivoContado : efectivoContadoEnVivo ?? 0;
+  const bancoUsado = yaGuardado ? yaGuardado.saldoBancoContado : saldoBancoContadoEnVivo ?? 0;
 
-  // Para el corte de HOY (todavia sin conciliar), el saldo pendiente a
-  // proveedores en vivo; para uno ya conciliado, la fotografia que se
-  // guardo ese dia (no las facturas pendientes de HOY).
-  const facturasPendientesMostrar = estaConciliado
-    ? corteExistente!.facturasPendientesPorProveedor
+  // Para el corte de HOY, el saldo pendiente a proveedores en vivo; para
+  // uno ya guardado, la fotografia que se guardo ese dia (no las
+  // facturas pendientes de HOY).
+  const facturasPendientesMostrar = yaGuardado
+    ? yaGuardado.facturasPendientesPorProveedor
     : resumen.facturasPendientesPorProveedor;
   const totalFacturasPendientesMostrar = facturasPendientesMostrar.reduce((acc, g) => acc + g.subtotal, 0);
 
@@ -71,7 +64,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
   const gastosEfectivo = resumen.gastos.subtotalesPorMetodo.efectivo;
   const pagosProveedoresEfectivo = resumen.pagosProveedores.efectivo;
   const depositosEfectivo = Number(resumen.depositosBanco.total ?? 0);
-  const efectivoEsperado = !estaConciliado
+  const efectivoEsperado = !yaGuardado
     ? resumen.saldoEfectivoSistema
     : efectivoAyer !== null
       ? efectivoAyer + ventasEfectivo + pagosClientesEfectivo - comprasEfectivo - gastosEfectivo - pagosProveedoresEfectivo - depositosEfectivo
@@ -85,18 +78,18 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
   // el cuadre automatico solo aplica al corte de HOY (no guardado todavia);
   // al reimprimir un corte pasado, saldoBancoSistema seria el de HOY, no
   // el de esa fecha, y no serviria para comparar.
-  const bancoEsperado = !estaConciliado ? resumen.saldoBancoSistema : null;
+  const bancoEsperado = !yaGuardado ? resumen.saldoBancoSistema : null;
   const diferenciaBanco = bancoEsperado !== null ? bancoUsado - bancoEsperado : null;
 
   return (
     <div id={elementId} style={{ display: 'grid', gap: '1rem', background: 'white' }}>
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
-          Efectivo{!corteExistente && ' (lo que vas escribiendo)'}
+          Efectivo{!yaGuardado && ' (lo que vas escribiendo)'}
           <div style={{ fontWeight: 700, fontSize: 18 }}>{formatoMoneda(efectivoUsado)}</div>
         </div>
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
-          Banco{(corteExistente?.saldoBancoContado == null) && ' (lo que vas escribiendo)'}
+          Banco{!yaGuardado && ' (lo que vas escribiendo)'}
           <div style={{ fontWeight: 700, fontSize: 18 }}>{formatoMoneda(bancoUsado)}</div>
         </div>
       </div>
@@ -343,7 +336,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
 
       <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
         <h3>Cuadre de efectivo</h3>
-        {!estaConciliado ? (
+        {!yaGuardado ? (
           <>
             <div style={{ fontWeight: 700 }}>
               Efectivo esperado (lo que lleva el sistema ahora mismo): {formatoMoneda(efectivoEsperado!)}
@@ -409,29 +402,28 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
       )}
 
       {tieneUtilidad && (() => {
-        const valorInventarioMostrado = estaConciliado ? corteExistente!.valorInventario! : resumen.valorInventario!;
-        const balanzaMostrada = estaConciliado
-          ? corteExistente!.balanzaTotal!
+        const valorInventarioMostrado = yaGuardado ? yaGuardado.valorInventario : resumen.valorInventario!;
+        const balanzaMostrada = yaGuardado
+          ? yaGuardado.balanzaTotal
           : efectivoUsado + bancoUsado + resumen.cartera + resumen.valorInventario! - resumen.cuentasPorPagar;
         const diferencia = resumen.balanzaEsperada != null ? balanzaMostrada - resumen.balanzaEsperada : null;
 
         return (
           <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fefce8' }}>
             <h3>Utilidad y balanza (solo visible para administración)</h3>
-            <div>Utilidad del día: <strong>{formatoMoneda(estaConciliado ? corteExistente!.utilidadDia! : resumen.utilidadDia!)}</strong></div>
+            <div>Utilidad del día: <strong>{formatoMoneda(yaGuardado ? yaGuardado.utilidadDia : resumen.utilidadDia!)}</strong></div>
             <div style={{ fontSize: 13, color: '#6b7280' }}>
               Balanza = efectivo + banco + cartera por cobrar + valor de inventario − cuentas por pagar
-              {!estaConciliado && ' (vista previa, todavía sin conciliar)'}
             </div>
-            <div>Efectivo{!estaConciliado && ' (lo que vas escribiendo)'}: {formatoMoneda(efectivoUsado)}</div>
-            <div>Banco{!estaConciliado && ' (lo que vas escribiendo)'}: {formatoMoneda(bancoUsado)}</div>
-            {!estaConciliado && <div>Cartera por cobrar: {formatoMoneda(resumen.cartera)}</div>}
+            <div>Efectivo{!yaGuardado && ' (lo que vas escribiendo)'}: {formatoMoneda(efectivoUsado)}</div>
+            <div>Banco{!yaGuardado && ' (lo que vas escribiendo)'}: {formatoMoneda(bancoUsado)}</div>
+            {!yaGuardado && <div>Cartera por cobrar: {formatoMoneda(resumen.cartera)}</div>}
             <div>Valor de inventario: {formatoMoneda(valorInventarioMostrado)}</div>
-            {!estaConciliado && <div>Cuentas por pagar: {formatoMoneda(resumen.cuentasPorPagar)}</div>}
+            {!yaGuardado && <div>Cuentas por pagar: {formatoMoneda(resumen.cuentasPorPagar)}</div>}
             <div style={{ fontWeight: 700, fontSize: 16 }}>
               Balanza total: {formatoMoneda(balanzaMostrada)}
             </div>
-            {estaConciliado && (
+            {yaGuardado && (
               <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
                 Cartera y cuentas por pagar de ese día ya no se muestran por separado (cambian con el
                 tiempo) — la balanza de arriba es la que quedó guardada ese día.
@@ -454,10 +446,10 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
               </div>
             )}
 
-            {corteExistente?.observacion && (
+            {yaGuardado?.observacion && (
               <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
                 <strong style={{ fontSize: 13 }}>Observación</strong>
-                <p style={{ fontSize: 13, margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>{corteExistente.observacion}</p>
+                <p style={{ fontSize: 13, margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>{yaGuardado.observacion}</p>
               </div>
             )}
           </div>
