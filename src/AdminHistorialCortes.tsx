@@ -39,7 +39,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
   function empezarEdicion(c: CorteHistorico) {
     setEditando(c);
     setEfectivoContado(String(c.efectivoContado));
-    setSaldoBancoContado(String(c.saldoBancoContado));
+    setSaldoBancoContado(c.saldoBancoContado != null ? String(c.saldoBancoContado) : '');
     setObservacion(c.observacion || '');
   }
 
@@ -93,8 +93,13 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                     <strong>{new Date(c.fecha).toLocaleDateString()}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>Registró: {c.registradoPor}</div>
                     <div>Efectivo: {formatoMoneda(c.efectivoContado)}</div>
-                    <div>Banco: {formatoMoneda(c.saldoBancoContado)}</div>
-                    {c.utilidadDia !== undefined && (
+                    <div>Banco: {c.saldoBancoContado != null ? formatoMoneda(c.saldoBancoContado) : '—'}</div>
+                    {c.estado !== 'conciliado' && (
+                      <div style={{ color: '#b45309', fontSize: 12, fontWeight: 600 }}>
+                        ⚠ Incompleto — falta {c.estado === 'efectivo' ? 'capturar el banco y conciliar' : 'conciliar'}
+                      </div>
+                    )}
+                    {c.utilidadDia != null && (
                       <>
                         <div style={{ marginTop: 4 }}>Utilidad del día: {formatoMoneda(c.utilidadDia)}</div>
                         <div>Valor de inventario: {formatoMoneda(c.valorInventario!)}</div>
