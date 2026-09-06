@@ -23,6 +23,14 @@ interface Props {
  */
 export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoBancoContadoEnVivo }: Props) {
   const tieneUtilidad = resumen.utilidadDia !== undefined;
+  // Si el ultimo corte no fue justo ayer, este corte abarca varios dias
+  // (desde el siguiente al ultimo corte hasta hoy) -- se muestra la fecha
+  // completa de cada renglon (no solo la hora) para distinguir de que dia
+  // es cada quien, y los titulos dicen "del periodo" en vez de "del día".
+  const abarcaVariosDias = resumen.abarcaVariosDias;
+  const tituloPeriodo = (singular: string, plural: string) => (abarcaVariosDias ? plural : singular);
+  const formatoFechaHora = (fecha: string | Date) =>
+    abarcaVariosDias ? new Date(fecha).toLocaleString() : new Date(fecha).toLocaleTimeString();
 
   // Si ya existe un corte guardado para esta fecha (hoy o un dia pasado),
   // se muestran EXACTAMENTE los montos con los que se guardo ese dia --
@@ -83,6 +91,13 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
 
   return (
     <div id={elementId} style={{ display: 'grid', gap: '1rem', background: 'white' }}>
+      {abarcaVariosDias && (
+        <div className="aviso-alerta" style={{ fontWeight: 600 }}>
+          ⚠ No se capturó el corte de uno o más días — este corte abarca desde el{' '}
+          {new Date(resumen.desde).toLocaleDateString()} hasta hoy. Cada renglón de abajo indica de qué
+          día es.
+        </div>
+      )}
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
           Efectivo{!yaGuardado && ' (lo que vas escribiendo)'}
@@ -96,11 +111,11 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
 
       {resumen && resumen.ventas.detalle.length > 0 && (
         <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-          <h3>Ventas del día ({resumen.ventas.detalle.length})</h3>
+          <h3>{tituloPeriodo('Ventas del día', 'Ventas del período')} ({resumen.ventas.detalle.length})</h3>
           <div style={{ fontSize: 13 }}>
             <div>Efectivo: {formatoMoneda(resumen.ventas.subtotalesPorMetodo.efectivo)}</div>
             <div>Transferencia: {formatoMoneda(resumen.ventas.subtotalesPorMetodo.transferencia)}</div>
-            <div>Crédito (sin abono hoy): {formatoMoneda(resumen.ventas.subtotalesPorMetodo.credito)}</div>
+            <div>Crédito ({tituloPeriodo('sin abono hoy', 'sin abono en el período')}): {formatoMoneda(resumen.ventas.subtotalesPorMetodo.credito)}</div>
           </div>
           {resumen.ventas.detalle.map((v) => {
             const pagoMixto = v.montoEfectivo > 0 && v.montoTransferencia > 0;
@@ -120,6 +135,9 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                     Efectivo: {formatoMoneda(v.montoEfectivo)} · Transferencia: {formatoMoneda(v.montoTransferencia)}
                   </div>
                 )}
+                {abarcaVariosDias && (
+                  <small style={{ color: '#6b7280' }}>{new Date(v.fecha).toLocaleString()}</small>
+                )}
               </div>
             );
           })}
@@ -128,10 +146,11 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
 
       {resumen?.pagosClientes && (
         <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-          <h3>Pagos de clientes recibidos hoy (cartera anterior)</h3>
+          <h3>{tituloPeriodo('Pagos de clientes recibidos hoy', 'Pagos de clientes recibidos en el período')} (cartera anterior)</h3>
           <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
-            Abonos a notas de días anteriores. No incluye el pago inicial de ventas de hoy — ese ya
-            se cuenta arriba, en "Ventas del día".
+            Abonos a notas de antes de {tituloPeriodo('hoy', 'este período')}. No incluye el pago inicial de{' '}
+            {tituloPeriodo('ventas de hoy', 'ventas del período')} — ese ya se cuenta arriba, en "
+            {tituloPeriodo('Ventas del día', 'Ventas del período')}".
           </p>
           <div>Total: <strong>{formatoMoneda(Number(resumen.pagosClientes.total ?? 0))}</strong></div>
           <div>Efectivo: {formatoMoneda(Number(resumen.pagosClientes.efectivo ?? 0))}</div>
@@ -146,7 +165,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                     Venta #{p.folio} · {p.cliente} · {p.metodoPago}
                     <br />
                     <small style={{ color: '#6b7280' }}>
-                      {new Date(p.fecha).toLocaleTimeString()} · registró: {p.registradoPor}
+                      {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
                     </small>
                   </span>
                   <strong>{formatoMoneda(p.monto)}</strong>
@@ -155,28 +174,33 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             </div>
           )}
           {resumen.pagosClientes.detalle.length === 0 && (
-            <p style={{ fontSize: 13, color: '#6b7280' }}>Sin pagos de clientes hoy.</p>
+            <p style={{ fontSize: 13, color: '#6b7280' }}>Sin pagos de clientes {tituloPeriodo('hoy', 'en el período')}.</p>
           )}
         </div>
       )}
 
       {resumen && resumen.compras.detalle.length > 0 && (
         <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-          <h3>Compras del día ({resumen.compras.detalle.length})</h3>
+          <h3>{tituloPeriodo('Compras del día', 'Compras del período')} ({resumen.compras.detalle.length})</h3>
           <div style={{ fontSize: 13 }}>
             <div>Efectivo: {formatoMoneda(resumen.compras.subtotalesPorMetodo.efectivo)}</div>
             <div>Transferencia: {formatoMoneda(resumen.compras.subtotalesPorMetodo.transferencia)}</div>
-            <div>Crédito (sin abono hoy): {formatoMoneda(resumen.compras.subtotalesPorMetodo.credito)}</div>
+            <div>Crédito ({tituloPeriodo('sin abono hoy', 'sin abono en el período')}): {formatoMoneda(resumen.compras.subtotalesPorMetodo.credito)}</div>
           </div>
           {resumen.compras.detalle.map((c) => (
-            <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-              <span>{c.proveedor} · {c.numeroFactura || 'sin factura'} · {c.metodoPago ?? 'crédito'}</span>
-              <span>
-                {formatoMoneda(c.total)}{' '}
-                <small style={{ color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                  ({c.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(c.saldoPendiente)}`})
-                </small>
-              </span>
+            <div key={c.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>{c.proveedor} · {c.numeroFactura || 'sin factura'} · {c.metodoPago ?? 'crédito'}</span>
+                <span>
+                  {formatoMoneda(c.total)}{' '}
+                  <small style={{ color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                    ({c.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(c.saldoPendiente)}`})
+                  </small>
+                </span>
+              </div>
+              {abarcaVariosDias && (
+                <small style={{ color: '#6b7280' }}>{new Date(c.fecha).toLocaleString()}</small>
+              )}
             </div>
           ))}
         </div>
@@ -184,7 +208,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
 
       {resumen && resumen.gastos.detalle.length > 0 && (
         <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-          <h3>Gastos del día ({resumen.gastos.detalle.length})</h3>
+          <h3>{tituloPeriodo('Gastos del día', 'Gastos del período')} ({resumen.gastos.detalle.length})</h3>
           <div style={{ fontSize: 13 }}>
             <div>Efectivo: {formatoMoneda(resumen.gastos.subtotalesPorMetodo.efectivo)}</div>
             <div>Transferencia: {formatoMoneda(resumen.gastos.subtotalesPorMetodo.transferencia)}</div>
@@ -202,7 +226,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                 <strong>{formatoMoneda(g.monto)}</strong>
               </div>
               <small style={{ color: '#6b7280' }}>
-                {new Date(g.fecha).toLocaleTimeString()} · registró: {g.registradoPor}
+                {formatoFechaHora(g.fecha)} · registró: {g.registradoPor}
               </small>
             </div>
           ))}
@@ -211,10 +235,11 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
 
       {resumen?.pagosProveedores && (
         <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-          <h3>Pagos a proveedores hechos hoy (cartera anterior)</h3>
+          <h3>{tituloPeriodo('Pagos a proveedores hechos hoy', 'Pagos a proveedores hechos en el período')} (cartera anterior)</h3>
           <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
-            Abonos a facturas de días anteriores. No incluye el pago inicial de compras de hoy — ese
-            ya se cuenta arriba, en "Compras del día".
+            Abonos a facturas de antes de {tituloPeriodo('hoy', 'este período')}. No incluye el pago inicial de{' '}
+            {tituloPeriodo('compras de hoy', 'compras del período')} — ese ya se cuenta arriba, en "
+            {tituloPeriodo('Compras del día', 'Compras del período')}".
           </p>
           <div>Total: <strong>{formatoMoneda(Number(resumen.pagosProveedores.total ?? 0))}</strong></div>
           <div>Efectivo: {formatoMoneda(Number(resumen.pagosProveedores.efectivo ?? 0))}</div>
@@ -229,7 +254,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                     {p.proveedor} · Factura {p.numeroFactura || 'sin número'} · {p.metodoPago}
                     <br />
                     <small style={{ color: '#6b7280' }}>
-                      {new Date(p.fecha).toLocaleTimeString()} · registró: {p.registradoPor}
+                      {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
                     </small>
                   </span>
                   <strong>{formatoMoneda(p.monto)}</strong>
@@ -238,14 +263,14 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             </div>
           )}
           {resumen.pagosProveedores.detalle.length === 0 && (
-            <p style={{ fontSize: 13, color: '#6b7280' }}>Sin pagos a proveedores hoy.</p>
+            <p style={{ fontSize: 13, color: '#6b7280' }}>Sin pagos a proveedores {tituloPeriodo('hoy', 'en el período')}.</p>
           )}
         </div>
       )}
 
       {resumen?.depositosBanco && (
         <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-          <h3>Depósitos a banco hoy</h3>
+          <h3>{tituloPeriodo('Depósitos a banco hoy', 'Depósitos a banco en el período')}</h3>
           <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
             Traspaso interno (efectivo → banco): ya está reflejado en los saldos del sistema, no es un gasto ni afecta la utilidad.
           </p>
@@ -260,7 +285,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                     {d.notas || 'Depósito a banco'}
                     <br />
                     <small style={{ color: '#6b7280' }}>
-                      {new Date(d.fecha).toLocaleTimeString()} · registró: {d.registradoPor}
+                      {formatoFechaHora(d.fecha)} · registró: {d.registradoPor}
                     </small>
                   </span>
                   <strong>{formatoMoneda(d.monto)}</strong>
@@ -269,14 +294,14 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             </div>
           )}
           {resumen.depositosBanco.detalle.length === 0 && (
-            <p style={{ fontSize: 13, color: '#6b7280' }}>Sin depósitos a banco hoy.</p>
+            <p style={{ fontSize: 13, color: '#6b7280' }}>Sin depósitos a banco {tituloPeriodo('hoy', 'en el período')}.</p>
           )}
         </div>
       )}
 
       {resumen && (resumen.canceladas.ventas.length > 0 || resumen.canceladas.compras.length > 0) && (
         <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fff2f1' }}>
-          <h3 style={{ color: '#b91c1c' }}>❌ Cancelado hoy</h3>
+          <h3 style={{ color: '#b91c1c' }}>❌ {tituloPeriodo('Cancelado hoy', 'Cancelado en el período')}</h3>
           {resumen.canceladas.ventas.map((v) => (
             <div key={v.id} style={{ fontSize: 13, borderBottom: '1px solid #fecaca', paddingBottom: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -411,7 +436,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
         return (
           <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fefce8' }}>
             <h3>Utilidad y balanza (solo visible para administración)</h3>
-            <div>Utilidad del día: <strong>{formatoMoneda(yaGuardado ? yaGuardado.utilidadDia : resumen.utilidadDia!)}</strong></div>
+            <div>{tituloPeriodo('Utilidad del día', 'Utilidad del período')}: <strong>{formatoMoneda(yaGuardado ? yaGuardado.utilidadDia : resumen.utilidadDia!)}</strong></div>
             <div style={{ fontSize: 13, color: '#6b7280' }}>
               Balanza = efectivo + banco + cartera por cobrar + valor de inventario − cuentas por pagar
             </div>
@@ -433,7 +458,8 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             {resumen.balanzaAyer != null && (
               <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
                 <div style={{ fontSize: 13, color: '#6b7280' }}>
-                  Cuadre: balanza de ayer ({formatoMoneda(resumen.balanzaAyer)}) + utilidad de hoy − gastos de hoy
+                  Cuadre: balanza de {tituloPeriodo('ayer', 'antes del período')} ({formatoMoneda(resumen.balanzaAyer)}) +{' '}
+                  {tituloPeriodo('utilidad de hoy − gastos de hoy', 'utilidad del período − gastos del período')}{' '}
                   = {formatoMoneda(resumen.balanzaEsperada!)} esperado
                 </div>
                 {Math.abs(diferencia ?? 0) < 0.01 ? (

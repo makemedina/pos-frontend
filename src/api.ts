@@ -1278,6 +1278,11 @@ export interface FacturaPendientePorProveedor {
 
 export interface ResumenCorteDia {
   yaExisteCorteHoy: boolean;
+  // Si el ultimo corte no fue justo ayer, este corte abarca varios dias
+  // (desde el siguiente al ultimo corte hasta hoy) -- cada renglon del
+  // detalle ya trae su propia fecha para distinguir de que dia es.
+  desde: string;
+  abarcaVariosDias: boolean;
   corteExistente: {
     id: string;
     efectivoContado: number;
