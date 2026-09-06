@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { formatoMoneda } from './formato';
 import type { ResumenCorteDia } from './api';
 
@@ -11,17 +12,35 @@ interface Props {
   saldoBancoContadoEnVivo?: number;
 }
 
+// Convierte una diferencia de cuadre en un texto llano ("falta"/"sobra")
+// en vez de un numero con signo -- mas facil de leer de un vistazo que
+// "-$120.00". Se usa tanto en el veredicto de arriba como en cada
+// seccion de cuadre mas abajo.
+function describirDiferencia(diferencia: number | null): { texto: string; color: string } {
+  if (diferencia === null) return { texto: '—', color: '#6b7280' };
+  if (Math.abs(diferencia) < 0.01) return { texto: '✓ Cuadra exacto', color: '#16a34a' };
+  if (diferencia < 0) return { texto: `⚠ Falta ${formatoMoneda(Math.abs(diferencia))}`, color: '#b91c1c' };
+  return { texto: `⚠ Sobra ${formatoMoneda(diferencia)}`, color: '#b45309' };
+}
+
 /**
  * Cuerpo del reporte de un corte de caja (todo menos la captura/formulario
- * del dia). Orden fijo, de arriba a abajo: saldos contados, ventas,
- * pagos de clientes (cartera anterior), compras, gastos, pagos a
- * proveedores (cartera anterior), depositos a banco, cancelaciones,
- * cuadre de efectivo (publico), y hasta el final utilidad/balanza (solo
- * administracion). Se usa tanto para el corte de HOY (AdminCorteCaja)
- * como para reimprimir un corte de un dia pasado desde el historico
+ * del dia). Arriba de todo va el veredicto (¿cuadra o no?), para verlo sin
+ * tener que desplazarse por todo el detalle; despues los saldos contados,
+ * ventas, pagos de clientes (cartera anterior), compras, gastos, pagos a
+ * proveedores (cartera anterior), depositos a banco, cancelaciones, y
+ * hasta el final el desglose completo del cuadre y la utilidad/balanza
+ * (solo administracion). El detalle linea por linea de cada seccion viene
+ * colapsado por default -- solo se ven los totales, a menos que se pida
+ * verlo. Se usa tanto para el corte de HOY (AdminCorteCaja) como para
+ * reimprimir un corte de un dia pasado desde el historico
  * (CorteHistoricoModal).
  */
 export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoBancoContadoEnVivo }: Props) {
+  const [detalleAbierto, setDetalleAbierto] = useState<Record<string, boolean>>({});
+  const toggleDetalle = (clave: string) =>
+    setDetalleAbierto((prev) => ({ ...prev, [clave]: !prev[clave] }));
+
   const tieneUtilidad = resumen.utilidadDia !== undefined;
   // Si el ultimo corte no fue justo ayer, este corte abarca varios dias
   // (desde el siguiente al ultimo corte hasta hoy) -- se muestra la fecha
@@ -89,6 +108,23 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
   const bancoEsperado = !yaGuardado ? resumen.saldoBancoSistema : null;
   const diferenciaBanco = bancoEsperado !== null ? bancoUsado - bancoEsperado : null;
 
+  // Balanza (todo el negocio: efectivo + banco + cartera + inventario −
+  // cuentas por pagar) -- se calcula aqui arriba (en vez de solo hasta
+  // abajo) para poder mostrarla tambien en el veredicto inicial.
+  const balanzaMostrada = tieneUtilidad
+    ? yaGuardado
+      ? yaGuardado.balanzaTotal!
+      : efectivoUsado + bancoUsado + resumen.cartera + resumen.valorInventario! - resumen.cuentasPorPagar
+    : null;
+  const diferenciaBalanza =
+    tieneUtilidad && resumen.balanzaEsperada != null && balanzaMostrada !== null
+      ? balanzaMostrada - resumen.balanzaEsperada
+      : null;
+
+  const veredictoEfectivo = describirDiferencia(diferenciaEfectivo);
+  const veredictoBanco = bancoEsperado !== null ? describirDiferencia(diferenciaBanco) : null;
+  const veredictoBalanza = tieneUtilidad && resumen.balanzaAyer != null ? describirDiferencia(diferenciaBalanza) : null;
+
   return (
     <div id={elementId} style={{ display: 'grid', gap: '1rem', background: 'white' }}>
       {abarcaVariosDias && (
@@ -98,6 +134,33 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
           día es.
         </div>
       )}
+
+      {/* Veredicto arriba de todo: para saber si cuadra sin tener que
+          desplazarse por todo el detalle de abajo. */}
+      <div style={{ display: 'grid', gap: 6, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#f8fafc' }}>
+        <h3 style={{ margin: 0 }}>¿Cuadra el corte?</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Efectivo</span>
+          <strong style={{ color: veredictoEfectivo.color }}>{veredictoEfectivo.texto}</strong>
+        </div>
+        {veredictoBanco && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Banco</span>
+            <strong style={{ color: veredictoBanco.color }}>{veredictoBanco.texto}</strong>
+          </div>
+        )}
+        {veredictoBalanza && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Negocio en general (balanza)</span>
+            <strong style={{ color: veredictoBalanza.color }}>{veredictoBalanza.texto}</strong>
+          </div>
+        )}
+        <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+          El detalle completo de cada cuadre está más abajo, junto con todo lo que se vendió, compró y
+          gastó.
+        </p>
+      </div>
+
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
           Efectivo{!yaGuardado && ' (lo que vas escribiendo)'}
@@ -117,30 +180,34 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             <div>Transferencia: {formatoMoneda(resumen.ventas.subtotalesPorMetodo.transferencia)}</div>
             <div>Crédito ({tituloPeriodo('sin abono hoy', 'sin abono en el período')}): {formatoMoneda(resumen.ventas.subtotalesPorMetodo.credito)}</div>
           </div>
-          {resumen.ventas.detalle.map((v) => {
-            const pagoMixto = v.montoEfectivo > 0 && v.montoTransferencia > 0;
-            return (
-              <div key={v.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>#{v.folio} · {v.cliente} · {v.vendedor} · {v.metodoPago ?? 'crédito'}</span>
-                  <span>
-                    {formatoMoneda(v.total)}{' '}
-                    <small style={{ color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                      ({v.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(v.saldoPendiente)}`})
-                    </small>
-                  </span>
-                </div>
-                {pagoMixto && (
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>
-                    Efectivo: {formatoMoneda(v.montoEfectivo)} · Transferencia: {formatoMoneda(v.montoTransferencia)}
+          <button type="button" className="boton-secundario" onClick={() => toggleDetalle('ventas')} style={{ width: 'auto', justifySelf: 'start' }}>
+            {detalleAbierto.ventas ? 'Ocultar detalle' : `Ver detalle (${resumen.ventas.detalle.length})`}
+          </button>
+          {detalleAbierto.ventas &&
+            resumen.ventas.detalle.map((v) => {
+              const pagoMixto = v.montoEfectivo > 0 && v.montoTransferencia > 0;
+              return (
+                <div key={v.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>#{v.folio} · {v.cliente} · {v.vendedor} · {v.metodoPago ?? 'crédito'}</span>
+                    <span>
+                      {formatoMoneda(v.total)}{' '}
+                      <small style={{ color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                        ({v.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(v.saldoPendiente)}`})
+                      </small>
+                    </span>
                   </div>
-                )}
-                {abarcaVariosDias && (
-                  <small style={{ color: '#6b7280' }}>{new Date(v.fecha).toLocaleString()}</small>
-                )}
-              </div>
-            );
-          })}
+                  {pagoMixto && (
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>
+                      Efectivo: {formatoMoneda(v.montoEfectivo)} · Transferencia: {formatoMoneda(v.montoTransferencia)}
+                    </div>
+                  )}
+                  {abarcaVariosDias && (
+                    <small style={{ color: '#6b7280' }}>{new Date(v.fecha).toLocaleString()}</small>
+                  )}
+                </div>
+              );
+            })}
         </div>
       )}
 
@@ -157,21 +224,27 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
           <div>Transferencia: {formatoMoneda(Number(resumen.pagosClientes.transferencia ?? 0))}</div>
 
           {resumen.pagosClientes.detalle.length > 0 && (
-            <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
-              <strong style={{ fontSize: 13 }}>Detalle</strong>
-              {resumen.pagosClientes.detalle.map((p) => (
-                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-                  <span>
-                    Venta #{p.folio} · {p.cliente} · {p.metodoPago}
-                    <br />
-                    <small style={{ color: '#6b7280' }}>
-                      {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
-                    </small>
-                  </span>
-                  <strong>{formatoMoneda(p.monto)}</strong>
+            <>
+              <button type="button" className="boton-secundario" onClick={() => toggleDetalle('pagosClientes')} style={{ width: 'auto', justifySelf: 'start' }}>
+                {detalleAbierto.pagosClientes ? 'Ocultar detalle' : `Ver detalle (${resumen.pagosClientes.detalle.length})`}
+              </button>
+              {detalleAbierto.pagosClientes && (
+                <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
+                  {resumen.pagosClientes.detalle.map((p) => (
+                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                      <span>
+                        Venta #{p.folio} · {p.cliente} · {p.metodoPago}
+                        <br />
+                        <small style={{ color: '#6b7280' }}>
+                          {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
+                        </small>
+                      </span>
+                      <strong>{formatoMoneda(p.monto)}</strong>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
           {resumen.pagosClientes.detalle.length === 0 && (
             <p style={{ fontSize: 13, color: '#6b7280' }}>Sin pagos de clientes {tituloPeriodo('hoy', 'en el período')}.</p>
@@ -187,22 +260,26 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             <div>Transferencia: {formatoMoneda(resumen.compras.subtotalesPorMetodo.transferencia)}</div>
             <div>Crédito ({tituloPeriodo('sin abono hoy', 'sin abono en el período')}): {formatoMoneda(resumen.compras.subtotalesPorMetodo.credito)}</div>
           </div>
-          {resumen.compras.detalle.map((c) => (
-            <div key={c.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>{c.proveedor} · {c.numeroFactura || 'sin factura'} · {c.metodoPago ?? 'crédito'}</span>
-                <span>
-                  {formatoMoneda(c.total)}{' '}
-                  <small style={{ color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                    ({c.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(c.saldoPendiente)}`})
-                  </small>
-                </span>
+          <button type="button" className="boton-secundario" onClick={() => toggleDetalle('compras')} style={{ width: 'auto', justifySelf: 'start' }}>
+            {detalleAbierto.compras ? 'Ocultar detalle' : `Ver detalle (${resumen.compras.detalle.length})`}
+          </button>
+          {detalleAbierto.compras &&
+            resumen.compras.detalle.map((c) => (
+              <div key={c.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{c.proveedor} · {c.numeroFactura || 'sin factura'} · {c.metodoPago ?? 'crédito'}</span>
+                  <span>
+                    {formatoMoneda(c.total)}{' '}
+                    <small style={{ color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                      ({c.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(c.saldoPendiente)}`})
+                    </small>
+                  </span>
+                </div>
+                {abarcaVariosDias && (
+                  <small style={{ color: '#6b7280' }}>{new Date(c.fecha).toLocaleString()}</small>
+                )}
               </div>
-              {abarcaVariosDias && (
-                <small style={{ color: '#6b7280' }}>{new Date(c.fecha).toLocaleString()}</small>
-              )}
-            </div>
-          ))}
+            ))}
         </div>
       )}
 
@@ -213,23 +290,27 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             <div>Efectivo: {formatoMoneda(resumen.gastos.subtotalesPorMetodo.efectivo)}</div>
             <div>Transferencia: {formatoMoneda(resumen.gastos.subtotalesPorMetodo.transferencia)}</div>
           </div>
-          {resumen.gastos.detalle.map((g) => (
-            <div key={g.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>
-                  {g.concepto}
-                  <br />
-                  <small style={{ color: '#6b7280' }}>
-                    {g.categoria}{g.proveedor ? ` · ${g.proveedor}` : ''} · {g.metodoPago}
-                  </small>
-                </span>
-                <strong>{formatoMoneda(g.monto)}</strong>
+          <button type="button" className="boton-secundario" onClick={() => toggleDetalle('gastos')} style={{ width: 'auto', justifySelf: 'start' }}>
+            {detalleAbierto.gastos ? 'Ocultar detalle' : `Ver detalle (${resumen.gastos.detalle.length})`}
+          </button>
+          {detalleAbierto.gastos &&
+            resumen.gastos.detalle.map((g) => (
+              <div key={g.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>
+                    {g.concepto}
+                    <br />
+                    <small style={{ color: '#6b7280' }}>
+                      {g.categoria}{g.proveedor ? ` · ${g.proveedor}` : ''} · {g.metodoPago}
+                    </small>
+                  </span>
+                  <strong>{formatoMoneda(g.monto)}</strong>
+                </div>
+                <small style={{ color: '#6b7280' }}>
+                  {formatoFechaHora(g.fecha)} · registró: {g.registradoPor}
+                </small>
               </div>
-              <small style={{ color: '#6b7280' }}>
-                {formatoFechaHora(g.fecha)} · registró: {g.registradoPor}
-              </small>
-            </div>
-          ))}
+            ))}
         </div>
       )}
 
@@ -246,21 +327,27 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
           <div>Transferencia: {formatoMoneda(Number(resumen.pagosProveedores.transferencia ?? 0))}</div>
 
           {resumen.pagosProveedores.detalle.length > 0 && (
-            <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
-              <strong style={{ fontSize: 13 }}>Detalle</strong>
-              {resumen.pagosProveedores.detalle.map((p) => (
-                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-                  <span>
-                    {p.proveedor} · Factura {p.numeroFactura || 'sin número'} · {p.metodoPago}
-                    <br />
-                    <small style={{ color: '#6b7280' }}>
-                      {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
-                    </small>
-                  </span>
-                  <strong>{formatoMoneda(p.monto)}</strong>
+            <>
+              <button type="button" className="boton-secundario" onClick={() => toggleDetalle('pagosProveedores')} style={{ width: 'auto', justifySelf: 'start' }}>
+                {detalleAbierto.pagosProveedores ? 'Ocultar detalle' : `Ver detalle (${resumen.pagosProveedores.detalle.length})`}
+              </button>
+              {detalleAbierto.pagosProveedores && (
+                <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
+                  {resumen.pagosProveedores.detalle.map((p) => (
+                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                      <span>
+                        {p.proveedor} · Factura {p.numeroFactura || 'sin número'} · {p.metodoPago}
+                        <br />
+                        <small style={{ color: '#6b7280' }}>
+                          {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
+                        </small>
+                      </span>
+                      <strong>{formatoMoneda(p.monto)}</strong>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
           {resumen.pagosProveedores.detalle.length === 0 && (
             <p style={{ fontSize: 13, color: '#6b7280' }}>Sin pagos a proveedores {tituloPeriodo('hoy', 'en el período')}.</p>
@@ -277,21 +364,27 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
           <div>Total: <strong>{formatoMoneda(Number(resumen.depositosBanco.total ?? 0))}</strong></div>
 
           {resumen.depositosBanco.detalle.length > 0 && (
-            <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
-              <strong style={{ fontSize: 13 }}>Detalle</strong>
-              {resumen.depositosBanco.detalle.map((d) => (
-                <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-                  <span>
-                    {d.notas || 'Depósito a banco'}
-                    <br />
-                    <small style={{ color: '#6b7280' }}>
-                      {formatoFechaHora(d.fecha)} · registró: {d.registradoPor}
-                    </small>
-                  </span>
-                  <strong>{formatoMoneda(d.monto)}</strong>
+            <>
+              <button type="button" className="boton-secundario" onClick={() => toggleDetalle('depositos')} style={{ width: 'auto', justifySelf: 'start' }}>
+                {detalleAbierto.depositos ? 'Ocultar detalle' : `Ver detalle (${resumen.depositosBanco.detalle.length})`}
+              </button>
+              {detalleAbierto.depositos && (
+                <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
+                  {resumen.depositosBanco.detalle.map((d) => (
+                    <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                      <span>
+                        {d.notas || 'Depósito a banco'}
+                        <br />
+                        <small style={{ color: '#6b7280' }}>
+                          {formatoFechaHora(d.fecha)} · registró: {d.registradoPor}
+                        </small>
+                      </span>
+                      <strong>{formatoMoneda(d.monto)}</strong>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
           {resumen.depositosBanco.detalle.length === 0 && (
             <p style={{ fontSize: 13, color: '#6b7280' }}>Sin depósitos a banco {tituloPeriodo('hoy', 'en el período')}.</p>
@@ -360,22 +453,16 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
       )}
 
       <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-        <h3>Cuadre de efectivo</h3>
+        <h3>Detalle del cuadre de efectivo</h3>
         {!yaGuardado ? (
           <>
             <div style={{ fontWeight: 700 }}>
-              Efectivo esperado (lo que lleva el sistema ahora mismo): {formatoMoneda(efectivoEsperado!)}
+              Efectivo que debería haber (según el sistema): {formatoMoneda(efectivoEsperado!)}
             </div>
             <div>
               Efectivo que se está reportando (lo que vas escribiendo): <strong>{formatoMoneda(efectivoUsado)}</strong>
             </div>
-            {Math.abs(diferenciaEfectivo ?? 0) < 0.01 ? (
-              <div style={{ color: '#16a34a', fontWeight: 600 }}>✓ Cuadra</div>
-            ) : (
-              <div className="texto-alerta" style={{ fontWeight: 600 }}>
-                ⚠ No cuadra. Diferencia: {formatoMoneda(diferenciaEfectivo)}
-              </div>
-            )}
+            <div style={{ fontWeight: 600, color: veredictoEfectivo.color }}>{veredictoEfectivo.texto}</div>
           </>
         ) : efectivoAyer === null ? (
           <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
@@ -391,96 +478,71 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             <div>− Pagos a proveedores (efectivo): {formatoMoneda(pagosProveedoresEfectivo)}</div>
             <div>− Depósitos a banco: {formatoMoneda(depositosEfectivo)}</div>
             <div style={{ fontWeight: 700, paddingTop: 4, borderTop: '1px solid #e5e7eb' }}>
-              Efectivo esperado: {formatoMoneda(efectivoEsperado!)}
+              Efectivo que debería haber: {formatoMoneda(efectivoEsperado!)}
             </div>
             <div>
               Efectivo que se está reportando: <strong>{formatoMoneda(efectivoUsado)}</strong>
             </div>
-            {Math.abs(diferenciaEfectivo ?? 0) < 0.01 ? (
-              <div style={{ color: '#16a34a', fontWeight: 600 }}>✓ Cuadra</div>
-            ) : (
-              <div className="texto-alerta" style={{ fontWeight: 600 }}>
-                ⚠ No cuadra. Diferencia: {formatoMoneda(diferenciaEfectivo)}
-              </div>
-            )}
+            <div style={{ fontWeight: 600, color: veredictoEfectivo.color }}>{veredictoEfectivo.texto}</div>
           </>
         )}
       </div>
 
       {bancoEsperado !== null && (
         <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-          <h3>Cuadre de banco</h3>
+          <h3>Detalle del cuadre de banco</h3>
           <div style={{ fontWeight: 700 }}>
-            Banco esperado (lo que lleva el sistema ahora mismo): {formatoMoneda(bancoEsperado)}
+            Banco que debería haber (según el sistema): {formatoMoneda(bancoEsperado)}
           </div>
           <div>
             Banco que se está reportando (lo que vas escribiendo): <strong>{formatoMoneda(bancoUsado)}</strong>
           </div>
-          {Math.abs(diferenciaBanco ?? 0) < 0.01 ? (
-            <div style={{ color: '#16a34a', fontWeight: 600 }}>✓ Cuadra</div>
-          ) : (
-            <div className="texto-alerta" style={{ fontWeight: 600 }}>
-              ⚠ No cuadra. Diferencia: {formatoMoneda(diferenciaBanco)}
+          <div style={{ fontWeight: 600, color: veredictoBanco!.color }}>{veredictoBanco!.texto}</div>
+        </div>
+      )}
+
+      {tieneUtilidad && (
+        <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fefce8' }}>
+          <h3>Qué tan bien le fue al negocio (solo administración)</h3>
+          <div>{tituloPeriodo('Utilidad del día', 'Utilidad del período')}: <strong>{formatoMoneda(yaGuardado ? yaGuardado.utilidadDia : resumen.utilidadDia!)}</strong></div>
+          <div style={{ fontSize: 13, color: '#6b7280' }}>
+            Balanza (todo lo que vale el negocio) = efectivo + banco + lo que te deben (cartera) + valor de
+            inventario − lo que debes a proveedores
+          </div>
+          <div>Efectivo{!yaGuardado && ' (lo que vas escribiendo)'}: {formatoMoneda(efectivoUsado)}</div>
+          <div>Banco{!yaGuardado && ' (lo que vas escribiendo)'}: {formatoMoneda(bancoUsado)}</div>
+          {!yaGuardado && <div>Cartera por cobrar: {formatoMoneda(resumen.cartera)}</div>}
+          <div>Valor de inventario: {formatoMoneda(yaGuardado ? yaGuardado.valorInventario! : resumen.valorInventario!)}</div>
+          {!yaGuardado && <div>Cuentas por pagar: {formatoMoneda(resumen.cuentasPorPagar)}</div>}
+          <div style={{ fontWeight: 700, fontSize: 16 }}>
+            Valor total del negocio (balanza): {formatoMoneda(balanzaMostrada!)}
+          </div>
+          {yaGuardado && (
+            <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+              Cartera y cuentas por pagar de ese día ya no se muestran por separado (cambian con el
+              tiempo) — la balanza de arriba es la que quedó guardada ese día.
+            </p>
+          )}
+
+          {resumen.balanzaAyer != null && (
+            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
+              <div style={{ fontSize: 13, color: '#6b7280' }}>
+                Cuadre: balanza de {tituloPeriodo('ayer', 'antes del período')} ({formatoMoneda(resumen.balanzaAyer)}) +{' '}
+                {tituloPeriodo('utilidad de hoy − gastos de hoy', 'utilidad del período − gastos del período')}{' '}
+                = {formatoMoneda(resumen.balanzaEsperada!)} esperado
+              </div>
+              <div style={{ fontWeight: 600, color: veredictoBalanza!.color }}>{veredictoBalanza!.texto}</div>
+            </div>
+          )}
+
+          {yaGuardado?.observacion && (
+            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
+              <strong style={{ fontSize: 13 }}>Observación</strong>
+              <p style={{ fontSize: 13, margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>{yaGuardado.observacion}</p>
             </div>
           )}
         </div>
       )}
-
-      {tieneUtilidad && (() => {
-        const valorInventarioMostrado = yaGuardado ? yaGuardado.valorInventario : resumen.valorInventario!;
-        const balanzaMostrada = yaGuardado
-          ? yaGuardado.balanzaTotal
-          : efectivoUsado + bancoUsado + resumen.cartera + resumen.valorInventario! - resumen.cuentasPorPagar;
-        const diferencia = resumen.balanzaEsperada != null ? balanzaMostrada - resumen.balanzaEsperada : null;
-
-        return (
-          <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fefce8' }}>
-            <h3>Utilidad y balanza (solo visible para administración)</h3>
-            <div>{tituloPeriodo('Utilidad del día', 'Utilidad del período')}: <strong>{formatoMoneda(yaGuardado ? yaGuardado.utilidadDia : resumen.utilidadDia!)}</strong></div>
-            <div style={{ fontSize: 13, color: '#6b7280' }}>
-              Balanza = efectivo + banco + cartera por cobrar + valor de inventario − cuentas por pagar
-            </div>
-            <div>Efectivo{!yaGuardado && ' (lo que vas escribiendo)'}: {formatoMoneda(efectivoUsado)}</div>
-            <div>Banco{!yaGuardado && ' (lo que vas escribiendo)'}: {formatoMoneda(bancoUsado)}</div>
-            {!yaGuardado && <div>Cartera por cobrar: {formatoMoneda(resumen.cartera)}</div>}
-            <div>Valor de inventario: {formatoMoneda(valorInventarioMostrado)}</div>
-            {!yaGuardado && <div>Cuentas por pagar: {formatoMoneda(resumen.cuentasPorPagar)}</div>}
-            <div style={{ fontWeight: 700, fontSize: 16 }}>
-              Balanza total: {formatoMoneda(balanzaMostrada)}
-            </div>
-            {yaGuardado && (
-              <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
-                Cartera y cuentas por pagar de ese día ya no se muestran por separado (cambian con el
-                tiempo) — la balanza de arriba es la que quedó guardada ese día.
-              </p>
-            )}
-
-            {resumen.balanzaAyer != null && (
-              <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
-                <div style={{ fontSize: 13, color: '#6b7280' }}>
-                  Cuadre: balanza de {tituloPeriodo('ayer', 'antes del período')} ({formatoMoneda(resumen.balanzaAyer)}) +{' '}
-                  {tituloPeriodo('utilidad de hoy − gastos de hoy', 'utilidad del período − gastos del período')}{' '}
-                  = {formatoMoneda(resumen.balanzaEsperada!)} esperado
-                </div>
-                {Math.abs(diferencia ?? 0) < 0.01 ? (
-                  <div style={{ color: '#16a34a', fontWeight: 600 }}>✓ Cuadra</div>
-                ) : (
-                  <div className="texto-alerta" style={{ fontWeight: 600 }}>
-                    ⚠ No cuadra. Diferencia: {formatoMoneda(diferencia)}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {yaGuardado?.observacion && (
-              <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e7eb' }}>
-                <strong style={{ fontSize: 13 }}>Observación</strong>
-                <p style={{ fontSize: 13, margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>{yaGuardado.observacion}</p>
-              </div>
-            )}
-          </div>
-        );
-      })()}
     </div>
   );
 }
