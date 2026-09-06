@@ -23,6 +23,99 @@ function describirDiferencia(diferencia: number | null): { texto: string; color:
   return { texto: `⚠ Sobra ${formatoMoneda(diferencia)}`, color: '#b45309' };
 }
 
+// Orden fijo al desglosar nota por nota dentro de un cliente/proveedor:
+// primero efectivo, luego transferencia, y al final lo que no tiene
+// metodo de pago (a credito, sin abono). Mismo criterio que ya usa el
+// backend para ordenar las listas completas.
+const ORDEN_METODO_PAGO: Record<string, number> = { efectivo: 0, transferencia: 1 };
+
+function ordenarPorMetodo<T>(items: T[], getMetodo: (item: T) => string | null): T[] {
+  return [...items].sort((a, b) => {
+    const metodoA = getMetodo(a);
+    const metodoB = getMetodo(b);
+    const ordenA = metodoA ? ORDEN_METODO_PAGO[metodoA] ?? 2 : 3;
+    const ordenB = metodoB ? ORDEN_METODO_PAGO[metodoB] ?? 2 : 3;
+    return ordenA - ordenB;
+  });
+}
+
+interface GrupoNombre<T> {
+  clave: string;
+  subtotal: number;
+  items: T[];
+}
+
+interface GrupoDia<T> {
+  fecha: Date;
+  grupos: GrupoNombre<T>[];
+}
+
+// Agrupa un detalle plano (ventas, compras, pagos...) primero por día,
+// despues por cliente/proveedor (con su subtotal), y adentro de cada uno
+// ordena nota por nota segun la forma de pago -- el orden que se pidio
+// para hacer el recibo del corte mas facil de revisar.
+function agruparPorDiaYNombre<T>(
+  items: T[],
+  getFecha: (item: T) => string,
+  getNombre: (item: T) => string,
+  getMetodo: (item: T) => string | null,
+  getMonto: (item: T) => number
+): GrupoDia<T>[] {
+  const porDia = new Map<string, { fecha: Date; items: T[] }>();
+  for (const item of items) {
+    const f = new Date(getFecha(item));
+    const clave = f.toDateString();
+    let dia = porDia.get(clave);
+    if (!dia) {
+      dia = { fecha: f, items: [] };
+      porDia.set(clave, dia);
+    }
+    dia.items.push(item);
+  }
+
+  return Array.from(porDia.values())
+    .sort((a, b) => a.fecha.getTime() - b.fecha.getTime())
+    .map((dia) => {
+      const porNombre = new Map<string, T[]>();
+      for (const item of dia.items) {
+        const nombre = getNombre(item);
+        const arr = porNombre.get(nombre) ?? [];
+        arr.push(item);
+        porNombre.set(nombre, arr);
+      }
+      const grupos = Array.from(porNombre.entries())
+        .map(([clave, itemsNombre]) => ({
+          clave,
+          subtotal: itemsNombre.reduce((acc, it) => acc + getMonto(it), 0),
+          items: ordenarPorMetodo(itemsNombre, getMetodo),
+        }))
+        .sort((a, b) => a.clave.localeCompare(b.clave));
+      return { fecha: dia.fecha, grupos };
+    });
+}
+
+// Dibuja el desglose ya agrupado: encabezado de día, adentro un renglon
+// por cliente/proveedor con su subtotal, y adentro de cada uno una linea
+// por nota/pago (renderItem), ya ordenada por forma de pago.
+function renderDetalleAgrupado<T>(grupos: GrupoDia<T>[], renderItem: (item: T) => React.ReactNode) {
+  return grupos.map((dia) => (
+    <div key={dia.fecha.toDateString()} style={{ display: 'grid', gap: 6 }}>
+      <div style={{ fontWeight: 700, fontSize: 13, color: '#374151', textTransform: 'capitalize' }}>
+        {dia.fecha.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
+      </div>
+      {dia.grupos.map((g) => (
+        <div key={g.clave} style={{ display: 'grid', gap: 4, paddingLeft: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, fontSize: 13 }}>
+            <span>{g.clave}</span>
+            <span>{formatoMoneda(g.subtotal)}</span>
+          </div>
+          <div style={{ display: 'grid', gap: 2, paddingLeft: 8 }}>{g.items.map(renderItem)}</div>
+        </div>
+      ))}
+    </div>
+  ));
+}
+
 /**
  * Cuerpo del reporte de un corte de caja (todo menos la captura/formulario
  * del dia). Arriba de todo va el veredicto (¿cuadra o no?), para verlo sin
@@ -184,30 +277,36 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             {detalleAbierto.ventas ? 'Ocultar detalle' : `Ver detalle (${resumen.ventas.detalle.length})`}
           </button>
           {detalleAbierto.ventas &&
-            resumen.ventas.detalle.map((v) => {
-              const pagoMixto = v.montoEfectivo > 0 && v.montoTransferencia > 0;
-              return (
-                <div key={v.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>#{v.folio} · {v.cliente} · {v.vendedor} · {v.metodoPago ?? 'crédito'}</span>
-                    <span>
-                      {formatoMoneda(v.total)}{' '}
-                      <small style={{ color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                        ({v.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(v.saldoPendiente)}`})
-                      </small>
-                    </span>
-                  </div>
-                  {pagoMixto && (
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>
-                      Efectivo: {formatoMoneda(v.montoEfectivo)} · Transferencia: {formatoMoneda(v.montoTransferencia)}
+            renderDetalleAgrupado(
+              agruparPorDiaYNombre(
+                resumen.ventas.detalle,
+                (v) => v.fecha,
+                (v) => v.cliente,
+                (v) => v.metodoPago,
+                (v) => v.total
+              ),
+              (v) => {
+                const pagoMixto = v.montoEfectivo > 0 && v.montoTransferencia > 0;
+                return (
+                  <div key={v.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>#{v.folio} · {v.vendedor} · {v.metodoPago ?? 'crédito'}</span>
+                      <span>
+                        {formatoMoneda(v.total)}{' '}
+                        <small style={{ color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                          ({v.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(v.saldoPendiente)}`})
+                        </small>
+                      </span>
                     </div>
-                  )}
-                  {abarcaVariosDias && (
-                    <small style={{ color: '#6b7280' }}>{new Date(v.fecha).toLocaleString()}</small>
-                  )}
-                </div>
-              );
-            })}
+                    {pagoMixto && (
+                      <div style={{ fontSize: 12, color: '#6b7280' }}>
+                        Efectivo: {formatoMoneda(v.montoEfectivo)} · Transferencia: {formatoMoneda(v.montoTransferencia)}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+            )}
         </div>
       )}
 
@@ -229,19 +328,28 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                 {detalleAbierto.pagosClientes ? 'Ocultar detalle' : `Ver detalle (${resumen.pagosClientes.detalle.length})`}
               </button>
               {detalleAbierto.pagosClientes && (
-                <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
-                  {resumen.pagosClientes.detalle.map((p) => (
-                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-                      <span>
-                        Venta #{p.folio} · {p.cliente} · {p.metodoPago}
-                        <br />
-                        <small style={{ color: '#6b7280' }}>
-                          {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
-                        </small>
-                      </span>
-                      <strong>{formatoMoneda(p.monto)}</strong>
-                    </div>
-                  ))}
+                <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
+                  {renderDetalleAgrupado(
+                    agruparPorDiaYNombre(
+                      resumen.pagosClientes.detalle,
+                      (p) => p.fecha,
+                      (p) => p.cliente,
+                      (p) => p.metodoPago,
+                      (p) => p.monto
+                    ),
+                    (p) => (
+                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                        <span>
+                          Venta #{p.folio} · {p.metodoPago}
+                          <br />
+                          <small style={{ color: '#6b7280' }}>
+                            {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
+                          </small>
+                        </span>
+                        <strong>{formatoMoneda(p.monto)}</strong>
+                      </div>
+                    )
+                  )}
                 </div>
               )}
             </>
@@ -264,22 +372,28 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             {detalleAbierto.compras ? 'Ocultar detalle' : `Ver detalle (${resumen.compras.detalle.length})`}
           </button>
           {detalleAbierto.compras &&
-            resumen.compras.detalle.map((c) => (
-              <div key={c.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>{c.proveedor} · {c.numeroFactura || 'sin factura'} · {c.metodoPago ?? 'crédito'}</span>
-                  <span>
-                    {formatoMoneda(c.total)}{' '}
-                    <small style={{ color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
-                      ({c.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(c.saldoPendiente)}`})
-                    </small>
-                  </span>
+            renderDetalleAgrupado(
+              agruparPorDiaYNombre(
+                resumen.compras.detalle,
+                (c) => c.fecha,
+                (c) => c.proveedor,
+                (c) => c.metodoPago,
+                (c) => c.total
+              ),
+              (c) => (
+                <div key={c.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{c.numeroFactura || 'sin factura'} · {c.metodoPago ?? 'crédito'}</span>
+                    <span>
+                      {formatoMoneda(c.total)}{' '}
+                      <small style={{ color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                        ({c.estadoPago === 'pagada' ? 'pagada' : `saldo ${formatoMoneda(c.saldoPendiente)}`})
+                      </small>
+                    </span>
+                  </div>
                 </div>
-                {abarcaVariosDias && (
-                  <small style={{ color: '#6b7280' }}>{new Date(c.fecha).toLocaleString()}</small>
-                )}
-              </div>
-            ))}
+              )
+            )}
         </div>
       )}
 
@@ -332,19 +446,28 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                 {detalleAbierto.pagosProveedores ? 'Ocultar detalle' : `Ver detalle (${resumen.pagosProveedores.detalle.length})`}
               </button>
               {detalleAbierto.pagosProveedores && (
-                <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
-                  {resumen.pagosProveedores.detalle.map((p) => (
-                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
-                      <span>
-                        {p.proveedor} · Factura {p.numeroFactura || 'sin número'} · {p.metodoPago}
-                        <br />
-                        <small style={{ color: '#6b7280' }}>
-                          {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
-                        </small>
-                      </span>
-                      <strong>{formatoMoneda(p.monto)}</strong>
-                    </div>
-                  ))}
+                <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
+                  {renderDetalleAgrupado(
+                    agruparPorDiaYNombre(
+                      resumen.pagosProveedores.detalle,
+                      (p) => p.fecha,
+                      (p) => p.proveedor,
+                      (p) => p.metodoPago,
+                      (p) => p.monto
+                    ),
+                    (p) => (
+                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                        <span>
+                          Factura {p.numeroFactura || 'sin número'} · {p.metodoPago}
+                          <br />
+                          <small style={{ color: '#6b7280' }}>
+                            {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
+                          </small>
+                        </span>
+                        <strong>{formatoMoneda(p.monto)}</strong>
+                      </div>
+                    )
+                  )}
                 </div>
               )}
             </>
