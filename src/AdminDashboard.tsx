@@ -198,8 +198,11 @@ export function AdminDashboard({ onCerrar }: Props) {
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
                 <option value="dia">Hoy</option>
                 <option value="ayer">Ayer</option>
+                <option value="antier">Antier</option>
                 <option value="semana">Esta semana</option>
                 <option value="semana_pasada">Semana pasada</option>
+                <option value="hace_2_semanas">Hace 2 semanas</option>
+                <option value="hace_3_semanas">Hace 3 semanas</option>
                 <option value="mes">Este mes</option>
                 <option value="anio">Este año</option>
                 <option value="rango">Personalizado</option>
