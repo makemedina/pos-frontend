@@ -1,33 +1,46 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
-import { headerAuth, API_URL, buscarProveedores, crearProveedorRapido, type Proveedor } from './api';
+import {
+  headerAuth,
+  API_URL,
+  buscarProveedores,
+  crearProveedorRapido,
+  obtenerGastos,
+  type Proveedor,
+  type CategoriaGasto,
+  type GastoHistorial,
+} from './api';
 import { exportarAExcel } from './exportarExcel';
 
-interface CategoriaGasto {
-  id: string;
-  nombre: string;
-  departamento: string;
-}
-
-interface Gasto {
-  id: string;
-  concepto: string;
-  monto: number;
-  metodoPago: string;
-  fecha: string;
-  categoria: CategoriaGasto;
-  proveedor: { nombre: string } | null;
-  registradoPor: { nombre: string };
-  cancelado: boolean;
-  canceladoEn: string | null;
-  fotoComprobanteKey: string | null;
-}
+type Gasto = GastoHistorial;
 
 interface Props {
   onCerrar: () => void;
 }
 
 const DEPARTAMENTOS = ['Operativos', 'Administrativos', 'Recursos Humanos', 'Financieros'];
+
+type Periodo =
+  | 'dia'
+  | 'ayer'
+  | 'antier'
+  | 'semana'
+  | 'semana_pasada'
+  | 'hace_2_semanas'
+  | 'hace_3_semanas'
+  | 'mes'
+  | 'anio'
+  | 'rango'
+  | 'todos';
+
+function formatDateInput(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+const CARD = { border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 };
 
 export function AdminGastos({ onCerrar }: Props) {
   const [categorias, setCategorias] = useState<CategoriaGasto[]>([]);
@@ -54,6 +67,18 @@ export function AdminGastos({ onCerrar }: Props) {
   const [pestana, setPestana] = useState<'registrar' | 'historico'>('registrar');
   const [busquedaGasto, setBusquedaGasto] = useState('');
 
+  // Reporte de gastos (pestaña Histórico): mismo patrón de filtros que
+  // Historial de compras/ventas.
+  const [periodo, setPeriodo] = useState<Periodo>('mes');
+  const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
+  const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
+  const [categoriaFiltro, setCategoriaFiltro] = useState('');
+  const [metodoPagoFiltro, setMetodoPagoFiltro] = useState('');
+  const [busquedaProveedorFiltro, setBusquedaProveedorFiltro] = useState('');
+  const [resultadosProveedorFiltro, setResultadosProveedorFiltro] = useState<Proveedor[]>([]);
+  const [proveedorFiltro, setProveedorFiltro] = useState<Proveedor | null>(null);
+  const [cargandoHistorial, setCargandoHistorial] = useState(true);
+
   const [confirmandoId, setConfirmandoId] = useState<string | null>(null);
   const [necesitaAutorizacion, setNecesitaAutorizacion] = useState(false);
   const [autorizadoPorTelefono, setAutorizadoPorTelefono] = useState('');
@@ -61,25 +86,59 @@ export function AdminGastos({ onCerrar }: Props) {
   const [cancelando, setCancelando] = useState(false);
 
   useEffect(() => {
-    cargar();
+    cargarCategorias();
   }, []);
 
-  async function cargar() {
+  useEffect(() => {
+    cargarHistorial();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodo, desde, hasta, categoriaFiltro, metodoPagoFiltro, proveedorFiltro]);
+
+  async function cargarCategorias() {
     try {
-      const [catRes, gastoRes] = await Promise.all([
-        fetch(`${API_URL}/gastos/categorias`, { headers: headerAuth() }),
-        fetch(`${API_URL}/gastos`, { headers: headerAuth() }),
-      ]);
-      const categoriasData = await catRes.json();
-      const gastosData = await gastoRes.json();
+      const res = await fetch(`${API_URL}/gastos/categorias`, { headers: headerAuth() });
+      const categoriasData = await res.json();
       setCategorias(categoriasData);
-      setGastos(gastosData);
       if (categoriasData[0] && !categoriasData.some((c: CategoriaGasto) => c.id === categoriaId)) {
         setCategoriaId(categoriasData[0].id);
       }
     } catch {
-      setMensaje('No se pudo cargar los gastos');
+      setMensaje('No se pudo cargar las categorías de gasto');
     }
+  }
+
+  async function cargarHistorial() {
+    setCargandoHistorial(true);
+    try {
+      const data = await obtenerGastos({
+        periodo,
+        desde: periodo === 'rango' ? desde : undefined,
+        hasta: periodo === 'rango' ? hasta : undefined,
+        categoriaId: categoriaFiltro || undefined,
+        proveedorId: proveedorFiltro?.id,
+        metodoPago: metodoPagoFiltro || undefined,
+      });
+      setGastos(data);
+    } catch {
+      setMensaje('No se pudo cargar el reporte de gastos.');
+    } finally {
+      setCargandoHistorial(false);
+    }
+  }
+
+  async function buscarProveedorFiltro(valor: string) {
+    setBusquedaProveedorFiltro(valor);
+    if (valor.length < 2) {
+      setResultadosProveedorFiltro([]);
+      return;
+    }
+    setResultadosProveedorFiltro(await buscarProveedores(valor));
+  }
+
+  function elegirProveedorFiltro(p: Proveedor) {
+    setProveedorFiltro(p);
+    setResultadosProveedorFiltro([]);
+    setBusquedaProveedorFiltro('');
   }
 
   async function buscarProveedor(valor: string) {
@@ -153,7 +212,7 @@ export function AdminGastos({ onCerrar }: Props) {
       setNecesitaAutorizacion(false);
       setAutorizadoPorTelefono('');
       setAutorizadoPin('');
-      cargar();
+      cargarHistorial();
     } finally {
       setCancelando(false);
     }
@@ -204,7 +263,7 @@ export function AdminGastos({ onCerrar }: Props) {
       if (previaFoto) URL.revokeObjectURL(previaFoto);
       setFotoComprobante(null);
       setPreviaFoto(null);
-      cargar();
+      cargarHistorial();
     } catch (err: any) {
       setMensaje(err.message || 'No se pudo registrar el gasto');
     } finally {
@@ -265,6 +324,16 @@ export function AdminGastos({ onCerrar }: Props) {
       (g.proveedor?.nombre || '').toLowerCase().includes(q)
     );
   });
+
+  // Los totales/subtotales del reporte no cuentan los gastos cancelados
+  // -- ese dinero nunca salio de verdad, igual que en el corte de caja.
+  const gastosActivos = gastosFiltrados.filter((g) => !g.cancelado);
+  const totalPeriodo = gastosActivos.reduce((acc, g) => acc + Number(g.monto), 0);
+  const totalPorDepartamento = gastosActivos.reduce<Record<string, number>>((acc, g) => {
+    const dep = g.categoria.departamento;
+    acc[dep] = (acc[dep] ?? 0) + Number(g.monto);
+    return acc;
+  }, {});
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
@@ -419,6 +488,112 @@ export function AdminGastos({ onCerrar }: Props) {
 
         {pestana === 'historico' && (
           <>
+            <div style={{ ...CARD, display: 'grid', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                  <span>Periodo</span>
+                  <select value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
+                    <option value="dia">Hoy</option>
+                    <option value="ayer">Ayer</option>
+                    <option value="antier">Antier</option>
+                    <option value="semana">Esta semana</option>
+                    <option value="semana_pasada">Semana pasada</option>
+                    <option value="hace_2_semanas">Hace 2 semanas</option>
+                    <option value="hace_3_semanas">Hace 3 semanas</option>
+                    <option value="mes">Este mes</option>
+                    <option value="anio">Este año</option>
+                    <option value="rango">Personalizado</option>
+                    <option value="todos">Todos</option>
+                  </select>
+                </label>
+
+                {periodo === 'rango' && (
+                  <>
+                    <label style={{ display: 'grid', gap: '0.25rem' }}>
+                      <span>Desde</span>
+                      <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
+                    </label>
+                    <label style={{ display: 'grid', gap: '0.25rem' }}>
+                      <span>Hasta</span>
+                      <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+                    </label>
+                  </>
+                )}
+
+                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                  <span>Categoría</span>
+                  <select value={categoriaFiltro} onChange={(e) => setCategoriaFiltro(e.target.value)}>
+                    <option value="">Todas</option>
+                    {Object.entries(categoriasPorDepartamento).map(([departamento, cats]) => (
+                      <optgroup key={departamento} label={departamento}>
+                        {cats.map((c) => (
+                          <option key={c.id} value={c.id}>{c.nombre}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </label>
+
+                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                  <span>Método de pago</span>
+                  <select value={metodoPagoFiltro} onChange={(e) => setMetodoPagoFiltro(e.target.value)}>
+                    <option value="">Todos</option>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="transferencia">Transferencia</option>
+                  </select>
+                </label>
+              </div>
+
+              <div>
+                <span style={{ display: 'block', marginBottom: 4 }}>Proveedor</span>
+                {proveedorFiltro ? (
+                  <div className="cliente-chip">
+                    <span>{proveedorFiltro.nombre}</span>
+                    <button onClick={() => setProveedorFiltro(null)}>Quitar filtro</button>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      className="buscador"
+                      placeholder="Buscar proveedor"
+                      value={busquedaProveedorFiltro}
+                      onChange={(e) => buscarProveedorFiltro(e.target.value)}
+                    />
+                    {resultadosProveedorFiltro.map((p) => (
+                      <div key={p.id} className="resultado-cliente" onClick={() => elegirProveedorFiltro(p)}>
+                        {p.nombre}
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {!cargandoHistorial && (
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <div style={{ ...CARD, flex: 1 }}>
+                  <strong>{gastosActivos.length}</strong> gasto{gastosActivos.length !== 1 ? 's' : ''}
+                </div>
+                <div style={{ ...CARD, flex: 1 }}>
+                  Total: <strong>{formatoMoneda(totalPeriodo)}</strong>
+                </div>
+              </div>
+            )}
+
+            {!cargandoHistorial && Object.keys(totalPorDepartamento).length > 0 && (
+              <div style={{ ...CARD, display: 'grid', gap: 4 }}>
+                <strong style={{ fontSize: 13 }}>Por departamento</strong>
+                {Object.entries(totalPorDepartamento)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([departamento, monto]) => (
+                    <div key={departamento} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                      <span>{departamento}</span>
+                      <span>{formatoMoneda(monto)}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+
             <input
               className="buscador"
               placeholder="Buscar por concepto, categoría o proveedor"
@@ -426,8 +601,11 @@ export function AdminGastos({ onCerrar }: Props) {
               onChange={(e) => setBusquedaGasto(e.target.value)}
             />
             <div style={{ display: 'grid', gap: '0.75rem' }}>
-              {gastosFiltrados.length === 0 && <p style={{ color: '#6b7280' }}>No hay gastos que coincidan.</p>}
-              {gastosFiltrados.map((gasto) => (
+              {cargandoHistorial && <p>Cargando...</p>}
+              {!cargandoHistorial && gastosFiltrados.length === 0 && (
+                <p style={{ color: '#6b7280' }}>No hay gastos que coincidan.</p>
+              )}
+              {!cargandoHistorial && gastosFiltrados.map((gasto) => (
                 <div key={gasto.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <div>

@@ -1538,6 +1538,54 @@ export async function obtenerHistorialCompras(filtros: FiltrosHistorialCompras):
   return res.json();
 }
 
+// ---------- GASTOS (reporte) ----------
+
+export interface CategoriaGasto {
+  id: string;
+  nombre: string;
+  departamento: string;
+}
+
+export interface GastoHistorial {
+  id: string;
+  concepto: string;
+  monto: number;
+  metodoPago: string;
+  fecha: string;
+  categoria: CategoriaGasto;
+  proveedor: { nombre: string } | null;
+  registradoPor: { nombre: string };
+  cancelado: boolean;
+  canceladoEn: string | null;
+  fotoComprobanteKey: string | null;
+}
+
+export interface FiltrosHistorialGastos {
+  periodo?: 'todos' | 'dia' | 'ayer' | 'antier' | 'semana' | 'semana_pasada' | 'hace_2_semanas' | 'hace_3_semanas' | 'mes' | 'anio' | 'rango';
+  desde?: string;
+  hasta?: string;
+  categoriaId?: string;
+  proveedorId?: string;
+  metodoPago?: string;
+}
+
+export async function obtenerGastos(filtros: FiltrosHistorialGastos = {}): Promise<GastoHistorial[]> {
+  const params = new URLSearchParams();
+  if (filtros.periodo) params.set('periodo', filtros.periodo);
+  if (filtros.desde) params.set('desde', filtros.desde);
+  if (filtros.hasta) params.set('hasta', filtros.hasta);
+  if (filtros.categoriaId) params.set('categoriaId', filtros.categoriaId);
+  if (filtros.proveedorId) params.set('proveedorId', filtros.proveedorId);
+  if (filtros.metodoPago) params.set('metodoPago', filtros.metodoPago);
+
+  const res = await fetch(`${API_URL}/gastos?${params.toString()}`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el reporte de gastos');
+  }
+  return res.json();
+}
+
 // ---------- MOVIMIENTOS DE INVENTARIO (reporte) ----------
 
 export interface MovimientoInventario {
