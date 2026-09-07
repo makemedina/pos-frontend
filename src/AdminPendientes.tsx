@@ -4,7 +4,9 @@ import {
   crearPendiente,
   actualizarPendiente,
   eliminarPendiente,
+  obtenerClientesConSaldo,
   type Pendiente,
+  type ClienteConSaldo,
 } from './api';
 
 interface Props {
@@ -37,9 +39,27 @@ export function AdminPendientes({ onCerrar }: Props) {
   const [notas, setNotas] = useState('');
   const [guardando, setGuardando] = useState(false);
 
+  const [clientes, setClientes] = useState<ClienteConSaldo[]>([]);
+  const [clienteElegido, setClienteElegido] = useState<ClienteConSaldo | null>(null);
+  const [busquedaCliente, setBusquedaCliente] = useState('');
+  const [listaClienteAbierta, setListaClienteAbierta] = useState(false);
+
   useEffect(() => {
     cargar();
+    obtenerClientesConSaldo('todos')
+      .then(setClientes)
+      .catch(() => {});
   }, []);
+
+  const clientesFiltrados = clientes.filter(
+    (c) => !busquedaCliente.trim() || c.nombre.toLowerCase().includes(busquedaCliente.trim().toLowerCase())
+  );
+
+  function elegirCliente(c: ClienteConSaldo) {
+    setClienteElegido(c);
+    setBusquedaCliente('');
+    setListaClienteAbierta(false);
+  }
 
   async function cargar() {
     setCargando(true);
@@ -57,10 +77,16 @@ export function AdminPendientes({ onCerrar }: Props) {
     if (!concepto.trim() || !fecha) return;
     setGuardando(true);
     try {
-      await crearPendiente({ concepto: concepto.trim(), fecha, notas: notas.trim() || undefined });
+      await crearPendiente({
+        concepto: concepto.trim(),
+        fecha,
+        notas: notas.trim() || undefined,
+        clienteId: clienteElegido?.id,
+      });
       setConcepto('');
       setNotas('');
       setFecha(formatDateInput(new Date()));
+      setClienteElegido(null);
       setFormAbierto(false);
       cargar();
     } catch {
@@ -123,6 +149,15 @@ export function AdminPendientes({ onCerrar }: Props) {
                 {new Date(p.fecha).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
                 {vencido && ' · Vencido'}
               </div>
+              {p.cliente && (
+                <div style={{ fontSize: 13, color: '#374151', marginTop: 4 }}>
+                  🧑‍🤝‍🧑 {p.cliente.nombre}
+                  {' · '}
+                  <a href={`tel:${p.cliente.telefono}`} onClick={(e) => e.stopPropagation()}>
+                    📞 {p.cliente.telefono}
+                  </a>
+                </div>
+              )}
               {p.notas && <div style={{ fontSize: 13, color: '#374151', marginTop: 4 }}>{p.notas}</div>}
               <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Agregado por {p.registradoPor.nombre}</div>
             </span>
@@ -173,6 +208,56 @@ export function AdminPendientes({ onCerrar }: Props) {
               <span>¿Qué día?</span>
               <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
             </label>
+            <div style={{ display: 'grid', gap: '0.25rem', position: 'relative' }}>
+              <span>Cliente (opcional)</span>
+              {clienteElegido ? (
+                <div className="cliente-chip">
+                  <span>{clienteElegido.nombre}</span>
+                  <button onClick={() => setClienteElegido(null)}>Quitar</button>
+                </div>
+              ) : (
+                <>
+                  <input
+                    className="buscador"
+                    placeholder="Teclea el nombre o elige de la lista"
+                    value={busquedaCliente}
+                    onChange={(e) => setBusquedaCliente(e.target.value)}
+                    onFocus={() => setListaClienteAbierta(true)}
+                    onBlur={() => setTimeout(() => setListaClienteAbierta(false), 150)}
+                  />
+                  {listaClienteAbierta && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        zIndex: 10,
+                        maxHeight: 220,
+                        overflowY: 'auto',
+                        background: '#fff',
+                        borderRadius: 10,
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                      }}
+                    >
+                      {clientesFiltrados.length === 0 ? (
+                        <div style={{ padding: '0.5rem 0.75rem', color: '#6b7280', fontSize: 13 }}>Sin resultados.</div>
+                      ) : (
+                        clientesFiltrados.map((c) => (
+                          <div
+                            key={c.id}
+                            className="resultado-cliente"
+                            onMouseDown={() => elegirCliente(c)}
+                          >
+                            {c.nombre}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
             <label style={{ display: 'grid', gap: '0.25rem' }}>
               <span>Notas (opcional)</span>
               <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} style={{ resize: 'vertical' }} />

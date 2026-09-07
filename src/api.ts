@@ -390,6 +390,7 @@ export interface Pendiente {
   fecha: string;
   hecho: boolean;
   notas: string | null;
+  cliente: { id: string; nombre: string; telefono: string } | null;
   registradoPor: { nombre: string };
   creadoEn: string;
 }
@@ -412,7 +413,7 @@ export async function obtenerPendientesDeHoy(): Promise<Pendiente[]> {
   return res.json();
 }
 
-export async function crearPendiente(datos: { concepto: string; fecha: string; notas?: string }): Promise<Pendiente> {
+export async function crearPendiente(datos: { concepto: string; fecha: string; notas?: string; clienteId?: string }): Promise<Pendiente> {
   const res = await fetch(`${API_URL}/pendientes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
@@ -427,7 +428,7 @@ export async function crearPendiente(datos: { concepto: string; fecha: string; n
 
 export async function actualizarPendiente(
   id: string,
-  datos: { hecho?: boolean; concepto?: string; fecha?: string; notas?: string }
+  datos: { hecho?: boolean; concepto?: string; fecha?: string; notas?: string; clienteId?: string | null }
 ): Promise<void> {
   const res = await fetch(`${API_URL}/pendientes/${id}`, {
     method: 'PUT',

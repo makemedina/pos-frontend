@@ -190,6 +190,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
                   />
                   <span>
                     <strong style={{ textDecoration: p.hecho ? 'line-through' : 'none' }}>{p.concepto}</strong>
+                    {p.cliente && <div style={{ fontSize: 13, color: '#374151' }}>🧑‍🤝‍🧑 {p.cliente.nombre}</div>}
                     {p.notas && <div style={{ fontSize: 13, color: '#374151' }}>{p.notas}</div>}
                   </span>
                 </label>
