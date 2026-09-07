@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda, etiquetaMetodoPago } from './formato';
-import { exportarAExcel } from './exportarExcel';
+import { exportarAExcel, numeroSemana } from './exportarExcel';
 import { VentaDetalleModal } from './VentaDetalleModal';
 import {
   obtenerHistorialVentas,
@@ -143,7 +143,9 @@ export function AdminHistorialVentas({
       const filas = ventas.flatMap((v) =>
         v.items.map((it) => ({
           Folio: v.folio,
-          Fecha: new Date(v.fecha).toLocaleString(),
+          Fecha: new Date(v.fecha).toLocaleDateString(),
+          Hora: new Date(v.fecha).toLocaleTimeString(),
+          Semana: numeroSemana(new Date(v.fecha)),
           Cliente: v.cliente.nombre,
           Vendedor: v.vendedor.nombre,
           Producto: it.producto,

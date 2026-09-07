@@ -10,7 +10,7 @@ import {
   type CategoriaGasto,
   type GastoHistorial,
 } from './api';
-import { exportarAExcel } from './exportarExcel';
+import { exportarAExcel, numeroSemana } from './exportarExcel';
 
 type Gasto = GastoHistorial;
 
@@ -294,7 +294,9 @@ export function AdminGastos({ onCerrar }: Props) {
     try {
       await exportarAExcel(
         gastosFiltrados.map((g) => ({
-          Fecha: new Date(g.fecha).toLocaleString(),
+          Fecha: new Date(g.fecha).toLocaleDateString(),
+          Hora: new Date(g.fecha).toLocaleTimeString(),
+          Semana: numeroSemana(new Date(g.fecha)),
           Concepto: g.concepto,
           Categoria: g.categoria.nombre,
           Departamento: g.categoria.departamento,

@@ -5,6 +5,15 @@
 
 export class SinDatosParaExportarError extends Error {}
 
+/** Numero de semana ISO 8601 (1-53), la misma convencion usada en los calendarios. */
+export function numeroSemana(fecha: Date): number {
+  const d = new Date(Date.UTC(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()));
+  const diaSemana = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - diaSemana);
+  const inicioAnio = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((d.getTime() - inicioAnio.getTime()) / 86400000 + 1) / 7);
+}
+
 export async function exportarAExcel(
   filas: Record<string, any>[],
   nombreArchivo: string,

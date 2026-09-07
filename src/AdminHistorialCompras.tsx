@@ -6,7 +6,7 @@ import {
   type CompraHistorial,
   type Proveedor,
 } from './api';
-import { exportarAExcel } from './exportarExcel';
+import { exportarAExcel, numeroSemana } from './exportarExcel';
 import { CompraDetalleModal } from './CompraDetalleModal';
 
 interface Props {
@@ -93,6 +93,8 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
       const filas = compras.flatMap((c) =>
         c.items.map((it) => ({
           Fecha: new Date(c.fecha).toLocaleDateString(),
+          Hora: new Date(c.fecha).toLocaleTimeString(),
+          Semana: numeroSemana(new Date(c.fecha)),
           Proveedor: c.proveedor.nombre,
           Factura: c.numeroFactura || '',
           Producto: it.producto,

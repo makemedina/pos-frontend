@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
 import { headerAuth, API_URL } from './api';
-import { exportarAExcel } from './exportarExcel';
+import { exportarAExcel, numeroSemana } from './exportarExcel';
 
 interface Deposito {
   id: string;
@@ -99,7 +99,9 @@ export function AdminDepositos({ onCerrar }: Props) {
     try {
       await exportarAExcel(
         depositosFiltrados.map((d) => ({
-          Fecha: new Date(d.fecha).toLocaleString(),
+          Fecha: new Date(d.fecha).toLocaleDateString(),
+          Hora: new Date(d.fecha).toLocaleTimeString(),
+          Semana: numeroSemana(new Date(d.fecha)),
           Monto: Number(d.monto),
           Notas: d.notas || '',
           'Registrado por': d.registradoPor.nombre,

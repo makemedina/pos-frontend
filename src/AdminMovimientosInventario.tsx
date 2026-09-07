@@ -7,7 +7,7 @@ import {
   type ResumenMovimientosInventario,
   type Producto,
 } from './api';
-import { exportarAExcel } from './exportarExcel';
+import { exportarAExcel, numeroSemana } from './exportarExcel';
 
 interface Props {
   onCerrar: () => void;
@@ -103,7 +103,9 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
     try {
       await exportarAExcel(
         movimientos.map((m) => ({
-          Fecha: new Date(m.fecha).toLocaleString(),
+          Fecha: new Date(m.fecha).toLocaleDateString(),
+          Hora: new Date(m.fecha).toLocaleTimeString(),
+          Semana: numeroSemana(new Date(m.fecha)),
           Tipo: ETIQUETAS_TIPO[m.tipo].texto,
           Producto: m.producto,
           Marca: m.marca,
