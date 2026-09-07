@@ -384,6 +384,70 @@ export async function actualizarLlamadaCliente(
   }
 }
 
+export interface Pendiente {
+  id: string;
+  concepto: string;
+  fecha: string;
+  hecho: boolean;
+  notas: string | null;
+  registradoPor: { nombre: string };
+  creadoEn: string;
+}
+
+export async function obtenerPendientes(incluirHechos = false): Promise<Pendiente[]> {
+  const res = await fetch(`${API_URL}/pendientes?incluirHechos=${incluirHechos}`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los pendientes');
+  }
+  return res.json();
+}
+
+export async function obtenerPendientesDeHoy(): Promise<Pendiente[]> {
+  const res = await fetch(`${API_URL}/pendientes/hoy`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los pendientes de hoy');
+  }
+  return res.json();
+}
+
+export async function crearPendiente(datos: { concepto: string; fecha: string; notas?: string }): Promise<Pendiente> {
+  const res = await fetch(`${API_URL}/pendientes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(datos),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo crear el pendiente');
+  }
+  return res.json();
+}
+
+export async function actualizarPendiente(
+  id: string,
+  datos: { hecho?: boolean; concepto?: string; fecha?: string; notas?: string }
+): Promise<void> {
+  const res = await fetch(`${API_URL}/pendientes/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(datos),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo actualizar el pendiente');
+  }
+}
+
+export async function eliminarPendiente(id: string): Promise<void> {
+  const res = await fetch(`${API_URL}/pendientes/${id}`, { method: 'DELETE', headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo eliminar el pendiente');
+  }
+}
+
 export interface DireccionInput {
   calle?: string;
   colonia?: string;

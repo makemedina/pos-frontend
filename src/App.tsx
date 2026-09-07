@@ -42,6 +42,7 @@ import { AdminAjusteInventario } from './AdminAjusteInventario';
 import { AdminProductos } from './AdminProductos';
 import { AdminClientes } from './AdminClientes';
 import { AdminLlamadasHoy } from './AdminLlamadasHoy';
+import { AdminPendientes } from './AdminPendientes';
 import { AdminProveedores } from './AdminProveedores';
 import { AdminMovimientosInventario } from './AdminMovimientosInventario';
 import { AdminAntiguedadStock } from './AdminAntiguedadStock';
@@ -83,6 +84,7 @@ type Pantalla =
   | 'ajuste'
   | 'clientes'
   | 'llamadasHoy'
+  | 'pendientes'
   | 'movimientosInventario'
   | 'productos'
   | 'antiguedadStock'
@@ -166,6 +168,8 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
       return true; // cualquiera puede ver clientes; el switch de credito se oculta si no es admin
     case 'llamadasHoy':
       return true; // cualquiera puede ver a quien llamarle hoy
+    case 'pendientes':
+      return true; // cualquiera puede ver y agregar recordatorios
     case 'movimientosInventario':
       return !!usuario.permisos?.puedeVerCostos;
     case 'productos':
@@ -729,6 +733,7 @@ export default function App() {
       return renderSubmenu('Clientes', [
         { pantalla: 'clientes', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Alta, edición y datos', clase: 'boton-flotante-cartera' },
         { pantalla: 'llamadasHoy', icono: '📞', titulo: 'Llamadas de hoy', descripcion: 'A quién hablarle hoy para ofrecer producto', clase: 'boton-flotante-cartera' },
+        { pantalla: 'pendientes', icono: '📝', titulo: 'Pendientes', descripcion: 'Recordatorios y tareas programadas', clase: 'boton-flotante-cartera' },
       ]);
     }
     if (pantallaActiva === 'cuentasPorCobrarMenu') {
@@ -878,6 +883,9 @@ export default function App() {
     }
     if (pantallaActiva === 'llamadasHoy') {
       return <AdminLlamadasHoy onCerrar={() => abrirPantalla('clientesMenu')} />;
+    }
+    if (pantallaActiva === 'pendientes') {
+      return <AdminPendientes onCerrar={() => abrirPantalla('clientesMenu')} />;
     }
     if (pantallaActiva === 'movimientosInventario') {
       return <AdminMovimientosInventario onCerrar={() => abrirPantalla('inventarioMenu')} />;

@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { obtenerLlamadasDeHoy, actualizarLlamadaCliente, type LlamadaHoy } from './api';
+import {
+  obtenerLlamadasDeHoy,
+  actualizarLlamadaCliente,
+  obtenerPendientesDeHoy,
+  actualizarPendiente,
+  type LlamadaHoy,
+  type Pendiente,
+} from './api';
 
 interface Props {
   onCerrar: () => void;
@@ -20,6 +27,7 @@ function linkWhatsapp(telefono: string, mensaje: string) {
 
 export function AdminLlamadasHoy({ onCerrar }: Props) {
   const [llamadas, setLlamadas] = useState<LlamadaHoy[]>([]);
+  const [pendientesHoy, setPendientesHoy] = useState<Pendiente[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [guardandoId, setGuardandoId] = useState<string | null>(null);
@@ -31,11 +39,26 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
   async function cargar() {
     setCargando(true);
     try {
-      setLlamadas(await obtenerLlamadasDeHoy());
+      const [llamadasHoy, pendientes] = await Promise.all([obtenerLlamadasDeHoy(), obtenerPendientesDeHoy()]);
+      setLlamadas(llamadasHoy);
+      setPendientesHoy(pendientes);
     } catch {
       setMensaje('No se pudieron cargar las llamadas de hoy.');
     } finally {
       setCargando(false);
+    }
+  }
+
+  async function toggleHechoPendiente(p: Pendiente) {
+    setPendientesHoy((prev) => prev.map((x) => (x.id === p.id ? { ...x, hecho: !p.hecho } : x)));
+    setGuardandoId(p.id);
+    try {
+      await actualizarPendiente(p.id, { hecho: !p.hecho });
+    } catch {
+      setMensaje('No se pudo guardar. Intenta otra vez.');
+      cargar();
+    } finally {
+      setGuardandoId(null);
     }
   }
 
@@ -143,9 +166,41 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
+        {!cargando && pendientesHoy.length > 0 && (
+          <div style={{ display: 'grid', gap: '0.5rem' }}>
+            <strong style={{ fontSize: 13, color: '#6b7280' }}>Pendientes de hoy ({pendientesHoy.length})</strong>
+            {pendientesHoy.map((p) => (
+              <div
+                key={p.id}
+                style={{
+                  border: 'none',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
+                  padding: '0.75rem',
+                  borderRadius: 14,
+                  opacity: p.hecho ? 0.6 : 1,
+                }}
+              >
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={p.hecho}
+                    disabled={guardandoId === p.id}
+                    onChange={() => toggleHechoPendiente(p)}
+                    style={{ marginTop: 3 }}
+                  />
+                  <span>
+                    <strong style={{ textDecoration: p.hecho ? 'line-through' : 'none' }}>{p.concepto}</strong>
+                    {p.notas && <div style={{ fontSize: 13, color: '#374151' }}>{p.notas}</div>}
+                  </span>
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
+
         {cargando ? (
           <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>
-        ) : llamadas.length === 0 ? (
+        ) : llamadas.length === 0 && pendientesHoy.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#6b7280' }}>
             Nadie tiene hoy configurado como día de llamada. Puedes elegir los días de cada cliente en su
             ficha, dentro de Clientes.
