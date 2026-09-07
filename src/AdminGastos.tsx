@@ -302,6 +302,8 @@ export function AdminGastos({ onCerrar }: Props) {
           Monto: Number(g.monto),
           'Metodo de pago': g.metodoPago,
           'Registrado por': g.registradoPor.nombre,
+          Cancelado: g.cancelado ? 'Sí' : 'No',
+          'Cancelado el': g.canceladoEn ? new Date(g.canceladoEn).toLocaleString() : '',
         })),
         'gastos'
       );

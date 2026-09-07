@@ -158,6 +158,8 @@ export function AdminHistorialVentas({
           'Saldo pendiente': v.saldoPendiente,
           Estado: v.estadoPago,
           'Metodo(s) de pago': v.metodosPago.map(etiquetaMetodoPago).join(', '),
+          Cancelada: v.cancelada ? 'Sí' : 'No',
+          'Cancelada el': v.canceladaEn ? new Date(v.canceladaEn).toLocaleString() : '',
         }))
       );
       await exportarAExcel(filas, 'historial-ventas');

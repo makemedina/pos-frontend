@@ -104,6 +104,8 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
           'Saldo pendiente': c.saldoPendiente,
           Estado: c.estadoPago,
           'Metodo(s) de pago': c.metodosPago.join(', '),
+          Cancelada: c.cancelada ? 'Sí' : 'No',
+          'Cancelada el': c.canceladaEn ? new Date(c.canceladaEn).toLocaleString() : '',
         }))
       );
       await exportarAExcel(filas, 'historial-compras');
