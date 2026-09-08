@@ -308,6 +308,8 @@ export interface ClienteConSaldo extends DireccionCampos {
   ciudadEntrega: string | null;
   estadoEntrega: string | null;
   codigoPostalEntrega: string | null;
+  // Link al perfil/pin en Google Maps (o un Plus Code) -- texto libre.
+  googleMapsUrl: string | null;
   permiteVentaCredito: boolean;
   saldoInicial: number;
   saldoTotal: number;
@@ -460,6 +462,7 @@ export interface DireccionInput {
   ciudadEntrega?: string;
   estadoEntrega?: string;
   codigoPostalEntrega?: string;
+  googleMapsUrl?: string;
 }
 
 export async function crearClienteCompleto(

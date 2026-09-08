@@ -161,6 +161,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [editTelefono, setEditTelefono] = useState('');
   const [editDireccionNegocio, setEditDireccionNegocio] = useState<CamposDireccion>(DIRECCION_VACIA);
   const [editDireccionEntrega, setEditDireccionEntrega] = useState<CamposDireccion>(DIRECCION_VACIA);
+  const [editGoogleMapsUrl, setEditGoogleMapsUrl] = useState('');
   const [entregaIgualQueNegocio, setEntregaIgualQueNegocio] = useState(true);
   const [editPermiteCredito, setEditPermiteCredito] = useState(true);
   const [editDiasLlamada, setEditDiasLlamada] = useState<number[]>([]);
@@ -271,6 +272,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       const entregaCargada = direccionEntregaDe(data);
       setEditDireccionEntrega(entregaCargada);
       setEntregaIgualQueNegocio(direccionEstaVacia(entregaCargada));
+      setEditGoogleMapsUrl(data.googleMapsUrl || '');
       setEditPermiteCredito(data.permiteVentaCredito);
       setEditDiasLlamada(data.diasLlamada || []);
     } catch {
@@ -286,6 +288,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         const entregaCache = direccionEntregaDe(enLista);
         setEditDireccionEntrega(entregaCache);
         setEntregaIgualQueNegocio(direccionEstaVacia(entregaCache));
+        setEditGoogleMapsUrl(enLista.googleMapsUrl || '');
         setEditPermiteCredito(enLista.permiteVentaCredito);
         setMensaje('Sin conexión: datos guardados localmente. Transacciones y movimientos no están disponibles.');
       } else {
@@ -323,6 +326,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         ciudadEntrega: entregaAGuardar.ciudad,
         estadoEntrega: entregaAGuardar.estado,
         codigoPostalEntrega: entregaAGuardar.codigoPostal,
+        googleMapsUrl: editGoogleMapsUrl,
       };
       if (esAdmin) datos.permiteVentaCredito = editPermiteCredito;
       const [actualizado] = await Promise.all([
@@ -578,6 +582,29 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 </label>
                 <label className="etiqueta">Domicilio (dirección del negocio)</label>
                 <FormularioDireccion valores={editDireccionNegocio} onChange={setEditDireccionNegocio} />
+
+                <label>
+                  Google Maps (link o Plus Code, opcional)
+                  <input
+                    placeholder="Pega el link del perfil en Maps o un Plus Code"
+                    value={editGoogleMapsUrl}
+                    onChange={(e) => setEditGoogleMapsUrl(e.target.value)}
+                  />
+                </label>
+                {editGoogleMapsUrl.trim() && (
+                  <a
+                    href={
+                      editGoogleMapsUrl.trim().startsWith('http')
+                        ? editGoogleMapsUrl.trim()
+                        : linkGoogleMaps(editGoogleMapsUrl.trim())
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 13, justifySelf: 'start' }}
+                  >
+                    📍 Abrir en Google Maps
+                  </a>
+                )}
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
                   <input
