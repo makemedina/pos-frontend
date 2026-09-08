@@ -2086,3 +2086,35 @@ export async function descargarBackup(key: string): Promise<void> {
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+// ---------- NOTIFICACIONES PUSH ----------
+
+export async function obtenerVapidPublicKey(): Promise<string> {
+  const res = await fetch(`${API_URL}/push/vapid-public-key`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Las notificaciones push no estan disponibles');
+  }
+  const data = await res.json();
+  return data.publicKey;
+}
+
+export async function suscribirsePush(suscripcion: PushSubscription): Promise<void> {
+  const res = await fetch(`${API_URL}/push/suscribirse`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(suscripcion.toJSON()),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo activar las notificaciones');
+  }
+}
+
+export async function desuscribirsePush(endpoint: string): Promise<void> {
+  await fetch(`${API_URL}/push/desuscribirse`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ endpoint }),
+  });
+}

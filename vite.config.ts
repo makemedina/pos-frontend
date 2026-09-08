@@ -37,6 +37,10 @@ export default defineConfig({
             options: { cacheName: 'catalogo-cache' },
           },
         ],
+        // Le agrega al service worker generado el manejo de notificaciones
+        // push (ver public/push-sw.js) sin tener que cambiar de estrategia
+        // (generateSW) a un service worker propio.
+        importScripts: ['push-sw.js'],
       },
     }),
   ],

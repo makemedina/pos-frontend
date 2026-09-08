@@ -8,6 +8,7 @@ import {
   type Pendiente,
   type ClienteConSaldo,
 } from './api';
+import { notificacionesSoportadas, notificacionesActivadas, activarNotificaciones, desactivarNotificaciones } from './push';
 
 interface Props {
   onCerrar: () => void;
@@ -44,12 +45,39 @@ export function AdminPendientes({ onCerrar }: Props) {
   const [busquedaCliente, setBusquedaCliente] = useState('');
   const [listaClienteAbierta, setListaClienteAbierta] = useState(false);
 
+  const [notifSoportadas] = useState(notificacionesSoportadas());
+  const [notifActivas, setNotifActivas] = useState(false);
+  const [cambiandoNotif, setCambiandoNotif] = useState(false);
+
   useEffect(() => {
     cargar();
     obtenerClientesConSaldo('todos')
       .then(setClientes)
       .catch(() => {});
+    if (notifSoportadas) {
+      notificacionesActivadas()
+        .then(setNotifActivas)
+        .catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function toggleNotificaciones() {
+    setCambiandoNotif(true);
+    try {
+      if (notifActivas) {
+        await desactivarNotificaciones();
+        setNotifActivas(false);
+      } else {
+        await activarNotificaciones();
+        setNotifActivas(true);
+      }
+    } catch (err: any) {
+      setMensaje(err?.message || 'No se pudieron activar las notificaciones.');
+    } finally {
+      setCambiandoNotif(false);
+    }
+  }
 
   const clientesFiltrados = clientes.filter(
     (c) => !busquedaCliente.trim() || c.nombre.toLowerCase().includes(busquedaCliente.trim().toLowerCase())
@@ -190,6 +218,22 @@ export function AdminPendientes({ onCerrar }: Props) {
           Recordatorios y tareas sueltas programadas para un día específico. Los de hoy también aparecen en
           "Llamadas de hoy".
         </p>
+
+        {notifSoportadas && (
+          <button
+            onClick={toggleNotificaciones}
+            disabled={cambiandoNotif}
+            style={{
+              justifySelf: 'start',
+              background: notifActivas ? '#dcfce7' : '#f3f4f6',
+              color: notifActivas ? '#166534' : '#111',
+              fontSize: 13,
+              padding: '6px 12px',
+            }}
+          >
+            {notifActivas ? '🔔 Notificaciones activadas' : '🔕 Activar notificaciones push'}
+          </button>
+        )}
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
