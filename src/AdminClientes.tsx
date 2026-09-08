@@ -162,6 +162,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [editDireccionNegocio, setEditDireccionNegocio] = useState<CamposDireccion>(DIRECCION_VACIA);
   const [editDireccionEntrega, setEditDireccionEntrega] = useState<CamposDireccion>(DIRECCION_VACIA);
   const [editGoogleMapsUrl, setEditGoogleMapsUrl] = useState('');
+  const [editNotas, setEditNotas] = useState('');
   const [entregaIgualQueNegocio, setEntregaIgualQueNegocio] = useState(true);
   const [editPermiteCredito, setEditPermiteCredito] = useState(true);
   const [editDiasLlamada, setEditDiasLlamada] = useState<number[]>([]);
@@ -273,6 +274,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       setEditDireccionEntrega(entregaCargada);
       setEntregaIgualQueNegocio(direccionEstaVacia(entregaCargada));
       setEditGoogleMapsUrl(data.googleMapsUrl || '');
+      setEditNotas(data.notas || '');
       setEditPermiteCredito(data.permiteVentaCredito);
       setEditDiasLlamada(data.diasLlamada || []);
     } catch {
@@ -289,6 +291,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         setEditDireccionEntrega(entregaCache);
         setEntregaIgualQueNegocio(direccionEstaVacia(entregaCache));
         setEditGoogleMapsUrl(enLista.googleMapsUrl || '');
+        setEditNotas(enLista.notas || '');
         setEditPermiteCredito(enLista.permiteVentaCredito);
         setMensaje('Sin conexión: datos guardados localmente. Transacciones y movimientos no están disponibles.');
       } else {
@@ -327,6 +330,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         estadoEntrega: entregaAGuardar.estado,
         codigoPostalEntrega: entregaAGuardar.codigoPostal,
         googleMapsUrl: editGoogleMapsUrl,
+        notas: editNotas,
       };
       if (esAdmin) datos.permiteVentaCredito = editPermiteCredito;
       const [actualizado] = await Promise.all([
@@ -621,6 +625,17 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                     <FormularioDireccion valores={editDireccionEntrega} onChange={setEditDireccionEntrega} />
                   </>
                 )}
+
+                <label>
+                  Notas (opcional)
+                  <textarea
+                    placeholder="Instrucciones de entrega, preferencias, referencias del lugar, etc."
+                    value={editNotas}
+                    onChange={(e) => setEditNotas(e.target.value)}
+                    rows={3}
+                    style={{ resize: 'vertical' }}
+                  />
+                </label>
 
                 {esAdmin && (
                   <div className="fila-switch">
