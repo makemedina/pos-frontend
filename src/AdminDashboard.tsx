@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { formatoMoneda, formatoKg } from './formato';
-import { headerAuth, API_URL } from './api';
+import { headerAuth, API_URL, obtenerPendientesDeHoy, actualizarPendiente, type Pendiente } from './api';
 import { exportarVariasHojas } from './exportarExcel';
 
 interface DiaResumen {
@@ -87,6 +87,8 @@ export function AdminDashboard({ onCerrar }: Props) {
   const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
   const [metricaExpandida, setMetricaExpandida] = useState<MetricaClave | null>(null);
+  const [pendientesHoy, setPendientesHoy] = useState<Pendiente[]>([]);
+  const [guardandoPendienteId, setGuardandoPendienteId] = useState<string | null>(null);
 
   const filtroLabel = useMemo(() => {
     switch (periodo) {
@@ -107,6 +109,25 @@ export function AdminDashboard({ onCerrar }: Props) {
     cargar({ periodo, desde, hasta });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodo, desde, hasta]);
+
+  // Independiente del filtro de periodo de arriba -- "hoy" siempre es hoy.
+  useEffect(() => {
+    obtenerPendientesDeHoy()
+      .then(setPendientesHoy)
+      .catch(() => {});
+  }, []);
+
+  async function toggleHechoPendiente(p: Pendiente) {
+    setPendientesHoy((prev) => prev.map((x) => (x.id === p.id ? { ...x, hecho: !p.hecho } : x)));
+    setGuardandoPendienteId(p.id);
+    try {
+      await actualizarPendiente(p.id, { hecho: !p.hecho });
+    } catch {
+      obtenerPendientesDeHoy().then(setPendientesHoy).catch(() => {});
+    } finally {
+      setGuardandoPendienteId(null);
+    }
+  }
 
   async function cargar(filtro: { periodo: string; desde: string; hasta: string }) {
     try {
@@ -226,6 +247,31 @@ export function AdminDashboard({ onCerrar }: Props) {
         </div>
 
         {mensaje && <div className="banner-mensaje">{mensaje}</div>}
+
+        {pendientesHoy.length > 0 && (
+          <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+            <h3 style={{ margin: 0 }}>📝 Pendientes de hoy</h3>
+            {pendientesHoy.map((p) => (
+              <label
+                key={p.id}
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', opacity: p.hecho ? 0.6 : 1 }}
+              >
+                <input
+                  type="checkbox"
+                  checked={p.hecho}
+                  disabled={guardandoPendienteId === p.id}
+                  onChange={() => toggleHechoPendiente(p)}
+                  style={{ marginTop: 3 }}
+                />
+                <span>
+                  <span style={{ textDecoration: p.hecho ? 'line-through' : 'none' }}>{p.concepto}</span>
+                  {p.cliente && <div style={{ fontSize: 13, color: '#6b7280' }}>🧑‍🤝‍🧑 {p.cliente.nombre}</div>}
+                  {p.notas && <div style={{ fontSize: 13, color: '#6b7280' }}>{p.notas}</div>}
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
 
         {data && (
           <>
