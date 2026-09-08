@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFecha } from './formato';
 import { obtenerFacturasPendientes, type FacturaPendiente } from './api';
 import { exportarAExcel } from './exportarExcel';
 
@@ -47,8 +47,8 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
           Proveedor: f.proveedor.nombre,
           Telefono: f.proveedor.telefono || '',
           Factura: f.numeroFactura || '',
-          'Fecha de compra': new Date(f.fecha).toLocaleDateString(),
-          Vencimiento: f.fechaVencimiento ? new Date(f.fechaVencimiento).toLocaleDateString() : '',
+          'Fecha de compra': formatoFecha(new Date(f.fecha)),
+          Vencimiento: f.fechaVencimiento ? formatoFecha(new Date(f.fechaVencimiento)) : '',
           Total: f.total,
           'Saldo pendiente': f.saldoPendiente,
         })),
@@ -94,7 +94,7 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
                       <div style={{ fontSize: 13, color: '#6b7280' }}>{f.proveedor.telefono || ''}</div>
                       <div style={{ fontSize: 13 }}>Factura: {f.numeroFactura || 'Sin factura'}</div>
                       <div style={{ fontSize: 13 }}>
-                        Vence: {f.fechaVencimiento ? new Date(f.fechaVencimiento).toLocaleDateString() : 'Sin fecha'}
+                        Vence: {f.fechaVencimiento ? formatoFecha(new Date(f.fechaVencimiento)) : 'Sin fecha'}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>

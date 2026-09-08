@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatoMoneda, formatoKg } from './formato';
+import { formatoMoneda, formatoKg, formatoFecha } from './formato';
 import type { VarianteCatalogo } from './api';
 import type { ItemCarrito } from './Carrito';
 
@@ -102,7 +102,7 @@ export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, ultimoPrec
             {ultimoPrecio && (
               <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
                 Último precio a este cliente: {formatoMoneda(ultimoPrecio.precioUnitario)}/kg
-                ({new Date(ultimoPrecio.fecha).toLocaleDateString()}) — precio de lista:{' '}
+                ({formatoFecha(new Date(ultimoPrecio.fecha))}) — precio de lista:{' '}
                 {formatoMoneda(variante.precioVenta)}/kg
               </p>
             )}

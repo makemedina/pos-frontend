@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda, formatoKg } from './formato';
+import { formatoMoneda, formatoKg, formatoFecha, formatoFechaHora } from './formato';
 import {
   obtenerProductosGestion,
   obtenerHistorialVariante,
@@ -240,7 +240,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                     <div style={{ fontSize: 13, color: '#6b7280' }}>Lotes en stock (costo de compra):</div>
                     {productoElegido.lotes.map((l, i) => (
                       <div key={i} style={{ fontSize: 13, color: '#6b7280' }}>
-                        {formatoKg(l.cantidadDisponible)} kg a {formatoMoneda(l.costoUnitario)}/kg · ingresó {new Date(l.fechaIngreso).toLocaleDateString()}
+                        {formatoKg(l.cantidadDisponible)} kg a {formatoMoneda(l.costoUnitario)}/kg · ingresó {formatoFecha(new Date(l.fechaIngreso))}
                       </div>
                     ))}
                   </div>
@@ -281,7 +281,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                       <div>
                         <div style={{ fontSize: 12, color: info.color, fontWeight: 600 }}>{info.texto}</div>
                         <div style={{ fontSize: 13 }}>{m.referencia}</div>
-                        <div style={{ fontSize: 11, color: '#9ca3af' }}>{new Date(m.fecha).toLocaleString()}</div>
+                        <div style={{ fontSize: 11, color: '#9ca3af' }}>{formatoFechaHora(new Date(m.fecha))}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? '#16a34a' : '#b91c1c' }}>

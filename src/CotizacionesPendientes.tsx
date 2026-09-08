@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFechaHora } from './formato';
 import {
   obtenerCotizacionesPendientes,
   obtenerCotizacion,
@@ -125,7 +125,7 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
       });
       onVentaConfirmada({
         folio: resultado.venta.folio,
-        fecha: new Date(resultado.venta.fecha ?? Date.now()).toLocaleString(),
+        fecha: formatoFechaHora(new Date(resultado.venta.fecha ?? Date.now())),
         vendedor: vendedorNombre,
         cliente: { nombre: detalle.cliente.nombre, telefono: detalle.cliente.telefono },
         items: detalle.items.map((i) => ({
@@ -208,7 +208,7 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
                         <strong>Cotización #{c.folio}</strong>
                         <div style={{ fontSize: 13, color: '#6b7280' }}>{c.cliente.nombre}</div>
                         <div style={{ fontSize: 12, color: '#9ca3af' }}>
-                          {new Date(c.fecha).toLocaleString()} · {c.vendedor.nombre}
+                          {formatoFechaHora(new Date(c.fecha))} · {c.vendedor.nombre}
                         </div>
                       </div>
                       <div style={{ fontWeight: 700 }}>{formatoMoneda(c.total)}</div>

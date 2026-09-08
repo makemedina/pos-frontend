@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFecha } from './formato';
 import { obtenerHistorialCortes, actualizarCorte, eliminarCorte, type CorteHistorico } from './api';
 import { CorteHistoricoModal } from './CorteHistoricoModal';
 
@@ -48,7 +48,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
     if (!editando) return;
     try {
       await actualizarCorte(editando.id, Number(efectivoContado), Number(saldoBancoContado), observacion);
-      setMensaje(`Corte del ${new Date(editando.fecha).toLocaleDateString()} actualizado.`);
+      setMensaje(`Corte del ${formatoFecha(new Date(editando.fecha))} actualizado.`);
       setEditando(null);
       cargar();
     } catch {
@@ -60,7 +60,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
     setEliminando(true);
     try {
       await eliminarCorte(id);
-      setMensaje(`Corte del ${new Date(fecha).toLocaleDateString()} eliminado.`);
+      setMensaje(`Corte del ${formatoFecha(new Date(fecha))} eliminado.`);
       setConfirmandoEliminarId(null);
       cargar();
     } catch (err: any) {
@@ -90,7 +90,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
               <div key={c.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <strong>{new Date(c.fecha).toLocaleDateString()}</strong>
+                    <strong>{formatoFecha(new Date(c.fecha))}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>Registró: {c.registradoPor}</div>
                     <div>Efectivo: {formatoMoneda(c.efectivoContado)}</div>
                     <div>Banco: {formatoMoneda(c.saldoBancoContado)}</div>
@@ -131,7 +131,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                 {confirmandoEliminarId === c.id && (
                   <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
                     <p className="texto-alerta" style={{ fontWeight: 600 }}>
-                      ¿Seguro que quieres eliminar el corte del {new Date(c.fecha).toLocaleDateString()}?
+                      ¿Seguro que quieres eliminar el corte del {formatoFecha(new Date(c.fecha))}?
                       Esto puede afectar el cuadre del corte del día siguiente que ya se guardó (se
                       comparará contra el corte anterior a este). No se puede deshacer.
                     </p>
@@ -152,7 +152,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
 
         {editando && (
           <form onSubmit={guardarEdicion} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-            <h3>Corregir corte del {new Date(editando.fecha).toLocaleDateString()}</h3>
+            <h3>Corregir corte del {formatoFecha(new Date(editando.fecha))}</h3>
             <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
               Solo se pueden corregir los montos contados. La utilidad y la balanza de ese día no se recalculan.
             </p>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import { headerAuth, API_URL } from './api';
 import { exportarAExcel, numeroSemana } from './exportarExcel';
 
@@ -99,7 +99,7 @@ export function AdminDepositos({ onCerrar }: Props) {
     try {
       await exportarAExcel(
         depositosFiltrados.map((d) => ({
-          Fecha: new Date(d.fecha).toLocaleDateString(),
+          Fecha: formatoFecha(new Date(d.fecha)),
           Hora: new Date(d.fecha).toLocaleTimeString(),
           Semana: numeroSemana(new Date(d.fecha)),
           Monto: Number(d.monto),
@@ -183,7 +183,7 @@ export function AdminDepositos({ onCerrar }: Props) {
                     <div>
                       <strong>{formatoMoneda(Number(deposito.monto))}</strong>
                       {deposito.notas && <div style={{ fontSize: 13, color: '#6b7280' }}>{deposito.notas}</div>}
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>{new Date(deposito.fecha).toLocaleString()}</div>
+                      <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoFechaHora(new Date(deposito.fecha))}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <small>{deposito.registradoPor.nombre}</small>
@@ -192,7 +192,7 @@ export function AdminDepositos({ onCerrar }: Props) {
 
                   {deposito.cancelado ? (
                     <div className="aviso-alerta" style={{ marginTop: 8 }}>
-                      ❌ Cancelado{deposito.canceladoEn ? ` el ${new Date(deposito.canceladoEn).toLocaleString()}` : ''}
+                      ❌ Cancelado{deposito.canceladoEn ? ` el ${formatoFechaHora(new Date(deposito.canceladoEn))}` : ''}
                     </div>
                   ) : confirmandoId === deposito.id ? (
                     <div className="bloque-autorizacion" style={{ marginTop: 8 }}>

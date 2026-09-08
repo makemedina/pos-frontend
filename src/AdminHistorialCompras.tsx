@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import {
   obtenerHistorialCompras,
   buscarProveedores,
@@ -114,7 +114,7 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
     try {
       const filas = compras.flatMap((c) =>
         c.items.map((it) => ({
-          Fecha: new Date(c.fecha).toLocaleDateString(),
+          Fecha: formatoFecha(new Date(c.fecha)),
           Hora: new Date(c.fecha).toLocaleTimeString(),
           Semana: numeroSemana(new Date(c.fecha)),
           Proveedor: c.proveedor.nombre,
@@ -129,7 +129,7 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
           Estado: c.estadoPago,
           'Metodo(s) de pago': c.metodosPago.join(', '),
           Cancelada: c.cancelada ? 'Sí' : 'No',
-          'Cancelada el': c.canceladaEn ? new Date(c.canceladaEn).toLocaleString() : '',
+          'Cancelada el': c.canceladaEn ? formatoFechaHora(new Date(c.canceladaEn)) : '',
         }))
       );
       await exportarAExcel(filas, 'historial-compras');
@@ -271,7 +271,7 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
                   <div>
                     <strong>{c.proveedor.nombre}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>
-                      {new Date(c.fecha).toLocaleDateString()} · Factura: {c.numeroFactura || 'sin número'}
+                      {formatoFecha(new Date(c.fecha))} · Factura: {c.numeroFactura || 'sin número'}
                     </div>
                     <div style={{ fontSize: 12, color: '#6b7280' }}>
                       {c.metodosPago.join(', ') || 'Sin pago registrado'}

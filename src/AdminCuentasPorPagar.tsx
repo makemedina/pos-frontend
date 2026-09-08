@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import {
   obtenerFacturasPendientes,
   obtenerPagosDeCompra,
@@ -203,7 +203,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         clienteTelefono: proveedorElegido.telefono ?? undefined,
         monto: resultado.totalPagado,
         metodoPago: metodoPagoMultiple,
-        fecha: new Date().toLocaleString(),
+        fecha: formatoFechaHora(new Date()),
         saldoNotaRestante: 0,
         saldoTotalCliente: saldoTotalProveedor,
         detalleNotas:
@@ -337,7 +337,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         clienteTelefono: facturaElegida.proveedor.telefono ?? undefined,
         monto: montoPagado,
         metodoPago,
-        fecha: new Date().toLocaleString(),
+        fecha: formatoFechaHora(new Date()),
         saldoNotaRestante: facturaActualizada?.saldoPendiente ?? 0,
         saldoTotalCliente: saldoTotalProveedor,
         entidadLabel: 'Proveedor',
@@ -604,7 +604,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     <div>
                       <strong>Factura: {f.numeroFactura || 'Sin factura'}</strong>
                       <div style={{ fontSize: 13 }}>
-                        Vence: {f.fechaVencimiento ? new Date(f.fechaVencimiento).toLocaleDateString() : 'Sin fecha'}
+                        Vence: {f.fechaVencimiento ? formatoFecha(new Date(f.fechaVencimiento)) : 'Sin fecha'}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
@@ -643,7 +643,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                 <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>
-                      {new Date(p.fecha).toLocaleDateString()} · {new Date(p.fecha).toLocaleTimeString()} · {p.metodoPago}
+                      {formatoFecha(new Date(p.fecha))} · {new Date(p.fecha).toLocaleTimeString()} · {p.metodoPago}
                       <br />
                       <small style={{ color: '#6b7280' }}>Registró: {p.registradoPor.nombre}</small>
                     </span>
@@ -654,7 +654,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
 
                   {p.cancelado && (
                     <div className="aviso-alerta" style={{ marginTop: 6 }}>
-                      ❌ Cancelado{p.canceladoEn ? ` el ${new Date(p.canceladoEn).toLocaleString()}` : ''}
+                      ❌ Cancelado{p.canceladoEn ? ` el ${formatoFechaHora(new Date(p.canceladoEn))}` : ''}
                     </div>
                   )}
 
@@ -746,7 +746,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                 <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>
-                      {new Date(g.fecha).toLocaleString()} · {g.metodosPago.join(' + ') || '—'}
+                      {formatoFechaHora(new Date(g.fecha))} · {g.metodosPago.join(' + ') || '—'}
                       <br />
                       <small style={{ color: '#6b7280' }}>Registró: {g.registradoPor}</small>
                     </span>

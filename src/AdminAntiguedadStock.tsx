@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda, formatoKg } from './formato';
+import { formatoMoneda, formatoKg, formatoFecha } from './formato';
 import { obtenerAntiguedadStock, type LoteAntiguo } from './api';
 
 interface Props {
@@ -86,7 +86,7 @@ export function AdminAntiguedadStock({ onCerrar }: Props) {
                   <div>
                     <strong>{l.producto} {l.marca}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>
-                      Proveedor: {l.proveedor} · Ingresó {new Date(l.fechaIngreso).toLocaleDateString()}
+                      Proveedor: {l.proveedor} · Ingresó {formatoFecha(new Date(l.fechaIngreso))}
                     </div>
                     <div style={{ fontSize: 13 }}>
                       {formatoKg(l.cantidadDisponible)} kg a {formatoMoneda(l.costoUnitario)}/kg

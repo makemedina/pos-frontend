@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda, formatoDireccion } from './formato';
+import { formatoMoneda, formatoDireccion, formatoFecha, formatoFechaHora } from './formato';
 import {
   obtenerClientesConSaldo,
   obtenerClienteDetalle,
@@ -727,7 +727,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <div>
                           <strong>Venta #{v.folio}</strong>
-                          <div style={{ fontSize: 12, color: '#6b7280' }}>{new Date(v.fecha).toLocaleDateString()}</div>
+                          <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoFecha(new Date(v.fecha))}</div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
                           <div>{formatoMoneda(v.total)}</div>
@@ -758,7 +758,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                         {m.tipo === 'venta' ? '🛒 Venta' : '💵 Abono'} #{m.folio}
                         {m.cancelado && <span style={{ color: '#b91c1c', fontWeight: 600 }}> (cancelado)</span>}
                         <br />
-                        <small style={{ color: '#6b7280' }}>{new Date(m.fecha).toLocaleString()}</small>
+                        <small style={{ color: '#6b7280' }}>{formatoFechaHora(new Date(m.fecha))}</small>
                       </span>
                       <strong style={{ color: m.tipo === 'venta' ? '#b91c1c' : '#16a34a', textDecoration: m.cancelado ? 'line-through' : 'none' }}>
                         {m.tipo === 'venta' ? '+' : '-'}{formatoMoneda(m.monto)}

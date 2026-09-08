@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda, etiquetaMetodoPago } from './formato';
+import { formatoMoneda, etiquetaMetodoPago, formatoFecha, formatoFechaHora } from './formato';
 import { exportarAExcel } from './exportarExcel';
 import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
 import { ComprobantePagoModal, type DatosComprobantePago } from './ComprobantePagoModal';
@@ -278,7 +278,7 @@ export function AdminCartera({ onCerrar }: Props) {
         clienteTelefono: clienteElegido.telefono,
         monto: resultado.totalPagado,
         metodoPago: pagos.map((p) => etiquetaMetodoPago(p.metodoPago)).join(', '),
-        fecha: new Date().toLocaleString(),
+        fecha: formatoFechaHora(new Date()),
         saldoNotaRestante: 0,
         saldoTotalCliente: resultado.saldoTotalCliente,
         detalleNotas: resultado.detalle.map((d) => ({
@@ -379,7 +379,7 @@ export function AdminCartera({ onCerrar }: Props) {
         setComprobanteActivo({
           ...reconstruido,
           clienteTelefono: reconstruido.clienteTelefono ?? undefined,
-          fecha: new Date(reconstruido.fecha).toLocaleString(),
+          fecha: formatoFechaHora(new Date(reconstruido.fecha)),
         });
         return;
       } catch {
@@ -393,7 +393,7 @@ export function AdminCartera({ onCerrar }: Props) {
       clienteTelefono: clienteElegido.telefono,
       monto: p.monto,
       metodoPago: p.metodoPago,
-      fecha: new Date(p.fecha).toLocaleString(),
+      fecha: formatoFechaHora(new Date(p.fecha)),
       saldoNotaRestante: notaElegida.saldoPendiente,
       saldoTotalCliente: clienteElegido.saldoTotal,
     });
@@ -423,7 +423,7 @@ export function AdminCartera({ onCerrar }: Props) {
         clienteTelefono: clienteElegido!.telefono,
         monto: montoTotal,
         metodoPago: partes.map((p) => etiquetaMetodoPago(p.metodoPago)).join(', '),
-        fecha: new Date().toLocaleString(),
+        fecha: formatoFechaHora(new Date()),
         saldoNotaRestante: Number(resultado.saldoNotaRestante ?? 0),
         saldoTotalCliente: Number(resultado.saldoTotalCliente ?? 0),
       });
@@ -527,7 +527,7 @@ export function AdminCartera({ onCerrar }: Props) {
           Cliente: c.nombre,
           Telefono: c.telefono,
           Folio: n.folio,
-          Fecha: new Date(n.fecha).toLocaleDateString(),
+          Fecha: formatoFecha(new Date(n.fecha)),
           Total: n.total,
           'Saldo pendiente': n.saldoPendiente,
           Estado: n.estadoPago,
@@ -649,7 +649,7 @@ export function AdminCartera({ onCerrar }: Props) {
         Cliente: clienteElegido.nombre,
         Telefono: clienteElegido.telefono,
         Folio: n.folio,
-        Fecha: new Date(n.fecha).toLocaleDateString(),
+        Fecha: formatoFecha(new Date(n.fecha)),
         Total: n.total,
         'Saldo pendiente': n.saldoPendiente,
         Estado: n.estadoPago,
@@ -947,7 +947,7 @@ export function AdminCartera({ onCerrar }: Props) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <strong>Venta #{n.folio}</strong>
-                        <div style={{ fontSize: 13, color: '#6b7280' }}>{new Date(n.fecha).toLocaleDateString()}</div>
+                        <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoFecha(new Date(n.fecha))}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div>Total: {formatoMoneda(n.total)}</div>
@@ -992,7 +992,7 @@ export function AdminCartera({ onCerrar }: Props) {
                 <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>
-                      {new Date(p.fecha).toLocaleString()} · {etiquetaMetodoPago(p.metodoPago)}
+                      {formatoFechaHora(new Date(p.fecha))} · {etiquetaMetodoPago(p.metodoPago)}
                       <br />
                       <small style={{ color: '#6b7280' }}>Registro: {p.registradoPor.nombre}</small>
                     </span>
@@ -1003,7 +1003,7 @@ export function AdminCartera({ onCerrar }: Props) {
 
                   {p.cancelado ? (
                     <div className="aviso-alerta" style={{ marginTop: 6 }}>
-                      ❌ Cancelado{p.canceladoEn ? ` el ${new Date(p.canceladoEn).toLocaleString()}` : ''}
+                      ❌ Cancelado{p.canceladoEn ? ` el ${formatoFechaHora(new Date(p.canceladoEn))}` : ''}
                     </div>
                   ) : (
                     <button
@@ -1126,7 +1126,7 @@ export function AdminCartera({ onCerrar }: Props) {
                 <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>
-                      {new Date(g.fecha).toLocaleString()} · {g.metodosPago.map(etiquetaMetodoPago).join(' + ') || '—'}
+                      {formatoFechaHora(new Date(g.fecha))} · {g.metodosPago.map(etiquetaMetodoPago).join(' + ') || '—'}
                       <br />
                       <small style={{ color: '#6b7280' }}>Registró: {g.registradoPor}</small>
                     </span>

@@ -55,7 +55,7 @@ import { ConfiguracionRecibo } from './ConfiguracionRecibo';
 import { ConfiguracionImpresora } from './ConfiguracionImpresora';
 import { ReciboModal } from './ReciboModal';
 import type { DatosRecibo } from './construirRecibo';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFechaHora } from './formato';
 import {
   guardarCatalogoCache,
   obtenerCatalogoCache,
@@ -440,7 +440,7 @@ export default function App() {
       setMensajeCotizacion(`Cotización #${cotizacion.folio} guardada.`);
       setCotizacionParaCompartir({
         folio: cotizacion.folio,
-        fecha: new Date(cotizacion.fecha).toLocaleString(),
+        fecha: formatoFechaHora(new Date(cotizacion.fecha)),
         vendedor: usuario!.nombre,
         cliente: { nombre: clienteVenta.nombre, telefono: clienteVenta.telefono },
         items: carrito.map((i) => ({
@@ -520,7 +520,7 @@ export default function App() {
       if (cotizacionesPendientesCount > 0) cargarCotizacionesPendientesCount();
       setReciboActivo({
         folio: resultado.venta.folio,
-        fecha: new Date(resultado.venta.fecha ?? Date.now()).toLocaleString(),
+        fecha: formatoFechaHora(new Date(resultado.venta.fecha ?? Date.now())),
         vendedor: usuario!.nombre,
         cliente: { nombre: datos.clienteNombre, telefono: datos.clienteTelefono },
         items: carrito.map((i) => ({
@@ -603,7 +603,7 @@ export default function App() {
         setMensaje('Sin conexión: la venta se guardó en este celular y se subirá sola cuando vuelva internet.');
         setReciboActivo({
           folio: 'pendiente',
-          fecha: new Date().toLocaleString(),
+          fecha: formatoFechaHora(new Date()),
           vendedor: usuario!.nombre,
           cliente: { nombre: datos.clienteNombre, telefono: datos.clienteTelefono },
           items: carrito.map((i) => ({

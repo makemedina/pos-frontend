@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFecha } from './formato';
 import { obtenerNotasAntiguas, type NotaAntigua } from './api';
 
 interface Props {
@@ -78,7 +78,7 @@ export function AdminNotasAntiguas({ onCerrar }: Props) {
                   <div>
                     <strong>{n.clienteNombre}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>
-                      {n.clienteTelefono} · Nota #{n.folio} · {new Date(n.fecha).toLocaleDateString()}
+                      {n.clienteTelefono} · Nota #{n.folio} · {formatoFecha(new Date(n.fecha))}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>

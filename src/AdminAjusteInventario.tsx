@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFecha } from './formato';
 import {
   buscarVariantes,
   obtenerLotesDeVariante,
@@ -186,7 +186,7 @@ export function AdminAjusteInventario({ onCerrar, varianteInicial }: Props) {
                   onClick={() => setLoteElegido(l)}
                 >
                   <div>
-                    <p className="item-nombre">{new Date(l.fechaIngreso).toLocaleDateString()}</p>
+                    <p className="item-nombre">{formatoFecha(new Date(l.fechaIngreso))}</p>
                     <p className="item-detalle">
                       Costo {formatoMoneda(l.costoUnitario)}/kg · Disponible {l.cantidadDisponible} kg de {l.cantidadInicial} kg
                     </p>

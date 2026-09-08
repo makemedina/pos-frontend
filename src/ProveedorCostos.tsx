@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFecha } from './formato';
 import {
   buscarVariantes,
   obtenerCostosProveedor,
@@ -186,7 +186,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
                 {cargandoUltimaCompra
                   ? 'Buscando el último costo de compra...'
                   : ultimaCompra
-                    ? `Se precargó el último costo con el que se le compró: ${formatoMoneda(ultimaCompra.costo)} (${new Date(ultimaCompra.fecha).toLocaleDateString()}). Puedes ajustarlo.`
+                    ? `Se precargó el último costo con el que se le compró: ${formatoMoneda(ultimaCompra.costo)} (${formatoFecha(new Date(ultimaCompra.fecha))}). Puedes ajustarlo.`
                     : 'Este proveedor no tiene compras registradas de este producto todavía.'}
               </p>
             </div>
@@ -220,7 +220,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
                     <strong>{c.producto}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>{c.marca}</div>
                     <div style={{ fontSize: 12, color: '#9ca3af' }}>
-                      Guardado el {new Date(c.actualizadoEn).toLocaleDateString()}
+                      Guardado el {formatoFecha(new Date(c.actualizadoEn))}
                     </div>
                   </div>
                   {editandoId === c.varianteId ? (
@@ -250,7 +250,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
                 {editandoId === c.varianteId && ultimaCompraEdicion && (
                   <p style={{ fontSize: 12, color: '#6b7280', margin: '6px 0 0' }}>
                     Último costo de compra: {formatoMoneda(ultimaCompraEdicion.costo)} (
-                    {new Date(ultimaCompraEdicion.fecha).toLocaleDateString()}){' '}
+                    {formatoFecha(new Date(ultimaCompraEdicion.fecha))}){' '}
                     {ultimaCompraEdicion.costo !== Number(costoEdicion) && (
                       <button
                         onClick={() => setCostoEdicion(String(ultimaCompraEdicion.costo))}

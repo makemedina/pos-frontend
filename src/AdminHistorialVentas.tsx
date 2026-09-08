@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda, etiquetaMetodoPago } from './formato';
+import { formatoMoneda, etiquetaMetodoPago, formatoFecha, formatoFechaHora } from './formato';
 import { exportarAExcel, numeroSemana } from './exportarExcel';
 import { VentaDetalleModal } from './VentaDetalleModal';
 import {
@@ -143,7 +143,7 @@ export function AdminHistorialVentas({
       const filas = ventas.flatMap((v) =>
         v.items.map((it) => ({
           Folio: v.folio,
-          Fecha: new Date(v.fecha).toLocaleDateString(),
+          Fecha: formatoFecha(new Date(v.fecha)),
           Hora: new Date(v.fecha).toLocaleTimeString(),
           Semana: numeroSemana(new Date(v.fecha)),
           Cliente: v.cliente.nombre,
@@ -161,7 +161,7 @@ export function AdminHistorialVentas({
           Estado: v.estadoPago,
           'Metodo(s) de pago': v.metodosPago.map(etiquetaMetodoPago).join(', '),
           Cancelada: v.cancelada ? 'Sí' : 'No',
-          'Cancelada el': v.canceladaEn ? new Date(v.canceladaEn).toLocaleString() : '',
+          'Cancelada el': v.canceladaEn ? formatoFechaHora(new Date(v.canceladaEn)) : '',
         }))
       );
       await exportarAExcel(filas, 'historial-ventas');
@@ -369,7 +369,7 @@ export function AdminHistorialVentas({
                   <div>
                     <strong>Venta #{v.folio}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>
-                      {new Date(v.fecha).toLocaleString()}
+                      {formatoFechaHora(new Date(v.fecha))}
                     </div>
                     <div style={{ fontSize: 13 }}>
                       <span style={{ fontSize: 16, fontWeight: 700 }}>{v.cliente.nombre}</span> · {v.cliente.telefono}

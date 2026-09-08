@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda, formatoKg } from './formato';
+import { formatoMoneda, formatoKg, formatoFecha, formatoFechaHora } from './formato';
 import {
   obtenerMovimientosInventario,
   buscarProductos,
@@ -103,7 +103,7 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
     try {
       await exportarAExcel(
         movimientos.map((m) => ({
-          Fecha: new Date(m.fecha).toLocaleDateString(),
+          Fecha: formatoFecha(new Date(m.fecha)),
           Hora: new Date(m.fecha).toLocaleTimeString(),
           Semana: numeroSemana(new Date(m.fecha)),
           Tipo: ETIQUETAS_TIPO[m.tipo].texto,
@@ -235,7 +235,7 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
                       </div>
                       <div style={{ fontSize: 12, color: info.color, fontWeight: 600 }}>{info.texto}</div>
                       <div style={{ fontSize: 12, color: '#6b7280' }}>{m.referencia}</div>
-                      <div style={{ fontSize: 11, color: '#9ca3af' }}>{new Date(m.fecha).toLocaleString()}</div>
+                      <div style={{ fontSize: 11, color: '#9ca3af' }}>{formatoFechaHora(new Date(m.fecha))}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? '#16a34a' : '#b91c1c' }}>

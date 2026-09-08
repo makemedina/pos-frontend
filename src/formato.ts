@@ -1,3 +1,26 @@
+const DIAS_SEMANA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+// Nombre del dia de la semana en español (ej. "domingo"), para mostrar
+// junto a cualquier fecha en toda la app.
+export function nombreDia(fecha: string | Date): string {
+  return DIAS_SEMANA[new Date(fecha).getDay()];
+}
+
+// Igual que `new Date(fecha).toLocaleDateString()`, pero le antepone el
+// nombre del dia de la semana (ej. "domingo, 6/9/2026") -- se usa en vez
+// de llamar toLocaleDateString() directamente en cualquier pantalla que
+// muestre una fecha, para que siempre se vea a que dia corresponde.
+export function formatoFecha(fecha: string | Date): string {
+  const d = new Date(fecha);
+  return `${nombreDia(d)}, ${d.toLocaleDateString()}`;
+}
+
+// Igual que formatoFecha, pero con hora (equivalente a .toLocaleString()).
+export function formatoFechaHora(fecha: string | Date): string {
+  const d = new Date(fecha);
+  return `${nombreDia(d)}, ${d.toLocaleString()}`;
+}
+
 // Formatea cualquier numero como moneda con comas de miles y 2 decimales
 // (ej. 99987.94 -> "$99,987.94"). Se usa en TODAS las pantallas que
 // muestran un monto, para que nunca se vea "99987.94" sin comas.

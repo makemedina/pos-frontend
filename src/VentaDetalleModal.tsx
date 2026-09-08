@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda, etiquetaMetodoPago } from './formato';
+import { formatoMoneda, etiquetaMetodoPago, formatoFechaHora } from './formato';
 import { obtenerDetalleVenta, cancelarVenta, obtenerUtilidadVenta, type VentaDetalle, type UtilidadVenta } from './api';
 import { ReciboModal } from './ReciboModal';
 import type { DatosRecibo } from './construirRecibo';
@@ -69,7 +69,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
   const datosRecibo: DatosRecibo | null = venta
     ? {
         folio: venta.folio,
-        fecha: new Date(venta.fecha).toLocaleString(),
+        fecha: formatoFechaHora(new Date(venta.fecha)),
         vendedor: venta.vendedor.nombre,
         cliente: { nombre: venta.cliente.nombre, telefono: venta.cliente.telefono },
         items: venta.items.map((it) => ({
@@ -164,7 +164,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
             <div className="resumen-nota">
               <div className="linea-resumen">
                 <span>Fecha</span>
-                <span>{new Date(venta.fecha).toLocaleString()}</span>
+                <span>{formatoFechaHora(new Date(venta.fecha))}</span>
               </div>
               <div className="linea-resumen">
                 <span>Cliente</span>
@@ -204,7 +204,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
 
             {venta.cancelada && (
               <div className="aviso-alerta" style={{ marginTop: 8 }}>
-                ❌ Esta venta fue cancelada{venta.canceladaEn ? ` el ${new Date(venta.canceladaEn).toLocaleString()}` : ''}.
+                ❌ Esta venta fue cancelada{venta.canceladaEn ? ` el ${formatoFechaHora(new Date(venta.canceladaEn))}` : ''}.
                 El stock ya fue regresado al inventario.
               </div>
             )}

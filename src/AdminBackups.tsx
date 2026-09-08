@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatoFechaHora } from './formato';
 import {
   obtenerBackups,
   crearBackupManual,
@@ -162,7 +163,7 @@ export function AdminBackups({ onCerrar }: Props) {
                 <div key={b.key} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <strong>{new Date(b.fecha).toLocaleString()}</strong>
+                      <strong>{formatoFechaHora(new Date(b.fecha))}</strong>
                       <div style={{ fontSize: 12, color: etiqueta.color, fontWeight: 600 }}>{etiqueta.texto}</div>
                       <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoTamano(b.tamano)}</div>
                     </div>
@@ -205,7 +206,7 @@ export function AdminBackups({ onCerrar }: Props) {
                     <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
                       <p className="texto-alerta" style={{ fontWeight: 600 }}>
                         Esto va a BORRAR todo lo que hay ahorita en el sistema y lo va a reemplazar
-                        con lo que había en este respaldo ({new Date(b.fecha).toLocaleString()}).
+                        con lo que había en este respaldo ({formatoFechaHora(new Date(b.fecha))}).
                         Antes de empezar se guarda automáticamente un respaldo de cómo está todo
                         justo ahora, por si te equivocas de respaldo. Esto no se puede deshacer de
                         otra forma.

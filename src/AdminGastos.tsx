@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import {
   headerAuth,
   API_URL,
@@ -294,7 +294,7 @@ export function AdminGastos({ onCerrar }: Props) {
     try {
       await exportarAExcel(
         gastosFiltrados.map((g) => ({
-          Fecha: new Date(g.fecha).toLocaleDateString(),
+          Fecha: formatoFecha(new Date(g.fecha)),
           Hora: new Date(g.fecha).toLocaleTimeString(),
           Semana: numeroSemana(new Date(g.fecha)),
           Concepto: g.concepto,
@@ -305,7 +305,7 @@ export function AdminGastos({ onCerrar }: Props) {
           'Metodo de pago': g.metodoPago,
           'Registrado por': g.registradoPor.nombre,
           Cancelado: g.cancelado ? 'Sí' : 'No',
-          'Cancelado el': g.canceladoEn ? new Date(g.canceladoEn).toLocaleString() : '',
+          'Cancelado el': g.canceladoEn ? formatoFechaHora(new Date(g.canceladoEn)) : '',
         })),
         'gastos'
       );
@@ -636,7 +636,7 @@ export function AdminGastos({ onCerrar }: Props) {
 
                   {gasto.cancelado ? (
                     <div className="aviso-alerta" style={{ marginTop: 8 }}>
-                      ❌ Cancelado{gasto.canceladoEn ? ` el ${new Date(gasto.canceladoEn).toLocaleString()}` : ''}
+                      ❌ Cancelado{gasto.canceladoEn ? ` el ${formatoFechaHora(new Date(gasto.canceladoEn))}` : ''}
                     </div>
                   ) : confirmandoId === gasto.id ? (
                     <div className="bloque-autorizacion" style={{ marginTop: 8 }}>

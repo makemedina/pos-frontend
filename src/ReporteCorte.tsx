@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import type { ResumenCorteDia } from './api';
 
 interface Props {
@@ -141,8 +141,8 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
   // es cada quien, y los titulos dicen "del periodo" en vez de "del día".
   const abarcaVariosDias = resumen.abarcaVariosDias;
   const tituloPeriodo = (singular: string, plural: string) => (abarcaVariosDias ? plural : singular);
-  const formatoFechaHora = (fecha: string | Date) =>
-    abarcaVariosDias ? new Date(fecha).toLocaleString() : new Date(fecha).toLocaleTimeString();
+  const formatoFilaFecha = (fecha: string | Date) =>
+    abarcaVariosDias ? formatoFechaHora(new Date(fecha)) : new Date(fecha).toLocaleTimeString();
 
   // Si ya existe un corte guardado para esta fecha (hoy o un dia pasado),
   // se muestran EXACTAMENTE los montos con los que se guardo ese dia --
@@ -223,7 +223,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
       {abarcaVariosDias && (
         <div className="aviso-alerta" style={{ fontWeight: 600 }}>
           ⚠ No se capturó el corte de uno o más días — este corte abarca desde el{' '}
-          {new Date(resumen.desde).toLocaleDateString()} hasta hoy. Cada renglón de abajo indica de qué
+          {formatoFecha(new Date(resumen.desde))} hasta hoy. Cada renglón de abajo indica de qué
           día es.
         </div>
       )}
@@ -343,7 +343,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                           Venta #{p.folio} · {p.metodoPago}
                           <br />
                           <small style={{ color: '#6b7280' }}>
-                            {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
+                            {formatoFilaFecha(p.fecha)} · registró: {p.registradoPor}
                           </small>
                         </span>
                         <strong>{formatoMoneda(p.monto)}</strong>
@@ -421,7 +421,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                   <strong>{formatoMoneda(g.monto)}</strong>
                 </div>
                 <small style={{ color: '#6b7280' }}>
-                  {formatoFechaHora(g.fecha)} · registró: {g.registradoPor}
+                  {formatoFilaFecha(g.fecha)} · registró: {g.registradoPor}
                 </small>
               </div>
             ))}
@@ -461,7 +461,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                           Factura {p.numeroFactura || 'sin número'} · {p.metodoPago}
                           <br />
                           <small style={{ color: '#6b7280' }}>
-                            {formatoFechaHora(p.fecha)} · registró: {p.registradoPor}
+                            {formatoFilaFecha(p.fecha)} · registró: {p.registradoPor}
                           </small>
                         </span>
                         <strong>{formatoMoneda(p.monto)}</strong>
@@ -499,7 +499,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                         {d.notas || 'Depósito a banco'}
                         <br />
                         <small style={{ color: '#6b7280' }}>
-                          {formatoFechaHora(d.fecha)} · registró: {d.registradoPor}
+                          {formatoFilaFecha(d.fecha)} · registró: {d.registradoPor}
                         </small>
                       </span>
                       <strong>{formatoMoneda(d.monto)}</strong>
@@ -525,7 +525,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                 <strong>{formatoMoneda(v.total)}</strong>
               </div>
               <small style={{ color: '#6b7280' }}>
-                Original: {new Date(v.fechaOriginal).toLocaleDateString()} · Cancelada por {v.canceladaPor} el {new Date(v.canceladaEn).toLocaleString()}
+                Original: {formatoFecha(new Date(v.fechaOriginal))} · Cancelada por {v.canceladaPor} el {formatoFechaHora(new Date(v.canceladaEn))}
               </small>
             </div>
           ))}
@@ -536,7 +536,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                 <strong>{formatoMoneda(c.total)}</strong>
               </div>
               <small style={{ color: '#6b7280' }}>
-                Original: {new Date(c.fechaOriginal).toLocaleDateString()} · Cancelada por {c.canceladaPor} el {new Date(c.canceladaEn).toLocaleString()}
+                Original: {formatoFecha(new Date(c.fechaOriginal))} · Cancelada por {c.canceladaPor} el {formatoFechaHora(new Date(c.canceladaEn))}
               </small>
             </div>
           ))}
@@ -565,7 +565,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                   style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#6b7280', paddingLeft: 8 }}
                 >
                   <span>
-                    {f.numeroFactura || 'Sin factura'} · {new Date(f.fecha).toLocaleDateString()} · {f.diasAntiguedad} día{f.diasAntiguedad !== 1 ? 's' : ''}
+                    {f.numeroFactura || 'Sin factura'} · {formatoFecha(new Date(f.fecha))} · {f.diasAntiguedad} día{f.diasAntiguedad !== 1 ? 's' : ''}
                   </span>
                   <span>{formatoMoneda(f.saldoPendiente)}</span>
                 </div>

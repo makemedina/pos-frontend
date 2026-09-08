@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFechaHora } from './formato';
 import {
   obtenerVentasPendientes,
   quitarVentaDeCola,
@@ -85,7 +85,7 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
                   <div>
                     <strong>{v.resumen.clienteNombre}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>
-                      {new Date(v.resumen.fecha).toLocaleString()} · {v.resumen.totalItems} producto{v.resumen.totalItems !== 1 ? 's' : ''}
+                      {formatoFechaHora(new Date(v.resumen.fecha))} · {v.resumen.totalItems} producto{v.resumen.totalItems !== 1 ? 's' : ''}
                     </div>
                     {v.estado === 'error' && (
                       <div style={{ fontSize: 12, color: '#b91c1c', marginTop: 4 }}>⚠ {v.error}</div>

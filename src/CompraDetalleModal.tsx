@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda } from './formato';
+import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import {
   obtenerDetalleCompra,
   cancelarCompra,
@@ -234,7 +234,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
             <div className="resumen-nota">
               <div className="linea-resumen">
                 <span>Fecha</span>
-                <span>{new Date(compra.fecha).toLocaleString()}</span>
+                <span>{formatoFechaHora(new Date(compra.fecha))}</span>
               </div>
               <div className="linea-resumen">
                 <span>Factura</span>
@@ -274,7 +274,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
 
             {compra.cancelada && (
               <div className="aviso-alerta" style={{ marginTop: 8 }}>
-                ❌ Esta compra fue cancelada{compra.canceladaEn ? ` el ${new Date(compra.canceladaEn).toLocaleString()}` : ''}.
+                ❌ Esta compra fue cancelada{compra.canceladaEn ? ` el ${formatoFechaHora(new Date(compra.canceladaEn))}` : ''}.
                 El inventario que había agregado ya se puso en cero.
               </div>
             )}
@@ -287,7 +287,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
                     <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>
-                          {new Date(p.fecha).toLocaleDateString()} · {new Date(p.fecha).toLocaleTimeString()} · {p.metodoPago}
+                          {formatoFecha(new Date(p.fecha))} · {new Date(p.fecha).toLocaleTimeString()} · {p.metodoPago}
                           <br />
                           <small style={{ color: '#6b7280' }}>Registró: {p.registradoPor.nombre}</small>
                         </span>
@@ -298,7 +298,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
 
                       {p.cancelado && (
                         <div className="aviso-alerta" style={{ marginTop: 6 }}>
-                          ❌ Cancelado{p.canceladoEn ? ` el ${new Date(p.canceladoEn).toLocaleString()}` : ''}
+                          ❌ Cancelado{p.canceladoEn ? ` el ${formatoFechaHora(new Date(p.canceladoEn))}` : ''}
                         </div>
                       )}
 
