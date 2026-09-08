@@ -1585,6 +1585,7 @@ export interface FiltrosHistorialCompras {
   hasta?: string;
   proveedorId?: string;
   estadoPago?: string;
+  productoId?: string;
 }
 
 export async function obtenerHistorialCompras(filtros: FiltrosHistorialCompras): Promise<CompraHistorial[]> {
@@ -1594,6 +1595,7 @@ export async function obtenerHistorialCompras(filtros: FiltrosHistorialCompras):
   if (filtros.hasta) params.set('hasta', filtros.hasta);
   if (filtros.proveedorId) params.set('proveedorId', filtros.proveedorId);
   if (filtros.estadoPago) params.set('estadoPago', filtros.estadoPago);
+  if (filtros.productoId) params.set('productoId', filtros.productoId);
 
   const res = await fetch(`${API_URL}/compras/historial?${params.toString()}`, { headers: headerAuth() });
   if (!res.ok) {

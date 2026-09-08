@@ -179,7 +179,9 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
             <div className="resumen-nota">
               {venta.items.map((it, idx) => (
                 <div key={idx} className="linea-resumen">
-                  <span>{it.producto} {it.marca} · {it.cantidad} kg</span>
+                  <span>
+                    {it.producto} {it.marca} · {it.cantidad} kg × {formatoMoneda(it.precioUnitario)}/kg
+                  </span>
                   <span>{formatoMoneda(it.subtotal)}</span>
                 </div>
               ))}

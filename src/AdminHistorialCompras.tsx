@@ -3,8 +3,10 @@ import { formatoMoneda } from './formato';
 import {
   obtenerHistorialCompras,
   buscarProveedores,
+  buscarProductos,
   type CompraHistorial,
   type Proveedor,
+  type Producto,
 } from './api';
 import { exportarAExcel, numeroSemana } from './exportarExcel';
 import { CompraDetalleModal } from './CompraDetalleModal';
@@ -44,6 +46,10 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
   const [resultadosProveedor, setResultadosProveedor] = useState<Proveedor[]>([]);
   const [proveedorElegido, setProveedorElegido] = useState<Proveedor | null>(null);
 
+  const [busquedaProducto, setBusquedaProducto] = useState('');
+  const [resultadosProducto, setResultadosProducto] = useState<Producto[]>([]);
+  const [productoElegido, setProductoElegido] = useState<Producto | null>(null);
+
   const [compras, setCompras] = useState<CompraHistorial[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -52,7 +58,7 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
   useEffect(() => {
     cargar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [periodo, desde, hasta, estadoPago, proveedorElegido]);
+  }, [periodo, desde, hasta, estadoPago, proveedorElegido, productoElegido]);
 
   async function cargar() {
     setCargando(true);
@@ -63,6 +69,7 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
         hasta: periodo === 'rango' ? hasta : undefined,
         proveedorId: proveedorElegido?.id,
         estadoPago: estadoPago || undefined,
+        productoId: productoElegido?.id,
       });
       setCompras(data);
       setMensaje(null);
@@ -86,6 +93,21 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
     setProveedorElegido(p);
     setResultadosProveedor([]);
     setBusquedaProveedor('');
+  }
+
+  async function buscarProducto(valor: string) {
+    setBusquedaProducto(valor);
+    if (valor.length < 2) {
+      setResultadosProducto([]);
+      return;
+    }
+    setResultadosProducto(await buscarProductos(valor));
+  }
+
+  function elegirProducto(p: Producto) {
+    setProductoElegido(p);
+    setResultadosProducto([]);
+    setBusquedaProducto('');
   }
 
   async function exportar() {
@@ -191,6 +213,30 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
                 />
                 {resultadosProveedor.map((p) => (
                   <div key={p.id} className="resultado-cliente" onClick={() => elegirProveedor(p)}>
+                    {p.nombre}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+
+          <div>
+            <span style={{ display: 'block', marginBottom: 4 }}>Producto</span>
+            {productoElegido ? (
+              <div className="cliente-chip">
+                <span>{productoElegido.nombre}</span>
+                <button onClick={() => setProductoElegido(null)}>Quitar filtro</button>
+              </div>
+            ) : (
+              <>
+                <input
+                  className="buscador"
+                  placeholder="Buscar producto"
+                  value={busquedaProducto}
+                  onChange={(e) => buscarProducto(e.target.value)}
+                />
+                {resultadosProducto.map((p) => (
+                  <div key={p.id} className="resultado-cliente" onClick={() => elegirProducto(p)}>
                     {p.nombre}
                   </div>
                 ))}
