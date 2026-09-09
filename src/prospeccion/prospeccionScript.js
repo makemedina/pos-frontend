@@ -1,15 +1,19 @@
 (function(){
   "use strict";
 
-  // Si el script ya corrio una vez en esta sesion (el usuario
-  // navego a esta pantalla, salio, y volvio), no volvemos a registrar
-  // los listeners en document -- solo repintamos sobre el #app nuevo.
+  // Si el script ya corrio antes en esta sesion (el usuario navego a esta
+  // pantalla, salio, y volvio), no volvemos a registrar los listeners en
+  // document -- solo le pedimos que repinte sobre el #app nuevo.
   if (window.__prospeccionMounted) {
-    window.__prospeccionApi.render();
+    window.__prospeccionApi.setZona(
+      window.__PROSPECCION_DATA__ || [],
+      window.__PROSPECCION_RUTAS__ || {},
+      window.__PROSPECCION_ZONA__ || "default"
+    );
     return;
   }
 
-  const PROSPECTOS = window.__PROSPECCION_DATA__ || [];
+  let PROSPECTOS = window.__PROSPECCION_DATA__ || null;
 
   const CORTES = ["Diezmillo","Bola / pierna","Espaldilla","Falda","Suadero","Costilla",
     "Molida","Chambarete","Cabeza","Rib eye","Arrachera","Chorizo","Tripa","Pollo"];
@@ -17,12 +21,12 @@
   const ESTADOS = ["Sin visitar","Interesado","No interesado","Cotización enviada",
     "Muestra entregada","Cliente","Cerrado o no existe"];
 
-  const RUTAS = {
-    todas:"Todas", R1:"R1 Jardines", R2:"R2 Paseo Playas", R3:"R3 Malecón",
-    R4:"R4 Costa Azul", R5:"R5 Entrada"
-  };
+  let RUTAS = window.__PROSPECCION_RUTAS__ || {};
 
   // ---------- almacenamiento ----------
+  // Cada zona guarda su captura por separado (carne.crm.<ZONA_KEY>) para que
+  // cambiar de zona no mezcle visitas de una ciudad con ids de otra.
+  let ZONA_KEY = window.__PROSPECCION_ZONA__ || "default";
   const mem = {};
   const store = {
     async get(k){
@@ -39,7 +43,11 @@
 
   let crm = {};        // { id: {est, contacto, ...} }
   let precios = {};    // { corte: precio }
-  const S = { tab:"hoy", ruta:"todas", q:"", prio:"todas", seg:"todas", est:"todas", open:null };
+  const S = { tab:"hoy", ruta:"todas", lado:"todos", q:"", prio:"todas", seg:"todas",
+              est:"todas", open:null };
+  // "compra" = le vendo carne. "surte" = me puede surtir.
+  const LADOS = { todos:"Todos", compra:"Me compran", surte:"Me surten" };
+  const hayDosLados = () => new Set(PROSPECTOS.map(p=>p.l||"compra")).size > 1;
 
   const $ = s => document.querySelector(s);
   const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c =>
@@ -56,7 +64,8 @@
   }
 
   // ---------- filtros ----------
-  function enRuta(p){ return S.ruta==="todas" || p.r===S.ruta; }
+  function enLado(p){ return S.lado==="todos" || (p.l||"compra")===S.lado; }
+  function enRuta(p){ return (S.ruta==="todas" || p.r===S.ruta) && enLado(p); }
 
   function filtrados(){
     const q = S.q.trim().toLowerCase();
@@ -83,7 +92,15 @@
     $("#hdDone").textContent = done;
     $("#hdTot").textContent = univ.length;
     $("#barFill").style.width = univ.length ? (done/univ.length*100).toFixed(1)+"%" : "0";
-    $("#rutas").innerHTML = Object.entries(RUTAS).map(([k,v])=>
+    const bl = $("#lados");
+    if(hayDosLados()){
+      bl.hidden = false;
+      bl.innerHTML = Object.entries(LADOS).map(([k,v])=>
+        `<button data-lado="${k}" class="${S.lado===k?"on":""}">${esc(v)}</button>`).join("");
+    } else { bl.hidden = true; bl.innerHTML = ""; }
+    const rutasRelevantes = Object.entries(RUTAS).filter(([k])=>
+      k === "todas" || PROSPECTOS.some(p=>enLado(p) && p.r===k));
+    $("#rutas").innerHTML = rutasRelevantes.map(([k,v])=>
       `<button data-ruta="${k}" class="${S.ruta===k?"on":""}">${esc(v)}</button>`).join("");
   }
 
@@ -115,7 +132,8 @@
     return `<div class="stack">
       <div class="next">
         <div class="next-top">
-          <div class="next-kicker">Siguiente parada · ${esc(p.r)} · prioridad ${esc(p.p)}</div>
+          <div class="next-kicker">${p.l==="surte"?"Proveedor por visitar":"Siguiente parada"}
+            · ${esc(p.r)} · prioridad ${esc(p.p)}</div>
           <div class="next-name">${esc(p.n)}</div>
         </div>
         <div class="next-meta">
@@ -191,6 +209,11 @@
         <b class="num">$${Math.round(kg(cli)*precioProm).toLocaleString("es-MX")}</b>
         <span>venta semanal estimada, a precio promedio de tu lista</span></div>` : ""}
 
+      ${hayDosLados() ? `<div class="stat"><span>Estás viendo
+        ${S.lado==="todos"?"clientes y proveedores juntos":
+          S.lado==="compra"?"solo clientes":"solo proveedores"}.
+        Cambia con los botones de arriba.</span></div>` : ""}
+
       <div>
         <h2>Seguimientos vencidos</h2>
         <div style="margin-top:8px">${seg.length ? seg.map(p=>fila(p)).join("")
@@ -243,7 +266,8 @@
       <div class="sheet-hd">
         <div>
           <h3>${esc(p.n)}</h3>
-          <p>${esc(p.s)} · prioridad ${esc(p.p)} · ruta ${esc(p.r)}</p>
+          <p>${esc(p.s)} · prioridad ${esc(p.p)} · ruta ${esc(p.r)}
+            · ${p.l==="surte"?"me surte":"le vendo"}</p>
           <p>${esc(p.d)} — ${esc(p.c)}</p>
         </div>
         <button class="x" data-close aria-label="Cerrar">×</button>
@@ -298,7 +322,8 @@
         <textarea id="f-notas" placeholder="Qué dijo, cuándo recibe, quién decide">${esc(r.notas||"")}</textarea></label>
 
       <button class="save" id="f-save">Guardar visita</button>
-      <button class="ghost" id="f-cot">Armar cotización para WhatsApp</button>
+      <button class="ghost" id="f-cot">${p.l==="surte"
+        ? "Pedir cotización por WhatsApp" : "Armar cotización para WhatsApp"}</button>
     `;
     $("#sheet").hidden = false;
     document.body.style.overflow = "hidden";
@@ -320,7 +345,7 @@
       fecha: rec(id).fecha || hoyISO()
     };
     if(crm[id].est === "Sin visitar") crm[id].fecha = "";
-    await store.set("carne.crm", crm);
+    await store.set("carne.crm." + ZONA_KEY, crm);
     cierra(); render(); toast("Visita guardada");
   }
 
@@ -328,7 +353,26 @@
     const id = S.open; if(!id) return;
     const p = PROSPECTOS.find(x=>x.id===id);
     const cortes = [...document.querySelectorAll("#f-cortes button.on")].map(b=>b.dataset.corte);
-    if(!cortes.length){ toast("Marca primero los cortes que usa"); return; }
+    if(!cortes.length){ toast("Marca primero los cortes"); return; }
+
+    if(p.l === "surte"){
+      const kgP = Number($("#f-kg").value) || 0;
+      let t = `Buen día`;
+      const c2 = $("#f-contacto").value.trim();
+      if(c2) t += ` ${c2}`;
+      t += `, soy distribuidor de carne y ando cotizando proveedor.\n\nMe interesa:\n`
+         + cortes.map(x=>`• ${x}`).join("\n");
+      if(kgP > 0) t += `\n\nManejo alrededor de ${kgP} kg por semana de este volumen.`;
+      t += `\n\n¿Me pueden pasar precio por kilo y condiciones de entrega? `
+         + `Necesito factura y que el producto venga de rastro autorizado.`;
+      const dp = tel10(p.t);
+      if(dp){ window.open(`https://wa.me/52${dp}?text=${encodeURIComponent(t)}`,"_blank","noopener"); return; }
+      navigator.clipboard?.writeText(t).then(
+        ()=>toast("Mensaje copiado, pégalo en WhatsApp"),
+        ()=>toast("No pude copiar. Captura el teléfono primero."));
+      return;
+    }
+
     const sin = cortes.filter(c=>!Number(precios[c]));
     if(sin.length === cortes.length){ toast("Pon precios en la pestaña Ventas"); return; }
     const kg = Number($("#f-kg").value) || 0;
@@ -393,6 +437,7 @@
     if(t.hasAttribute("data-close")){ cierra(); return; }
     if(t.dataset.tab){ S.tab = t.dataset.tab; render(); return; }
     if(t.dataset.ruta){ S.ruta = t.dataset.ruta; render(); return; }
+    if(t.dataset.lado){ S.lado = t.dataset.lado; S.ruta = "todas"; render(); return; }
     if(t.dataset.corte){ t.classList.toggle("on"); return; }
     if(t.dataset.call){ window.location.href = "tel:+52"+t.dataset.call; return; }
     if(t.dataset.wa){ window.open("https://wa.me/52"+t.dataset.wa, "_blank", "noopener"); return; }
@@ -413,7 +458,7 @@
     if(t.id === "wipe"){
       if(!confirm("Se borra toda tu captura de visitas y precios. ¿Seguir?")) return;
       crm = {}; precios = {};
-      store.set("carne.crm", crm); store.set("carne.precios", precios);
+      store.set("carne.crm." + ZONA_KEY, crm); store.set("carne.precios." + ZONA_KEY, precios);
       render(); toast("Captura borrada"); return;
     }
     if(t.dataset.id){ abre(Number(t.dataset.id)); return; }
@@ -431,7 +476,7 @@
     if(el.dataset.precio){
       const v = Number(el.value);
       if(v > 0) precios[el.dataset.precio] = v; else delete precios[el.dataset.precio];
-      store.set("carne.precios", precios);
+      store.set("carne.precios." + ZONA_KEY, precios);
     }
   });
 
@@ -448,7 +493,7 @@
           const d = JSON.parse(fr.result);
           if(d.crm) crm = d.crm;
           if(d.precios) precios = d.precios;
-          await store.set("carne.crm", crm); await store.set("carne.precios", precios);
+          await store.set("carne.crm." + ZONA_KEY, crm); await store.set("carne.precios." + ZONA_KEY, precios);
           render(); toast("Respaldo importado");
         }catch(err){ toast("Ese archivo no es un respaldo válido"); }
       };
@@ -458,13 +503,37 @@
 
   document.addEventListener("keydown", e=>{ if(e.key === "Escape" && S.open) cierra(); });
 
-  window.__prospeccionApi = { render };
+  // ---------- arranque / cambio de zona ----------
+  async function cargaZona(){
+    crm = (await store.get("carne.crm." + ZONA_KEY)) || {};
+    precios = (await store.get("carne.precios." + ZONA_KEY)) || {};
+    if(!PROSPECTOS){
+      $("#view").innerHTML = '<div class="empty">Cargando prospectos…</div>';
+      try{
+        const r = await fetch("prospectos.json", {cache:"force-cache"});
+        if(!r.ok) throw new Error(r.status);
+        PROSPECTOS = await r.json();
+      }catch(err){
+        $("#view").innerHTML = '<div class="empty">No pude cargar prospectos.json.<br>'
+          + 'Colócalo junto a este archivo y recarga.</div>';
+        return;
+      }
+    }
+    render();
+  }
+
+  window.__prospeccionApi = {
+    render,
+    setZona(prospectos, rutas, zonaKey){
+      PROSPECTOS = prospectos;
+      RUTAS = rutas;
+      ZONA_KEY = zonaKey;
+      S.tab = "hoy"; S.ruta = "todas"; S.lado = "todos"; S.q = "";
+      S.prio = "todas"; S.seg = "todas"; S.est = "todas"; S.open = null;
+      cargaZona();
+    }
+  };
   window.__prospeccionMounted = true;
 
-  // ---------- arranque ----------
-  (async function(){
-    crm = (await store.get("carne.crm")) || {};
-    precios = (await store.get("carne.precios")) || {};
-    render();
-  })();
+  cargaZona();
 })();
