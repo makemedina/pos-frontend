@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatoMoneda, formatoKg } from './formato';
 import { headerAuth, API_URL, obtenerPendientesDeHoy, actualizarPendiente, type Pendiente } from './api';
 import { exportarVariasHojas } from './exportarExcel';
+import { intentarActivarNotificacionesAutomatico } from './push';
 
 interface DiaResumen {
   fecha: string;
@@ -115,6 +116,13 @@ export function AdminDashboard({ onCerrar }: Props) {
     obtenerPendientesDeHoy()
       .then(setPendientesHoy)
       .catch(() => {});
+  }, []);
+
+  // Pide permiso de notificaciones al entrar aqui (sin que el usuario
+  // tenga que ir a buscar el boton en Pendientes) -- si todavia no se ha
+  // decidido, se lo vuelve a preguntar cada vez que entra al Dashboard.
+  useEffect(() => {
+    intentarActivarNotificacionesAutomatico();
   }, []);
 
   async function toggleHechoPendiente(p: Pendiente) {
