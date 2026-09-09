@@ -51,6 +51,7 @@ import { AdminAnaliticaVentas } from './AdminAnaliticaVentas';
 import { AdminHistorialVentas } from './AdminHistorialVentas';
 import { AdminHistorialCortes } from './AdminHistorialCortes';
 import { AdminConfiguracion } from './AdminConfiguracion';
+import { AdminProspeccion } from './AdminProspeccion';
 import { ConfiguracionRecibo } from './ConfiguracionRecibo';
 import { ConfiguracionImpresora } from './ConfiguracionImpresora';
 import { ReciboModal } from './ReciboModal';
@@ -105,7 +106,8 @@ type Pantalla =
   | 'finanzasMenu'
   | 'configuracionMenu'
   | 'herramientas'
-  | 'respaldos';
+  | 'respaldos'
+  | 'prospeccion';
 
 interface OpcionMenu {
   pantalla: Pantalla;
@@ -126,6 +128,7 @@ const OPCIONES_MENU: OpcionMenu[] = [
   { pantalla: 'inventarioMenu', icono: '🥩', titulo: 'Inventario', descripcion: 'Productos, stock y movimientos', clase: 'boton-flotante-ajuste' },
   { pantalla: 'finanzasMenu', icono: '💸', titulo: 'Finanzas', descripcion: 'Corte, gastos y estadísticas', clase: 'boton-flotante-gastos' },
   { pantalla: 'configuracionMenu', icono: '⚙️', titulo: 'Configuración', descripcion: 'Negocio, usuarios y herramientas', clase: 'boton-flotante-ajuste' },
+  { pantalla: 'prospeccion', icono: '🗺️', titulo: 'Prospección', descripcion: 'Ruta de prospección y ventas en campo', clase: '' },
 ];
 
 function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
@@ -180,6 +183,8 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
       return !!usuario.permisos?.puedeVerCarteraGeneral;
     case 'historialCortes':
       return false; // solo administrador puede editar cortes pasados
+    case 'prospeccion':
+      return false; // solo administrador
     case 'clientesMenu':
       return puedeVer('clientes', usuario);
     case 'cuentasPorCobrarMenu':
@@ -819,6 +824,9 @@ export default function App() {
     }
     if (pantallaActiva === 'respaldos') {
       return <AdminBackups onCerrar={() => abrirPantalla('configuracionMenu')} />;
+    }
+    if (pantallaActiva === 'prospeccion') {
+      return <AdminProspeccion onCerrar={volverAlInicio} />;
     }
     if (pantallaActiva === 'gastos') {
       return <AdminGastos onCerrar={() => abrirPantalla('finanzasMenu')} />;
