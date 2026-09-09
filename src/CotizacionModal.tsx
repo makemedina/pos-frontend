@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { obtenerConfiguracion, type Configuracion } from './api';
 import { obtenerConfiguracionCache } from './offline';
 import { CotizacionVenta } from './CotizacionVenta';
-import type { DatosCotizacion } from './construirCotizacion';
+import { construirLineasCotizacion, type DatosCotizacion } from './construirCotizacion';
 import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
+import { impresoraConectada, nombreImpresoraConectada, conectarImpresora, imprimirLineas } from './impresionBluetooth';
 
 interface Props {
   datos: DatosCotizacion;
@@ -82,6 +83,25 @@ export function CotizacionModal({ datos, onCerrar }: Props) {
     }
   }
 
+  async function imprimir() {
+    if (!config) return;
+    setOcupado('imprimir');
+    setMensaje(null);
+    try {
+      if (!impresoraConectada()) {
+        await conectarImpresora();
+      }
+      const lineas = construirLineasCotizacion(config, datos);
+      const veces = config.imprimirDosVeces ? 2 : 1;
+      await imprimirLineas(lineas, veces);
+      setMensaje('Cotización enviada a la impresora.');
+    } catch (err: any) {
+      setMensaje(err.message || 'No se pudo imprimir. Revisa que la impresora esté prendida y cerca.');
+    } finally {
+      setOcupado(null);
+    }
+  }
+
   return (
     <div className="modal-fondo" onClick={onCerrar} style={{ zIndex: 40 }}>
       <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
@@ -120,6 +140,14 @@ export function CotizacionModal({ datos, onCerrar }: Props) {
                   📤 Compartir PDF
                 </button>
               )}
+
+              <button className="boton-secundario" disabled={!!ocupado} onClick={imprimir} style={{ width: '100%', marginTop: 0 }}>
+                {ocupado === 'imprimir'
+                  ? 'Imprimiendo...'
+                  : impresoraConectada()
+                    ? `🖨️ Imprimir (${nombreImpresoraConectada()})`
+                    : '🖨️ Conectar e imprimir'}
+              </button>
             </div>
           </>
         )}

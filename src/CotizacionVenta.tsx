@@ -8,6 +8,34 @@ interface Props {
   elementId: string;
 }
 
+// El aviso de "esto no es un recibo de venta" tiene que ser imposible de
+// pasar por alto -- por eso va grande, en rojo, con borde, y se repite
+// arriba, en medio y abajo del todo (pedido explicito: alguien podria
+// confundir una cotizacion con una venta ya cobrada si solo se avisa una
+// vez y de pasada).
+function AvisoCotizacion() {
+  return (
+    <div
+      style={{
+        textAlign: 'center',
+        fontWeight: 800,
+        fontSize: 15,
+        lineHeight: 1.3,
+        color: '#b91c1c',
+        border: '2px solid #b91c1c',
+        borderRadius: 6,
+        padding: '6px 4px',
+        margin: '10px 0',
+        textTransform: 'uppercase',
+      }}
+    >
+      Esto es una cotización.
+      <br />
+      No es un recibo de venta.
+    </div>
+  );
+}
+
 export function CotizacionVenta({ config, datos, elementId }: Props) {
   return (
     <div
@@ -22,6 +50,8 @@ export function CotizacionVenta({ config, datos, elementId }: Props) {
         lineHeight: 1.5,
       }}
     >
+      <AvisoCotizacion />
+
       {config.logoBase64 && (
         <img
           src={config.logoBase64}
@@ -57,6 +87,9 @@ export function CotizacionVenta({ config, datos, elementId }: Props) {
           </div>
         </div>
       ))}
+
+      <AvisoCotizacion />
+
       <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16 }}>
         <span>TOTAL</span>
@@ -66,6 +99,8 @@ export function CotizacionVenta({ config, datos, elementId }: Props) {
       <div style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: '#6b7280' }}>
         Cotización sin compromiso — precios sujetos a cambio hasta confirmar la venta.
       </div>
+
+      <AvisoCotizacion />
     </div>
   );
 }
