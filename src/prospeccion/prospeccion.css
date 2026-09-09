@@ -86,6 +86,11 @@
   text-align:right; font-variant-numeric:tabular-nums}
 
 /* --- sheet --- */
+/* #app .sheet tiene mas especificidad que la regla [hidden]{display:none} del
+   navegador, asi que sin esto el scrim se queda SIEMPRE encima (aunque
+   hidden="true") bloqueando el mouse en toda la pantalla -- el teclado
+   (Tab+Enter) no lo nota porque no le hace hit-test al click. */
+#app .sheet[hidden]{display:none}
 #app .sheet{position:fixed; inset:0; z-index:60; display:flex; align-items:flex-end}
 #app .sheet-scrim{position:absolute; inset:0; background:rgba(25,21,18,.45)}
 #app .sheet-body{position:relative; width:100%; max-height:92vh; overflow-y:auto;
