@@ -77,6 +77,7 @@ type Pantalla =
   | 'cartera'
   | 'notasAntiguas'
   | 'cuentas'
+  | 'proveedoresMenu'
   | 'usuarios'
   | 'gastos'
   | 'depositos'
@@ -91,7 +92,6 @@ type Pantalla =
   | 'antiguedadStock'
   | 'analiticaVentas'
   | 'historialCortes'
-  | 'comprasMenu'
   | 'facturasPendientes'
   | 'historialCompras'
   | 'ventasOffline'
@@ -99,8 +99,6 @@ type Pantalla =
   | 'configuracionRecibo'
   | 'configuracionImpresora'
   | 'clientesMenu'
-  | 'cuentasPorCobrarMenu'
-  | 'cuentasPorPagarMenu'
   | 'proveedores'
   | 'inventarioMenu'
   | 'finanzasMenu'
@@ -121,10 +119,8 @@ interface OpcionMenu {
 // de inicio -- Ventas ya no es un grupo aparte, es la pantalla de inicio
 // misma. Cada una se filtra segun los permisos reales del usuario.
 const OPCIONES_MENU: OpcionMenu[] = [
-  { pantalla: 'comprasMenu', icono: '📦', titulo: 'Compras', descripcion: 'Registrar compra e historial', clase: '' },
-  { pantalla: 'clientesMenu', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Datos, altas y edición', clase: 'boton-flotante-cartera' },
-  { pantalla: 'cuentasPorCobrarMenu', icono: '💵', titulo: 'Cuentas por Cobrar', descripcion: 'Cartera de clientes', clase: 'boton-flotante-cartera' },
-  { pantalla: 'cuentasPorPagarMenu', icono: '💳', titulo: 'Cuentas por Pagar', descripcion: 'Pagos, facturas y proveedores', clase: 'boton-flotante-cuentas' },
+  { pantalla: 'clientesMenu', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Datos, cartera y cuentas por cobrar', clase: 'boton-flotante-cartera' },
+  { pantalla: 'proveedoresMenu', icono: '🚚', titulo: 'Proveedores', descripcion: 'Compras, facturas y cuentas por pagar', clase: 'boton-flotante-cuentas' },
   { pantalla: 'inventarioMenu', icono: '🥩', titulo: 'Inventario', descripcion: 'Productos, stock y movimientos', clase: 'boton-flotante-ajuste' },
   { pantalla: 'finanzasMenu', icono: '💸', titulo: 'Finanzas', descripcion: 'Corte, gastos y estadísticas', clase: 'boton-flotante-gastos' },
   { pantalla: 'configuracionMenu', icono: '⚙️', titulo: 'Configuración', descripcion: 'Negocio, usuarios y herramientas', clase: 'boton-flotante-ajuste' },
@@ -147,8 +143,6 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
       return !!usuario.permisos?.puedeVerCostos;
     case 'ventasOffline':
       return true; // cualquiera puede ver y reintentar sus ventas guardadas sin conexion
-    case 'comprasMenu':
-      return !!usuario.permisos?.puedeRegistrarCompras;
     case 'usuarios':
       return false; // solo administrador
     case 'configuracion':
@@ -186,11 +180,21 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
     case 'prospeccion':
       return false; // solo administrador
     case 'clientesMenu':
-      return puedeVer('clientes', usuario);
-    case 'cuentasPorCobrarMenu':
-      return puedeVer('cartera', usuario);
-    case 'cuentasPorPagarMenu':
-      return puedeVer('cuentas', usuario) || puedeVer('facturasPendientes', usuario);
+      return (
+        puedeVer('clientes', usuario) ||
+        puedeVer('cartera', usuario) ||
+        puedeVer('notasAntiguas', usuario) ||
+        puedeVer('llamadasHoy', usuario) ||
+        puedeVer('pendientes', usuario)
+      );
+    case 'proveedoresMenu':
+      return (
+        puedeVer('compra', usuario) ||
+        puedeVer('proveedores', usuario) ||
+        puedeVer('historialCompras', usuario) ||
+        puedeVer('cuentas', usuario) ||
+        puedeVer('facturasPendientes', usuario)
+      );
     case 'inventarioMenu':
       return puedeVer('productos', usuario) || puedeVer('movimientosInventario', usuario) || puedeVer('antiguedadStock', usuario);
     case 'finanzasMenu':
@@ -668,7 +672,7 @@ export default function App() {
 
   function compraCompletada(mensajeExito: string) {
     setMensaje(mensajeExito);
-    abrirPantalla('comprasMenu');
+    abrirPantalla('proveedoresMenu');
   }
 
   async function handleLogout() {
@@ -737,20 +741,10 @@ export default function App() {
     if (pantallaActiva === 'clientesMenu') {
       return renderSubmenu('Clientes', [
         { pantalla: 'clientes', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Alta, edición y datos', clase: 'boton-flotante-cartera' },
+        { pantalla: 'cartera', icono: '💵', titulo: 'Cartera (cuentas por cobrar)', descripcion: 'Clientes con saldo pendiente', clase: 'boton-flotante-cartera' },
+        { pantalla: 'notasAntiguas', icono: '📆', titulo: 'Notas antiguas', descripcion: 'Notas con más de 7 días sin liquidarse', clase: 'boton-flotante-cartera' },
         { pantalla: 'llamadasHoy', icono: '📞', titulo: 'Llamadas de hoy', descripcion: 'A quién hablarle hoy para ofrecer producto', clase: 'boton-flotante-cartera' },
         { pantalla: 'pendientes', icono: '📝', titulo: 'Pendientes', descripcion: 'Recordatorios y tareas programadas', clase: 'boton-flotante-cartera' },
-      ]);
-    }
-    if (pantallaActiva === 'cuentasPorCobrarMenu') {
-      return renderSubmenu('Cuentas por Cobrar', [
-        { pantalla: 'cartera', icono: '💵', titulo: 'Cartera', descripcion: 'Clientes con saldo pendiente', clase: 'boton-flotante-cartera' },
-        { pantalla: 'notasAntiguas', icono: '📆', titulo: 'Notas antiguas', descripcion: 'Notas con más de 7 días sin liquidarse', clase: 'boton-flotante-cartera' },
-      ]);
-    }
-    if (pantallaActiva === 'cuentasPorPagarMenu') {
-      return renderSubmenu('Cuentas por Pagar', [
-        { pantalla: 'cuentas', icono: '💳', titulo: 'Registrar pago a factura', descripcion: 'Abonar una factura pendiente', clase: 'boton-flotante-cuentas' },
-        { pantalla: 'facturasPendientes', icono: '📋', titulo: 'Facturas por pagar', descripcion: 'Solo ver el listado', clase: 'boton-flotante-historial' },
       ]);
     }
     if (pantallaActiva === 'inventarioMenu') {
@@ -781,40 +775,42 @@ export default function App() {
       ]);
     }
 
-    if (pantallaActiva === 'comprasMenu') {
-      return renderSubmenu('Compras', [
+    if (pantallaActiva === 'proveedoresMenu') {
+      return renderSubmenu('Proveedores', [
+        { pantalla: 'proveedores', icono: '🚚', titulo: 'Proveedores', descripcion: 'Alta y edición de proveedores', clase: '' },
         { pantalla: 'compra', icono: '📦', titulo: 'Registrar compra', descripcion: 'Nueva compra a proveedor', clase: '' },
         { pantalla: 'historialCompras', icono: '📜', titulo: 'Historial de compras', descripcion: 'Todas, pagadas y pendientes', clase: 'boton-flotante-historial' },
-        { pantalla: 'proveedores', icono: '🚚', titulo: 'Proveedores', descripcion: 'Alta y edición de proveedores', clase: '' },
+        { pantalla: 'cuentas', icono: '💳', titulo: 'Registrar pago a factura', descripcion: 'Abonar una factura pendiente (cuentas por pagar)', clase: 'boton-flotante-cuentas' },
+        { pantalla: 'facturasPendientes', icono: '📋', titulo: 'Facturas por pagar', descripcion: 'Solo ver el listado', clase: 'boton-flotante-historial' },
       ]);
     }
 
     if (pantallaActiva === 'compra') {
-      return <PantallaCompra onCompletada={compraCompletada} onCerrar={() => abrirPantalla('comprasMenu')} />;
+      return <PantallaCompra onCompletada={compraCompletada} onCerrar={() => abrirPantalla('proveedoresMenu')} />;
     }
     if (pantallaActiva === 'cartera') {
-      return <AdminCartera onCerrar={() => abrirPantalla('cuentasPorCobrarMenu')} />;
+      return <AdminCartera onCerrar={() => abrirPantalla('clientesMenu')} />;
     }
     if (pantallaActiva === 'notasAntiguas') {
-      return <AdminNotasAntiguas onCerrar={() => abrirPantalla('cuentasPorCobrarMenu')} />;
+      return <AdminNotasAntiguas onCerrar={() => abrirPantalla('clientesMenu')} />;
     }
     if (pantallaActiva === 'cuentas') {
-      return <AdminCuentasPorPagar onCerrar={() => abrirPantalla('cuentasPorPagarMenu')} />;
+      return <AdminCuentasPorPagar onCerrar={() => abrirPantalla('proveedoresMenu')} />;
     }
     if (pantallaActiva === 'facturasPendientes') {
-      return <AdminFacturasPendientes onCerrar={() => abrirPantalla('cuentasPorPagarMenu')} />;
+      return <AdminFacturasPendientes onCerrar={() => abrirPantalla('proveedoresMenu')} />;
     }
     if (pantallaActiva === 'proveedores') {
       return (
         <AdminProveedores
-          onCerrar={() => abrirPantalla('comprasMenu')}
+          onCerrar={() => abrirPantalla('proveedoresMenu')}
           esAdmin={usuario.rolBase === 'administrador'}
           puedeVerCostos={!!usuario.permisos?.puedeVerCostos}
         />
       );
     }
     if (pantallaActiva === 'historialCompras') {
-      return <AdminHistorialCompras onCerrar={() => abrirPantalla('comprasMenu')} />;
+      return <AdminHistorialCompras onCerrar={() => abrirPantalla('proveedoresMenu')} />;
     }
     if (pantallaActiva === 'usuarios') {
       return <AdminUsuarios onCerrar={() => abrirPantalla('configuracionMenu')} />;
