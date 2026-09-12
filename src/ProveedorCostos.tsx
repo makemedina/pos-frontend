@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda, formatoFecha } from './formato';
+import { formatoMoneda, formatoFecha, haceDias } from './formato';
 import {
   buscarVariantes,
   obtenerCostosProveedor,
@@ -220,7 +220,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
                     <strong>{c.producto}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>{c.marca}</div>
                     <div style={{ fontSize: 12, color: '#9ca3af' }}>
-                      Guardado el {formatoFecha(new Date(c.actualizadoEn))}
+                      Guardado el {formatoFecha(new Date(c.actualizadoEn))} ({haceDias(c.actualizadoEn)})
                     </div>
                   </div>
                   {editandoId === c.varianteId ? (

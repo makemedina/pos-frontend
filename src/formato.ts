@@ -21,6 +21,19 @@ export function formatoFechaHora(fecha: string | Date): string {
   return `${nombreDia(d)}, ${d.toLocaleString()}`;
 }
 
+// "hace X días" en base a la diferencia de dias de calendario contra hoy
+// (no horas transcurridas), para que algo guardado ayer a las 11pm diga
+// "hace 1 día" aunque hayan pasado pocas horas. "hoy" / "ayer" para los
+// casos mas comunes, y "hace X días" en general.
+export function haceDias(fecha: string | Date): string {
+  const d = new Date(fecha);
+  const inicioDia = (f: Date) => new Date(f.getFullYear(), f.getMonth(), f.getDate()).getTime();
+  const dias = Math.round((inicioDia(new Date()) - inicioDia(d)) / 86400000);
+  if (dias <= 0) return 'hoy';
+  if (dias === 1) return 'hace 1 día';
+  return `hace ${dias} días`;
+}
+
 // Formatea cualquier numero como moneda con comas de miles y 2 decimales
 // (ej. 99987.94 -> "$99,987.94"). Se usa en TODAS las pantallas que
 // muestran un monto, para que nunca se vea "99987.94" sin comas.
