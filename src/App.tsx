@@ -127,6 +127,38 @@ const OPCIONES_MENU: OpcionMenu[] = [
   { pantalla: 'prospeccion', icono: '🗺️', titulo: 'Prospección', descripcion: 'Ruta de prospección y ventas en campo', clase: '' },
 ];
 
+// A que seccion de OPCIONES_MENU pertenece cada pantalla de detalle -- solo
+// para resaltar el item correcto en la barra lateral de escritorio (ver
+// sidebar-desktop) cuando se esta en una pantalla "hija" de esa seccion.
+const SECCION_DE_PANTALLA: Partial<Record<Pantalla, Pantalla>> = {
+  clientes: 'clientesMenu',
+  cartera: 'clientesMenu',
+  notasAntiguas: 'clientesMenu',
+  llamadasHoy: 'clientesMenu',
+  pendientes: 'clientesMenu',
+  proveedores: 'proveedoresMenu',
+  compra: 'proveedoresMenu',
+  historialCompras: 'proveedoresMenu',
+  cuentas: 'proveedoresMenu',
+  facturasPendientes: 'proveedoresMenu',
+  productos: 'inventarioMenu',
+  movimientosInventario: 'inventarioMenu',
+  antiguedadStock: 'inventarioMenu',
+  ajuste: 'inventarioMenu',
+  corte: 'finanzasMenu',
+  historialCortes: 'finanzasMenu',
+  gastos: 'finanzasMenu',
+  depositos: 'finanzasMenu',
+  dashboard: 'finanzasMenu',
+  analiticaVentas: 'finanzasMenu',
+  configuracion: 'configuracionMenu',
+  configuracionRecibo: 'configuracionMenu',
+  configuracionImpresora: 'configuracionMenu',
+  usuarios: 'configuracionMenu',
+  herramientas: 'configuracionMenu',
+  respaldos: 'configuracionMenu',
+};
+
 function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
   if (usuario.rolBase === 'administrador') return true;
   switch (pantalla) {
@@ -1022,9 +1054,40 @@ export default function App() {
     );
   }
 
+  const seccionActivaSidebar = SECCION_DE_PANTALLA[pantallaActiva] ?? pantallaActiva;
+
   return (
-    <div className="app">
+    <div className="app-shell">
+      {/* Solo visible en pantallas anchas (laptop/desktop, ver index.css) --
+          en celular la navegacion sigue siendo el menu ☰ de siempre. */}
+      <aside className="sidebar-desktop">
+        <img src={logoMrCarnes} alt="Mr Carnes" className="sidebar-desktop-logo" />
+        <nav className="sidebar-desktop-nav">
+          {OPCIONES_MENU.filter((o) => puedeVer(o.pantalla, usuario)).map((o) => (
+            <div
+              key={o.pantalla}
+              className={`sidebar-desktop-item${seccionActivaSidebar === o.pantalla ? ' activo' : ''}`}
+              onClick={() => abrirPantalla(o.pantalla)}
+            >
+              <span className="sidebar-desktop-icono">{o.icono}</span>
+              <span>{o.titulo}</span>
+            </div>
+          ))}
+        </nav>
+        <div className="sidebar-desktop-footer">
+          <div>
+            <strong>{usuario.nombre}</strong>
+            <small>{usuario.rolBase}</small>
+          </div>
+          <button className="boton-secundario" onClick={handleLogout} style={{ width: '100%' }}>
+            Salir
+          </button>
+        </div>
+      </aside>
+
+      <div className="app">
       <div
+        className="barra-logo-movil"
         style={{
           display: 'flex',
           justifyContent: 'flex-end',
@@ -1169,6 +1232,7 @@ export default function App() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

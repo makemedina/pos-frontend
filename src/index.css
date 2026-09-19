@@ -89,6 +89,121 @@ textarea:focus {
   background: transparent;
 }
 
+/* En celular, .app-shell no hace nada (la barra lateral de abajo esta
+   con display:none) -- toda la navegacion sigue siendo el menu ☰. */
+.sidebar-desktop {
+  display: none;
+}
+
+/* Pantallas anchas (laptop/desktop): la mayoria de las pantallas ya
+   limitan su propio contenido a 760-860px con un maxWidth inline (mas
+   angosto que esto), asi que solo hace falta soltar el cupo de .app
+   -- se acomodan solas, centradas, con mas aire a los lados en vez de
+   quedar en una franja vertical de 480px en medio de la pantalla.
+   Ademas se agrega una barra lateral fija con la navegacion principal,
+   en vez de depender del menu ☰ (que se oculta aqui, ver
+   .boton-hamburguesa y .barra-logo-movil). */
+@media (min-width: 900px) {
+  .app-shell {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 24px;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 24px 24px 0;
+  }
+
+  .app {
+    max-width: 960px;
+    flex: 1 1 auto;
+    margin: 0;
+    padding: 0 0 60px;
+  }
+
+  /* !important: ambos elementos traen su display en un style inline
+     (JSX), que de otra forma le gana a esta regla de media query. */
+  .barra-logo-movil,
+  .boton-hamburguesa {
+    display: none !important;
+  }
+
+  .sidebar-desktop {
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 24px;
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-radius: 20px;
+    padding: 18px 14px;
+    gap: 16px;
+    max-height: calc(100vh - 48px);
+  }
+
+  .sidebar-desktop-logo {
+    height: 32px;
+    width: auto;
+    align-self: flex-start;
+    margin-left: 4px;
+  }
+
+  .sidebar-desktop-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+  }
+
+  .sidebar-desktop-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ios-label);
+    transition: background 0.15s var(--ease);
+  }
+
+  .sidebar-desktop-item:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .sidebar-desktop-item.activo {
+    background: rgba(0, 122, 255, 0.12);
+    color: var(--ios-blue);
+  }
+
+  .sidebar-desktop-icono {
+    font-size: 18px;
+    width: 22px;
+    text-align: center;
+  }
+
+  .sidebar-desktop-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--ios-separator);
+  }
+
+  .sidebar-desktop-footer strong {
+    display: block;
+    font-size: 14px;
+  }
+
+  .sidebar-desktop-footer small {
+    color: var(--ios-secondary-label);
+  }
+}
+
 .encabezado {
   display: flex;
   justify-content: space-between;
@@ -787,6 +902,12 @@ textarea:focus {
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
+}
+
+@media (min-width: 900px) {
+  .grid-menu {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
 }
 
 .tarjeta-menu {

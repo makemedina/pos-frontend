@@ -175,7 +175,7 @@ export function AdminHistorialVentas({
       <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         {esInicio ? (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <button onClick={onAbrirMenu} style={{ width: 'auto', padding: '0 14px' }} aria-label="Menú">☰</button>
+            <button className="boton-hamburguesa" onClick={onAbrirMenu} style={{ width: 'auto', padding: '0 14px' }} aria-label="Menú">☰</button>
             <h2 style={{ margin: 0 }}>Ventas</h2>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={exportar} style={{ width: 'auto', padding: '0 12px' }} aria-label="Exportar a Excel">
