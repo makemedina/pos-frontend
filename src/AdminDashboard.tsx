@@ -35,6 +35,7 @@ interface DashboardData {
   mejoresClientesPorValor: Array<[string, number]>;
   detalleProductosPorValor: Record<string, Array<[string, number]>>;
   detalleClientesPorValor: Record<string, Array<[string, number]>>;
+  detalleClientesPorVolumen: Record<string, Array<[string, number]>>;
   ventasPorVendedor: Array<[string, number]>;
   detallePorDia: DiaResumen[];
 }
@@ -98,10 +99,14 @@ export function AdminDashboard({ onCerrar }: Props) {
   // nada nuevo al servidor.
   const [detalleProducto, setDetalleProducto] = useState<string | null>(null);
   const [detalleCliente, setDetalleCliente] = useState<string | null>(null);
+  // El detalle de un cliente se puede ver por valor ($) o por volumen
+  // (kg) -- se reinicia a "valor" cada vez que se abre un cliente nuevo.
+  const [detalleClientePestana, setDetalleClientePestana] = useState<'valor' | 'volumen'>('valor');
   // Cada lista del dashboard (productos, clientes, vendedores) muestra
   // solo los primeros ESPACIOS_POR_SECCION por default, con un boton
   // "Mostrar todos" para desplegar el resto -- el backend ya manda la
   // lista completa ordenada, esto es solo un recorte visual.
+  const [mostrarTodosProductosVolumen, setMostrarTodosProductosVolumen] = useState(false);
   const [mostrarTodosProductos, setMostrarTodosProductos] = useState(false);
   const [mostrarTodosClientes, setMostrarTodosClientes] = useState(false);
   const [mostrarTodosVendedores, setMostrarTodosVendedores] = useState(false);
@@ -125,6 +130,7 @@ export function AdminDashboard({ onCerrar }: Props) {
   // ya no hace falta un boton de "Aplicar filtros".
   useEffect(() => {
     cargar({ periodo, desde, hasta });
+    setMostrarTodosProductosVolumen(false);
     setMostrarTodosProductos(false);
     setMostrarTodosClientes(false);
     setMostrarTodosVendedores(false);
@@ -381,6 +387,28 @@ export function AdminDashboard({ onCerrar }: Props) {
             </div>
 
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <h3>Productos más vendidos por volumen</h3>
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {data.productosMasVendidos.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                {(mostrarTodosProductosVolumen ? data.productosMasVendidos : data.productosMasVendidos.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, cantidad]) => (
+                  <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{nombre}</span>
+                    <strong>{formatoKg(cantidad)} kg</strong>
+                  </div>
+                ))}
+              </div>
+              {data.productosMasVendidos.length > ESPACIOS_POR_SECCION && (
+                <button
+                  className="boton-secundario"
+                  onClick={() => setMostrarTodosProductosVolumen((v) => !v)}
+                  style={{ width: '100%', marginTop: 8 }}
+                >
+                  {mostrarTodosProductosVolumen ? 'Mostrar menos' : `Mostrar todos (${data.productosMasVendidos.length})`}
+                </button>
+              )}
+            </div>
+
+            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
               <h3>Productos más vendidos por valor</h3>
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {data.productosMasVendidosPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
@@ -413,7 +441,10 @@ export function AdminDashboard({ onCerrar }: Props) {
                 {(mostrarTodosClientes ? data.mejoresClientesPorValor : data.mejoresClientesPorValor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
                   <div
                     key={nombre}
-                    onClick={() => setDetalleCliente(nombre)}
+                    onClick={() => {
+                      setDetalleCliente(nombre);
+                      setDetalleClientePestana('valor');
+                    }}
                     style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}
                   >
                     <span>{nombre}</span>
@@ -510,14 +541,48 @@ export function AdminDashboard({ onCerrar }: Props) {
               <p className="titulo">{detalleCliente} — por producto</p>
               <button className="boton-cerrar" onClick={() => setDetalleCliente(null)}>✕</button>
             </div>
-            {(data.detalleClientesPorValor[detalleCliente] ?? []).length === 0 ? (
+
+            <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #e5e5ea', marginBottom: 8 }}>
+              {(['valor', 'volumen'] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setDetalleClientePestana(p)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: '8px 4px',
+                    borderRadius: 0,
+                    borderBottom: detalleClientePestana === p ? '2px solid #007aff' : '2px solid transparent',
+                    fontWeight: detalleClientePestana === p ? 700 : 400,
+                    color: detalleClientePestana === p ? '#007aff' : '#374151',
+                  }}
+                >
+                  {p === 'valor' ? 'Por valor' : 'Por volumen'}
+                </button>
+              ))}
+            </div>
+
+            {detalleClientePestana === 'valor' ? (
+              (data.detalleClientesPorValor[detalleCliente] ?? []).length === 0 ? (
+                <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>
+              ) : (
+                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                  {data.detalleClientesPorValor[detalleCliente].map(([producto, valor]) => (
+                    <div key={producto} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                      <span>{producto}</span>
+                      <strong>{formatoMoneda(valor)}</strong>
+                    </div>
+                  ))}
+                </div>
+              )
+            ) : (data.detalleClientesPorVolumen[detalleCliente] ?? []).length === 0 ? (
               <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>
             ) : (
               <div style={{ display: 'grid', gap: '0.5rem' }}>
-                {data.detalleClientesPorValor[detalleCliente].map(([producto, valor]) => (
+                {data.detalleClientesPorVolumen[detalleCliente].map(([producto, cantidad]) => (
                   <div key={producto} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
                     <span>{producto}</span>
-                    <strong>{formatoMoneda(valor)}</strong>
+                    <strong>{formatoKg(cantidad)} kg</strong>
                   </div>
                 ))}
               </div>
