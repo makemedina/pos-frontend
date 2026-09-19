@@ -83,6 +83,8 @@ function formatDateInput(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+const ESPACIOS_POR_SECCION = 10;
+
 export function AdminDashboard({ onCerrar }: Props) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -96,6 +98,13 @@ export function AdminDashboard({ onCerrar }: Props) {
   // nada nuevo al servidor.
   const [detalleProducto, setDetalleProducto] = useState<string | null>(null);
   const [detalleCliente, setDetalleCliente] = useState<string | null>(null);
+  // Cada lista del dashboard (productos, clientes, vendedores) muestra
+  // solo los primeros ESPACIOS_POR_SECCION por default, con un boton
+  // "Mostrar todos" para desplegar el resto -- el backend ya manda la
+  // lista completa ordenada, esto es solo un recorte visual.
+  const [mostrarTodosProductos, setMostrarTodosProductos] = useState(false);
+  const [mostrarTodosClientes, setMostrarTodosClientes] = useState(false);
+  const [mostrarTodosVendedores, setMostrarTodosVendedores] = useState(false);
   const [pendientesHoy, setPendientesHoy] = useState<Pendiente[]>([]);
   const [guardandoPendienteId, setGuardandoPendienteId] = useState<string | null>(null);
 
@@ -116,6 +125,9 @@ export function AdminDashboard({ onCerrar }: Props) {
   // ya no hace falta un boton de "Aplicar filtros".
   useEffect(() => {
     cargar({ periodo, desde, hasta });
+    setMostrarTodosProductos(false);
+    setMostrarTodosClientes(false);
+    setMostrarTodosVendedores(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodo, desde, hasta]);
 
@@ -372,7 +384,7 @@ export function AdminDashboard({ onCerrar }: Props) {
               <h3>Productos más vendidos por valor</h3>
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {data.productosMasVendidosPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
-                {data.productosMasVendidosPorValor.map(([nombre, valor]) => (
+                {(mostrarTodosProductos ? data.productosMasVendidosPorValor : data.productosMasVendidosPorValor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
                   <div
                     key={nombre}
                     onClick={() => setDetalleProducto(nombre)}
@@ -383,13 +395,22 @@ export function AdminDashboard({ onCerrar }: Props) {
                   </div>
                 ))}
               </div>
+              {data.productosMasVendidosPorValor.length > ESPACIOS_POR_SECCION && (
+                <button
+                  className="boton-secundario"
+                  onClick={() => setMostrarTodosProductos((v) => !v)}
+                  style={{ width: '100%', marginTop: 8 }}
+                >
+                  {mostrarTodosProductos ? 'Mostrar menos' : `Mostrar todos (${data.productosMasVendidosPorValor.length})`}
+                </button>
+              )}
             </div>
 
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
               <h3>Mejores clientes por valor</h3>
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {data.mejoresClientesPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
-                {data.mejoresClientesPorValor.map(([nombre, valor]) => (
+                {(mostrarTodosClientes ? data.mejoresClientesPorValor : data.mejoresClientesPorValor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
                   <div
                     key={nombre}
                     onClick={() => setDetalleCliente(nombre)}
@@ -400,19 +421,37 @@ export function AdminDashboard({ onCerrar }: Props) {
                   </div>
                 ))}
               </div>
+              {data.mejoresClientesPorValor.length > ESPACIOS_POR_SECCION && (
+                <button
+                  className="boton-secundario"
+                  onClick={() => setMostrarTodosClientes((v) => !v)}
+                  style={{ width: '100%', marginTop: 8 }}
+                >
+                  {mostrarTodosClientes ? 'Mostrar menos' : `Mostrar todos (${data.mejoresClientesPorValor.length})`}
+                </button>
+              )}
             </div>
 
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
               <h3>Ventas por vendedor</h3>
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {data.ventasPorVendedor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
-                {data.ventasPorVendedor.map(([nombre, valor]) => (
+                {(mostrarTodosVendedores ? data.ventasPorVendedor : data.ventasPorVendedor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
                   <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>{nombre}</span>
                     <strong>{formatoMoneda(valor)}</strong>
                   </div>
                 ))}
               </div>
+              {data.ventasPorVendedor.length > ESPACIOS_POR_SECCION && (
+                <button
+                  className="boton-secundario"
+                  onClick={() => setMostrarTodosVendedores((v) => !v)}
+                  style={{ width: '100%', marginTop: 8 }}
+                >
+                  {mostrarTodosVendedores ? 'Mostrar menos' : `Mostrar todos (${data.ventasPorVendedor.length})`}
+                </button>
+              )}
             </div>
           </>
         )}
