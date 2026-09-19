@@ -33,6 +33,8 @@ interface DashboardData {
   productosMasVendidos: Array<[string, number]>;
   productosMasVendidosPorValor: Array<[string, number]>;
   mejoresClientesPorValor: Array<[string, number]>;
+  detalleProductosPorValor: Record<string, Array<[string, number]>>;
+  detalleClientesPorValor: Record<string, Array<[string, number]>>;
   ventasPorVendedor: Array<[string, number]>;
   detallePorDia: DiaResumen[];
 }
@@ -88,6 +90,12 @@ export function AdminDashboard({ onCerrar }: Props) {
   const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
   const [metricaExpandida, setMetricaExpandida] = useState<MetricaClave | null>(null);
+  // Detalle al hacer click en un producto de "Productos mas vendidos por
+  // valor" (quien se lo compro) o en un cliente de "Mejores clientes por
+  // valor" (que le compro) -- viene precalculado del backend, sin pedir
+  // nada nuevo al servidor.
+  const [detalleProducto, setDetalleProducto] = useState<string | null>(null);
+  const [detalleCliente, setDetalleCliente] = useState<string | null>(null);
   const [pendientesHoy, setPendientesHoy] = useState<Pendiente[]>([]);
   const [guardandoPendienteId, setGuardandoPendienteId] = useState<string | null>(null);
 
@@ -365,7 +373,11 @@ export function AdminDashboard({ onCerrar }: Props) {
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {data.productosMasVendidosPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
                 {data.productosMasVendidosPorValor.map(([nombre, valor]) => (
-                  <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div
+                    key={nombre}
+                    onClick={() => setDetalleProducto(nombre)}
+                    style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}
+                  >
                     <span>{nombre}</span>
                     <strong>{formatoMoneda(valor)}</strong>
                   </div>
@@ -378,7 +390,11 @@ export function AdminDashboard({ onCerrar }: Props) {
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {data.mejoresClientesPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
                 {data.mejoresClientesPorValor.map(([nombre, valor]) => (
-                  <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div
+                    key={nombre}
+                    onClick={() => setDetalleCliente(nombre)}
+                    style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}
+                  >
                     <span>{nombre}</span>
                     <strong>{formatoMoneda(valor)}</strong>
                   </div>
@@ -417,6 +433,52 @@ export function AdminDashboard({ onCerrar }: Props) {
                   <div key={d.fecha} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
                     <span style={{ textTransform: 'capitalize' }}>{formatearFechaDia(d.fecha)}</span>
                     <strong>{METRICAS_INFO[metricaExpandida].obtenerValor(d)}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {detalleProducto && data && (
+        <div className="modal-fondo" onClick={() => setDetalleProducto(null)}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <p className="titulo">{detalleProducto} — por cliente</p>
+              <button className="boton-cerrar" onClick={() => setDetalleProducto(null)}>✕</button>
+            </div>
+            {(data.detalleProductosPorValor[detalleProducto] ?? []).length === 0 ? (
+              <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>
+            ) : (
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {data.detalleProductosPorValor[detalleProducto].map(([cliente, valor]) => (
+                  <div key={cliente} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                    <span>{cliente}</span>
+                    <strong>{formatoMoneda(valor)}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {detalleCliente && data && (
+        <div className="modal-fondo" onClick={() => setDetalleCliente(null)}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <p className="titulo">{detalleCliente} — por producto</p>
+              <button className="boton-cerrar" onClick={() => setDetalleCliente(null)}>✕</button>
+            </div>
+            {(data.detalleClientesPorValor[detalleCliente] ?? []).length === 0 ? (
+              <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>
+            ) : (
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {data.detalleClientesPorValor[detalleCliente].map(([producto, valor]) => (
+                  <div key={producto} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                    <span>{producto}</span>
+                    <strong>{formatoMoneda(valor)}</strong>
                   </div>
                 ))}
               </div>

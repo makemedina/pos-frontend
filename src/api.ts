@@ -1700,6 +1700,31 @@ export interface MovimientoInventario {
   cantidad: number;
   valor: number;
   referencia: string;
+  // Id de la compra/venta/ajuste de origen -- para abrir ese movimiento
+  // (distinto de "id" arriba, que es el lote o el item de venta).
+  idReferencia: string;
+}
+
+export interface AjusteDetalle {
+  id: string;
+  tipo: 'merma' | 'correccion_positiva' | 'correccion_negativa';
+  fecha: string;
+  producto: string;
+  marca: string;
+  cantidad: number;
+  motivo: string;
+  impactoUtilidad: number;
+  solicitadoPor: string;
+  autorizadoPor: string | null;
+}
+
+export async function obtenerAjuste(id: string): Promise<AjusteDetalle> {
+  const res = await fetch(`${API_URL}/inventario/ajustes/${id}`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar el ajuste');
+  }
+  return res.json();
 }
 
 export interface ResumenMovimientosInventario {

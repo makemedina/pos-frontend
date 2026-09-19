@@ -8,6 +8,9 @@ import {
   type Producto,
 } from './api';
 import { exportarAExcel, numeroSemana } from './exportarExcel';
+import { CompraDetalleModal } from './CompraDetalleModal';
+import { VentaDetalleModal } from './VentaDetalleModal';
+import { AjusteDetalleModal } from './AjusteDetalleModal';
 
 interface Props {
   onCerrar: () => void;
@@ -53,6 +56,10 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
   const [movimientos, setMovimientos] = useState<MovimientoInventario[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
+
+  // Al hacer click en un movimiento, se abre su origen: la compra, la
+  // venta, o el ajuste que lo genero.
+  const [movimientoAbierto, setMovimientoAbierto] = useState<{ tipo: MovimientoInventario['tipo']; id: string } | null>(null);
 
   // Se recarga automaticamente cada vez que cambia cualquier filtro --
   // ya no hace falta un boton de "Aplicar filtros".
@@ -227,7 +234,8 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
                 return (
                   <div
                     key={`${m.tipo}-${m.id}`}
-                    style={{ display: 'flex', justifyContent: 'space-between', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.6rem 0.75rem', borderRadius: 14 }}
+                    onClick={() => setMovimientoAbierto({ tipo: m.tipo, id: m.idReferencia })}
+                    style={{ display: 'flex', justifyContent: 'space-between', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.6rem 0.75rem', borderRadius: 14, cursor: 'pointer' }}
                   >
                     <div>
                       <div>
@@ -250,6 +258,18 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
           </>
         )}
       </div>
+
+      {movimientoAbierto?.tipo === 'entrada' && (
+        <CompraDetalleModal compraId={movimientoAbierto.id} onCerrar={() => setMovimientoAbierto(null)} />
+      )}
+      {movimientoAbierto?.tipo === 'salida' && (
+        <VentaDetalleModal ventaId={movimientoAbierto.id} onCerrar={() => setMovimientoAbierto(null)} />
+      )}
+      {(movimientoAbierto?.tipo === 'merma' ||
+        movimientoAbierto?.tipo === 'correccion_positiva' ||
+        movimientoAbierto?.tipo === 'correccion_negativa') && (
+        <AjusteDetalleModal ajusteId={movimientoAbierto.id} onCerrar={() => setMovimientoAbierto(null)} />
+      )}
     </div>
   );
 }
