@@ -1658,6 +1658,14 @@ export async function obtenerGastos(filtros: FiltrosHistorialGastos = {}): Promi
   return res.json();
 }
 
+// Fechas (ISO) de los cortes de caja ya guardados que el backend tuvo que
+// recalcular porque este cambio movio o modifico un gasto de un dia que
+// ya estaba cerrado -- ver recalcularCorteSiExiste en corte.service.ts.
+export interface RespuestaGastoConCortes extends GastoHistorial {
+  corteRecalculado?: string | null;
+  cortesRecalculados?: string[];
+}
+
 // Solo el administrador puede editar un gasto ya registrado (ver ruta en
 // el backend) -- cualquier campo es opcional, se manda solo lo que cambio.
 export async function editarGasto(
@@ -1670,7 +1678,7 @@ export async function editarGasto(
     metodoPago?: string;
     fecha?: string;
   }
-): Promise<GastoHistorial> {
+): Promise<RespuestaGastoConCortes> {
   const res = await fetch(`${API_URL}/gastos/${gastoId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },

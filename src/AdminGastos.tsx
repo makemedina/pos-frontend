@@ -201,6 +201,17 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
     }
   }
 
+  // El backend recalcula solo el corte de caja de un dia que ya estaba
+  // guardado, si el cambio de un gasto lo afecta (ver corteRecalculado /
+  // cortesRecalculados en las respuestas) -- aqui se arma el aviso para
+  // que quien edito sepa que un corte cerrado cambio de numeros.
+  function avisoCortesRecalculados(fechas: (string | null | undefined)[]) {
+    const validas = fechas.filter((f): f is string => !!f);
+    if (validas.length === 0) return '';
+    const listado = validas.map((f) => formatoFecha(new Date(f))).join(', ');
+    return ` ⚠️ El corte de caja del ${listado} ya estaba guardado y se recalculó con este cambio.`;
+  }
+
   async function confirmarCancelacion(gastoId: string) {
     setCancelando(true);
     try {
@@ -221,7 +232,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
         }
         return;
       }
-      setMensaje('Gasto cancelado.');
+      setMensaje(`Gasto cancelado.${avisoCortesRecalculados([data.corteRecalculado])}`);
       setConfirmandoId(null);
       setNecesitaAutorizacion(false);
       setAutorizadoPorTelefono('');
@@ -248,14 +259,14 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
   async function guardarEdicion(gastoId: string) {
     setGuardandoEdicion(true);
     try {
-      await editarGasto(gastoId, {
+      const resultado = await editarGasto(gastoId, {
         concepto: editConcepto,
         monto: Number(editMonto),
         metodoPago: editMetodoPago,
         categoriaId: editCategoriaId,
         fecha: editFecha,
       });
-      setMensaje('Gasto actualizado.');
+      setMensaje(`Gasto actualizado.${avisoCortesRecalculados(resultado.cortesRecalculados ?? [])}`);
       setEditandoId(null);
       cargarHistorial();
     } catch (err: any) {
@@ -304,7 +315,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'No se pudo guardar');
-      setMensaje('Gasto registrado');
+      setMensaje(`Gasto registrado.${avisoCortesRecalculados([data.corteRecalculado])}`);
       setConcepto('');
       setMonto('');
       setFecha(formatDateInput(new Date()));
