@@ -6,6 +6,7 @@ import {
   buscarProveedores,
   crearProveedorRapido,
   obtenerGastos,
+  editarGasto,
   type Proveedor,
   type CategoriaGasto,
   type GastoHistorial,
@@ -16,6 +17,7 @@ type Gasto = GastoHistorial;
 
 interface Props {
   onCerrar: () => void;
+  esAdmin: boolean;
 }
 
 const DEPARTAMENTOS = ['Operativos', 'Administrativos', 'Recursos Humanos', 'Financieros'];
@@ -42,13 +44,16 @@ function formatDateInput(date: Date) {
 
 const CARD = { border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 };
 
-export function AdminGastos({ onCerrar }: Props) {
+export function AdminGastos({ onCerrar, esAdmin }: Props) {
   const [categorias, setCategorias] = useState<CategoriaGasto[]>([]);
   const [gastos, setGastos] = useState<Gasto[]>([]);
   const [concepto, setConcepto] = useState('');
   const [monto, setMonto] = useState('');
   const [metodoPago, setMetodoPago] = useState('efectivo');
   const [categoriaId, setCategoriaId] = useState('');
+  // Solo el administrador puede elegir un dia distinto de hoy para el
+  // gasto -- a cualquier otro usuario el backend le ignora este campo.
+  const [fecha, setFecha] = useState(() => formatDateInput(new Date()));
   const [fotoComprobante, setFotoComprobante] = useState<File | null>(null);
   const [previaFoto, setPreviaFoto] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
@@ -84,6 +89,15 @@ export function AdminGastos({ onCerrar }: Props) {
   const [autorizadoPorTelefono, setAutorizadoPorTelefono] = useState('');
   const [autorizadoPin, setAutorizadoPin] = useState('');
   const [cancelando, setCancelando] = useState(false);
+
+  // Edicion de un gasto ya registrado (solo administrador).
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [editConcepto, setEditConcepto] = useState('');
+  const [editMonto, setEditMonto] = useState('');
+  const [editMetodoPago, setEditMetodoPago] = useState('efectivo');
+  const [editCategoriaId, setEditCategoriaId] = useState('');
+  const [editFecha, setEditFecha] = useState('');
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
 
   useEffect(() => {
     cargarCategorias();
@@ -218,6 +232,39 @@ export function AdminGastos({ onCerrar }: Props) {
     }
   }
 
+  function iniciarEdicion(gasto: Gasto) {
+    setEditandoId(gasto.id);
+    setEditConcepto(gasto.concepto);
+    setEditMonto(String(gasto.monto));
+    setEditMetodoPago(gasto.metodoPago);
+    setEditCategoriaId(gasto.categoria.id);
+    setEditFecha(formatDateInput(new Date(gasto.fecha)));
+  }
+
+  function cancelarEdicion() {
+    setEditandoId(null);
+  }
+
+  async function guardarEdicion(gastoId: string) {
+    setGuardandoEdicion(true);
+    try {
+      await editarGasto(gastoId, {
+        concepto: editConcepto,
+        monto: Number(editMonto),
+        metodoPago: editMetodoPago,
+        categoriaId: editCategoriaId,
+        fecha: editFecha,
+      });
+      setMensaje('Gasto actualizado.');
+      setEditandoId(null);
+      cargarHistorial();
+    } catch (err: any) {
+      setMensaje(err.message || 'No se pudo editar el gasto.');
+    } finally {
+      setGuardandoEdicion(false);
+    }
+  }
+
   function elegirFotoComprobante(e: React.ChangeEvent<HTMLInputElement>) {
     const archivo = e.target.files?.[0] ?? null;
     setFotoComprobante(archivo);
@@ -245,6 +292,7 @@ export function AdminGastos({ onCerrar }: Props) {
       cuerpo.append('concepto', concepto);
       cuerpo.append('monto', monto);
       cuerpo.append('metodoPago', metodoPago);
+      if (esAdmin) cuerpo.append('fecha', fecha);
       cuerpo.append('foto', fotoComprobante);
 
       // Sin Content-Type manual: el navegador lo pone solo (con el boundary
@@ -259,6 +307,7 @@ export function AdminGastos({ onCerrar }: Props) {
       setMensaje('Gasto registrado');
       setConcepto('');
       setMonto('');
+      setFecha(formatDateInput(new Date()));
       setProveedorElegido(null);
       if (previaFoto) URL.revokeObjectURL(previaFoto);
       setFotoComprobante(null);
@@ -380,6 +429,13 @@ export function AdminGastos({ onCerrar }: Props) {
               <option value="efectivo">Efectivo</option>
               <option value="transferencia">Transferencia</option>
             </select>
+
+            {esAdmin && (
+              <>
+                <label className="etiqueta">Día en que se aplica el gasto</label>
+                <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+              </>
+            )}
 
             <label className="etiqueta">Categoría</label>
             {!mostrarNuevaCategoria ? (
@@ -611,19 +667,66 @@ export function AdminGastos({ onCerrar }: Props) {
               )}
               {!cargandoHistorial && gastosFiltrados.map((gasto) => (
                 <div key={gasto.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <div>
-                      <strong>{gasto.concepto}</strong>
-                      <div>{gasto.categoria.nombre}</div>
-                      {gasto.proveedor && <div style={{ fontSize: 12, color: '#6b7280' }}>Proveedor: {gasto.proveedor.nombre}</div>}
+                  {editandoId === gasto.id ? (
+                    <div style={{ display: 'grid', gap: 8 }}>
+                      <label className="etiqueta">Concepto</label>
+                      <input value={editConcepto} onChange={(e) => setEditConcepto(e.target.value)} />
+                      <label className="etiqueta">Monto</label>
+                      <input type="number" step="0.01" value={editMonto} onChange={(e) => setEditMonto(e.target.value)} />
+                      <label className="etiqueta">Método de pago</label>
+                      <select value={editMetodoPago} onChange={(e) => setEditMetodoPago(e.target.value)}>
+                        <option value="efectivo">Efectivo</option>
+                        <option value="transferencia">Transferencia</option>
+                      </select>
+                      <label className="etiqueta">Categoría</label>
+                      <select value={editCategoriaId} onChange={(e) => setEditCategoriaId(e.target.value)}>
+                        {Object.entries(categoriasPorDepartamento).map(([departamento, cats]) => (
+                          <optgroup key={departamento} label={departamento}>
+                            {cats.map((c) => (
+                              <option key={c.id} value={c.id}>{c.nombre}</option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                      <label className="etiqueta">Día en que se aplica el gasto</label>
+                      <input type="date" value={editFecha} onChange={(e) => setEditFecha(e.target.value)} />
+                      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                        <button onClick={() => guardarEdicion(gasto.id)} disabled={guardandoEdicion} style={{ flex: 1 }}>
+                          {guardandoEdicion ? 'Guardando...' : 'Guardar cambios'}
+                        </button>
+                        <button className="boton-secundario" onClick={cancelarEdicion} disabled={guardandoEdicion} style={{ flex: 1 }}>
+                          Cancelar
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div>{formatoMoneda(Number(gasto.monto))}</div>
-                      <small>{gasto.registradoPor.nombre}</small>
-                    </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div>
+                          <strong>{gasto.concepto}</strong>
+                          <div>{gasto.categoria.nombre}</div>
+                          {gasto.proveedor && <div style={{ fontSize: 12, color: '#6b7280' }}>Proveedor: {gasto.proveedor.nombre}</div>}
+                          <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoFecha(new Date(gasto.fecha))}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div>{formatoMoneda(Number(gasto.monto))}</div>
+                          <small>{gasto.registradoPor.nombre}</small>
+                        </div>
+                      </div>
 
-                  {gasto.fotoComprobanteKey && (
+                      {esAdmin && !gasto.cancelado && (
+                        <button
+                          className="boton-secundario"
+                          onClick={() => iniciarEdicion(gasto)}
+                          style={{ width: '100%', marginTop: 8 }}
+                        >
+                          ✏️ Editar
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  {editandoId !== gasto.id && gasto.fotoComprobanteKey && (
                     <button
                       className="boton-secundario"
                       onClick={() => verComprobante(gasto.id)}
@@ -634,7 +737,7 @@ export function AdminGastos({ onCerrar }: Props) {
                     </button>
                   )}
 
-                  {gasto.cancelado ? (
+                  {editandoId === gasto.id ? null : gasto.cancelado ? (
                     <div className="aviso-alerta" style={{ marginTop: 8 }}>
                       ❌ Cancelado{gasto.canceladoEn ? ` el ${formatoFechaHora(new Date(gasto.canceladoEn))}` : ''}
                     </div>

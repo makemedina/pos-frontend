@@ -825,7 +825,7 @@ export default function App() {
       return <AdminProspeccion onCerrar={volverAlInicio} />;
     }
     if (pantallaActiva === 'gastos') {
-      return <AdminGastos onCerrar={() => abrirPantalla('finanzasMenu')} />;
+      return <AdminGastos onCerrar={() => abrirPantalla('finanzasMenu')} esAdmin={usuario.rolBase === 'administrador'} />;
     }
     if (pantallaActiva === 'depositos') {
       return <AdminDepositos onCerrar={() => abrirPantalla('finanzasMenu')} />;

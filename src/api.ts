@@ -1625,7 +1625,7 @@ export interface GastoHistorial {
   metodoPago: string;
   fecha: string;
   categoria: CategoriaGasto;
-  proveedor: { nombre: string } | null;
+  proveedor: { id: string; nombre: string } | null;
   registradoPor: { nombre: string };
   cancelado: boolean;
   canceladoEn: string | null;
@@ -1656,6 +1656,29 @@ export async function obtenerGastos(filtros: FiltrosHistorialGastos = {}): Promi
     throw new Error(data.error || 'No se pudo cargar el reporte de gastos');
   }
   return res.json();
+}
+
+// Solo el administrador puede editar un gasto ya registrado (ver ruta en
+// el backend) -- cualquier campo es opcional, se manda solo lo que cambio.
+export async function editarGasto(
+  gastoId: string,
+  cambios: {
+    categoriaId?: string;
+    proveedorId?: string | null;
+    concepto?: string;
+    monto?: number;
+    metodoPago?: string;
+    fecha?: string;
+  }
+): Promise<GastoHistorial> {
+  const res = await fetch(`${API_URL}/gastos/${gastoId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(cambios),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'No se pudo editar el gasto');
+  return data;
 }
 
 // ---------- MOVIMIENTOS DE INVENTARIO (reporte) ----------
