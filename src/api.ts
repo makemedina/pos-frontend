@@ -1243,6 +1243,7 @@ export async function guardarConfiguracion(datos: Partial<Configuracion>): Promi
 
 export interface PagoDetalleCorte {
   id: string;
+  ventaId: string;
   folio: number;
   cliente: string;
   monto: number;
@@ -1253,6 +1254,7 @@ export interface PagoDetalleCorte {
 
 export interface PagoProveedorDetalleCorte {
   id: string;
+  compraId: string;
   proveedor: string;
   numeroFactura: string | null;
   monto: number;
@@ -1895,6 +1897,7 @@ export interface PagoNota {
   canceladoEn: string | null;
   registradoPor: { nombre: string };
   grupoPagoId: string | null;
+  fotoComprobanteKey: string | null;
 }
 
 export interface ComprobantePagoReconstruido {
@@ -1972,15 +1975,37 @@ export async function obtenerPagosDeNota(ventaId: string): Promise<PagoNota[]> {
 
 // pagos: uno o mas {monto, metodoPago} -- permite repartir un abono
 // entre varios metodos (ej. parte en efectivo y parte por transferencia).
-export async function registrarPagoVenta(ventaId: string, pagos: { monto: number; metodoPago: string }[]) {
+// fotoComprobante: obligatoria si alguno de los pagos es por transferencia
+// (el backend la exige y regresa FOTO_REQUERIDA si falta).
+export async function registrarPagoVenta(
+  ventaId: string,
+  pagos: { monto: number; metodoPago: string }[],
+  fotoComprobante?: File
+) {
+  const cuerpo = new FormData();
+  cuerpo.append('pagos', JSON.stringify(pagos));
+  if (fotoComprobante) cuerpo.append('foto', fotoComprobante);
+
   const res = await fetch(`${API_URL}/ventas/${ventaId}/pagos`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ pagos }),
+    headers: headerAuth(),
+    body: cuerpo,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw { ...data, status: res.status };
   return data;
+}
+
+export async function obtenerComprobanteFotoPago(pagoId: string): Promise<Blob> {
+  const res = await fetch(`${API_URL}/ventas/pagos/${pagoId}/comprobante`, { headers: headerAuth() });
+  if (!res.ok) throw new Error('No se pudo cargar la foto del comprobante.');
+  return res.blob();
+}
+
+export async function obtenerComprobanteFotoDeposito(depositoId: string): Promise<Blob> {
+  const res = await fetch(`${API_URL}/depositos/${depositoId}/comprobante`, { headers: headerAuth() });
+  if (!res.ok) throw new Error('No se pudo cargar la foto del comprobante.');
+  return res.blob();
 }
 
 export async function cancelarPagoVenta(
@@ -2063,16 +2088,22 @@ export interface ResultadoPagoMultiNota {
 
 // pagos: uno o mas {monto, metodoPago} -- el pago recibido tambien se
 // puede repartir entre efectivo y transferencia, igual que un abono a una
-// sola nota.
+// sola nota. fotoComprobante: obligatoria si alguno es por transferencia.
 export async function registrarPagoMultiNota(
   clienteId: string,
   asignaciones: AsignacionPagoMultiple[],
-  pagos: { monto: number; metodoPago: string }[]
+  pagos: { monto: number; metodoPago: string }[],
+  fotoComprobante?: File
 ): Promise<ResultadoPagoMultiNota> {
+  const cuerpo = new FormData();
+  cuerpo.append('asignaciones', JSON.stringify(asignaciones));
+  cuerpo.append('pagos', JSON.stringify(pagos));
+  if (fotoComprobante) cuerpo.append('foto', fotoComprobante);
+
   const res = await fetch(`${API_URL}/cartera/clientes/${clienteId}/pagos`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ asignaciones, pagos }),
+    headers: headerAuth(),
+    body: cuerpo,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw { ...data, status: res.status };

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
-import type { ResumenCorteDia } from './api';
+import { obtenerComprobanteFotoDeposito, type ResumenCorteDia } from './api';
+import { VentaDetalleModal } from './VentaDetalleModal';
+import { CompraDetalleModal } from './CompraDetalleModal';
 
 interface Props {
   resumen: ResumenCorteDia;
@@ -133,6 +135,32 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
   const [detalleAbierto, setDetalleAbierto] = useState<Record<string, boolean>>({});
   const toggleDetalle = (clave: string) =>
     setDetalleAbierto((prev) => ({ ...prev, [clave]: !prev[clave] }));
+
+  // Al hacer click en una venta/compra (o en un pago/deposito que le
+  // pertenece), se abre su detalle completo -- mismos modales que ya se
+  // usan en el resto de la app.
+  const [ventaAbierta, setVentaAbierta] = useState<string | null>(null);
+  const [compraAbierta, setCompraAbierta] = useState<string | null>(null);
+  const [comprobanteDepositoAbierto, setComprobanteDepositoAbierto] = useState<string | null>(null);
+  const [cargandoComprobanteDeposito, setCargandoComprobanteDeposito] = useState(false);
+  const [mensajeDeposito, setMensajeDeposito] = useState<string | null>(null);
+
+  async function verComprobanteDeposito(depositoId: string) {
+    setCargandoComprobanteDeposito(true);
+    try {
+      const blob = await obtenerComprobanteFotoDeposito(depositoId);
+      setComprobanteDepositoAbierto(URL.createObjectURL(blob));
+    } catch {
+      setMensajeDeposito('Este depósito no tiene foto de comprobante.');
+    } finally {
+      setCargandoComprobanteDeposito(false);
+    }
+  }
+
+  function cerrarComprobanteDeposito() {
+    if (comprobanteDepositoAbierto) URL.revokeObjectURL(comprobanteDepositoAbierto);
+    setComprobanteDepositoAbierto(null);
+  }
 
   const tieneUtilidad = resumen.utilidadDia !== undefined;
   // Si el ultimo corte no fue justo ayer, este corte abarca varios dias
@@ -288,7 +316,11 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
               (v) => {
                 const pagoMixto = v.montoEfectivo > 0 && v.montoTransferencia > 0;
                 return (
-                  <div key={v.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                  <div
+                    key={v.id}
+                    onClick={() => setVentaAbierta(v.id)}
+                    style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4, cursor: 'pointer' }}
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>#{v.folio} · {v.vendedor} · {v.metodoPago ?? 'crédito'}</span>
                       <span>
@@ -338,7 +370,11 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                       (p) => p.monto
                     ),
                     (p) => (
-                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                      <div
+                        key={p.id}
+                        onClick={() => setVentaAbierta(p.ventaId)}
+                        style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4, cursor: 'pointer' }}
+                      >
                         <span>
                           Venta #{p.folio} · {p.metodoPago}
                           <br />
@@ -381,7 +417,11 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                 (c) => c.total
               ),
               (c) => (
-                <div key={c.id} style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                <div
+                  key={c.id}
+                  onClick={() => setCompraAbierta(c.id)}
+                  style={{ fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4, cursor: 'pointer' }}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>{c.numeroFactura || 'sin factura'} · {c.metodoPago ?? 'crédito'}</span>
                     <span>
@@ -456,7 +496,11 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                       (p) => p.monto
                     ),
                     (p) => (
-                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                      <div
+                        key={p.id}
+                        onClick={() => setCompraAbierta(p.compraId)}
+                        style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4, cursor: 'pointer' }}
+                      >
                         <span>
                           Factura {p.numeroFactura || 'sin número'} · {p.metodoPago}
                           <br />
@@ -494,7 +538,11 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
               {detalleAbierto.depositos && (
                 <div style={{ display: 'grid', gap: 4, marginTop: 8 }}>
                   {resumen.depositosBanco.detalle.map((d) => (
-                    <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4 }}>
+                    <div
+                      key={d.id}
+                      onClick={() => verComprobanteDeposito(d.id)}
+                      style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #e5e5ea', paddingBottom: 4, cursor: cargandoComprobanteDeposito ? 'wait' : 'pointer' }}
+                    >
                       <span>
                         {d.notas || 'Depósito a banco'}
                         <br />
@@ -519,7 +567,11 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
         <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fff2f1' }}>
           <h3 style={{ color: '#b91c1c' }}>❌ {tituloPeriodo('Cancelado hoy', 'Cancelado en el período')}</h3>
           {resumen.canceladas.ventas.map((v) => (
-            <div key={v.id} style={{ fontSize: 13, borderBottom: '1px solid #fecaca', paddingBottom: 4 }}>
+            <div
+              key={v.id}
+              onClick={() => setVentaAbierta(v.id)}
+              style={{ fontSize: 13, borderBottom: '1px solid #fecaca', paddingBottom: 4, cursor: 'pointer' }}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Venta #{v.folio} · {v.cliente}</span>
                 <strong>{formatoMoneda(v.total)}</strong>
@@ -530,7 +582,11 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             </div>
           ))}
           {resumen.canceladas.compras.map((c) => (
-            <div key={c.id} style={{ fontSize: 13, borderBottom: '1px solid #fecaca', paddingBottom: 4 }}>
+            <div
+              key={c.id}
+              onClick={() => setCompraAbierta(c.id)}
+              style={{ fontSize: 13, borderBottom: '1px solid #fecaca', paddingBottom: 4, cursor: 'pointer' }}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Compra {c.numeroFactura || 'sin factura'} · {c.proveedor}</span>
                 <strong>{formatoMoneda(c.total)}</strong>
@@ -664,6 +720,38 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
               <p style={{ fontSize: 13, margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>{yaGuardado.observacion}</p>
             </div>
           )}
+        </div>
+      )}
+
+      {ventaAbierta && (
+        <VentaDetalleModal ventaId={ventaAbierta} onCerrar={() => setVentaAbierta(null)} />
+      )}
+
+      {compraAbierta && (
+        <CompraDetalleModal compraId={compraAbierta} onCerrar={() => setCompraAbierta(null)} />
+      )}
+
+      {mensajeDeposito && (
+        <div className="modal-fondo" onClick={() => setMensajeDeposito(null)}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <p className="titulo">Depósito</p>
+              <button className="boton-cerrar" onClick={() => setMensajeDeposito(null)}>✕</button>
+            </div>
+            <p>{mensajeDeposito}</p>
+          </div>
+        </div>
+      )}
+
+      {comprobanteDepositoAbierto && (
+        <div className="modal-fondo" onClick={cerrarComprobanteDeposito}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <p className="titulo">Comprobante del depósito</p>
+              <button className="boton-cerrar" onClick={cerrarComprobanteDeposito}>✕</button>
+            </div>
+            <img src={comprobanteDepositoAbierto} alt="Comprobante" style={{ maxWidth: '100%', borderRadius: 8 }} />
+          </div>
         </div>
       )}
     </div>

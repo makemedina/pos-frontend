@@ -14,6 +14,7 @@ import {
   cancelarPagoVenta,
   obtenerSaldoAFavor,
   obtenerComprobantePagoPorGrupo,
+  obtenerComprobanteFotoPago,
   type ClienteCartera,
   type NotaCartera,
   type PagoNota,
@@ -71,6 +72,13 @@ export function AdminCartera({ onCerrar }: Props) {
   const [asignacionesPago, setAsignacionesPago] = useState<Record<string, string>>({});
   const [guardandoPagoMultiple, setGuardandoPagoMultiple] = useState(false);
   const [guardandoPago, setGuardandoPago] = useState(false);
+  // Foto del comprobante -- obligatoria solo si hay monto en transferencia
+  // (ver validacion en el backend). Un estado para cada formulario, para
+  // que no se mezclen entre el pago multiple y el de una sola nota.
+  const [fotoComprobantePagoMultiple, setFotoComprobantePagoMultiple] = useState<File | null>(null);
+  const [fotoComprobantePago, setFotoComprobantePago] = useState<File | null>(null);
+  const [comprobanteFotoAbierto, setComprobanteFotoAbierto] = useState<string | null>(null);
+  const [cargandoComprobanteFoto, setCargandoComprobanteFoto] = useState(false);
 
   // Nivel 3: pagos de una nota + formulario de abono
   const [notaElegida, setNotaElegida] = useState<NotaCartera | null>(null);
@@ -200,6 +208,7 @@ export function AdminCartera({ onCerrar }: Props) {
     setAsignacionesPago({});
     setEfectivoPagoMultiple('');
     setTransferenciaPagoMultiple('');
+    setFotoComprobantePagoMultiple(null);
     setMostrarPagoMultiple(true);
   }
 
@@ -208,6 +217,7 @@ export function AdminCartera({ onCerrar }: Props) {
     setAsignacionesPago({});
     setEfectivoPagoMultiple('');
     setTransferenciaPagoMultiple('');
+    setFotoComprobantePagoMultiple(null);
   }
 
   function actualizarAsignacion(notaId: string, valor: string) {
@@ -268,10 +278,14 @@ export function AdminCartera({ onCerrar }: Props) {
       setMensaje('Captura un monto mayor a cero en efectivo o transferencia.');
       return;
     }
+    if (Number(transferenciaPagoMultiple) > 0 && !fotoComprobantePagoMultiple) {
+      setMensaje('Sube la foto del comprobante de la transferencia antes de guardar.');
+      return;
+    }
 
     setGuardandoPagoMultiple(true);
     try {
-      const resultado = await registrarPagoMultiNota(clienteElegido.id, asignaciones, pagos);
+      const resultado = await registrarPagoMultiNota(clienteElegido.id, asignaciones, pagos, fotoComprobantePagoMultiple ?? undefined);
       setComprobanteActivo({
         folioNota: resultado.detalle.map((d) => d.folio).join(', '),
         clienteNombre: clienteElegido.nombre,
@@ -290,8 +304,10 @@ export function AdminCartera({ onCerrar }: Props) {
       cerrarPagoMultiple();
       await cargarNotas();
     } catch (err: any) {
-      if (err.code === 'MONTO_INVALIDO') {
+      if (err.code === 'MONTO_INVALIDO' || err.code === 'SALDO_A_FAVOR_INSUFICIENTE') {
         setMensaje(err.error || 'El monto del pago no es valido.');
+      } else if (err.code === 'FOTO_REQUERIDA' || err.code === 'FOTO_INVALIDA' || err.code === 'ALMACENAMIENTO_NO_CONFIGURADO') {
+        setMensaje(err.error || 'No se pudo subir la foto del comprobante.');
       } else {
         setMensaje('No se pudo registrar el pago.');
       }
@@ -372,6 +388,23 @@ export function AdminCartera({ onCerrar }: Props) {
   // completo (no solo la parte de la nota que se esta viendo). Los pagos
   // de antes de que existiera grupoPagoId no tienen ese dato, asi que
   // caen al comportamiento viejo: solo la parte de esta nota.
+  async function verComprobanteFoto(pagoId: string) {
+    setCargandoComprobanteFoto(true);
+    try {
+      const blob = await obtenerComprobanteFotoPago(pagoId);
+      setComprobanteFotoAbierto(URL.createObjectURL(blob));
+    } catch {
+      setMensaje('No se pudo cargar la foto del comprobante.');
+    } finally {
+      setCargandoComprobanteFoto(false);
+    }
+  }
+
+  function cerrarComprobanteFoto() {
+    if (comprobanteFotoAbierto) URL.revokeObjectURL(comprobanteFotoAbierto);
+    setComprobanteFotoAbierto(null);
+  }
+
   async function reimprimirComprobante(p: PagoNota) {
     if (p.grupoPagoId) {
       try {
@@ -411,11 +444,15 @@ export function AdminCartera({ onCerrar }: Props) {
       setMensaje('Captura al menos un monto mayor a cero.');
       return;
     }
+    if (Number(montoTransferencia) > 0 && !fotoComprobantePago) {
+      setMensaje('Sube la foto del comprobante de la transferencia antes de guardar.');
+      return;
+    }
     const montoTotal = partes.reduce((acc, p) => acc + p.monto, 0);
 
     setGuardandoPago(true);
     try {
-      const resultado = await registrarPagoVenta(notaElegida.id, partes);
+      const resultado = await registrarPagoVenta(notaElegida.id, partes, fotoComprobantePago ?? undefined);
       setMensaje(`Pago registrado para la venta #${notaElegida.folio}`);
       setComprobanteActivo({
         folioNota: notaElegida.folio,
@@ -430,6 +467,7 @@ export function AdminCartera({ onCerrar }: Props) {
       setMontoEfectivo('');
       setMontoTransferencia('');
       setMontoSaldoFavor('');
+      setFotoComprobantePago(null);
       // Refresca la nota (saldo actualizado) y su historial de pagos. Si la
       // nota quedo pagada (o con saldo a favor) y "ver tambien pagadas" esta
       // apagado, ya no viene en notaData -- se usa el saldo que ya sabemos
@@ -451,6 +489,8 @@ export function AdminCartera({ onCerrar }: Props) {
     } catch (err: any) {
       if (err.code === 'MONTO_INVALIDO' || err.code === 'SALDO_A_FAVOR_INSUFICIENTE') {
         setMensaje(err.error || 'El monto del pago no es valido.');
+      } else if (err.code === 'FOTO_REQUERIDA' || err.code === 'FOTO_INVALIDA' || err.code === 'ALMACENAMIENTO_NO_CONFIGURADO') {
+        setMensaje(err.error || 'No se pudo subir la foto del comprobante.');
       } else {
         setMensaje('No se pudo registrar el pago.');
       }
@@ -835,13 +875,30 @@ export function AdminCartera({ onCerrar }: Props) {
                   Transferencia
                   <input
                     value={transferenciaPagoMultiple}
-                    onChange={(e) => setTransferenciaPagoMultiple(e.target.value)}
+                    onChange={(e) => {
+                      setTransferenciaPagoMultiple(e.target.value);
+                      if (Number(e.target.value) <= 0) setFotoComprobantePagoMultiple(null);
+                    }}
                     type="number"
                     step="0.01"
                     min="0"
                     placeholder="0.00"
                   />
                 </label>
+
+                {Number(transferenciaPagoMultiple) > 0 && (
+                  <label>
+                    Foto del comprobante de la transferencia (obligatoria)
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setFotoComprobantePagoMultiple(e.target.files?.[0] ?? null)}
+                    />
+                    {fotoComprobantePagoMultiple && (
+                      <small style={{ color: '#16a34a' }}>📎 {fotoComprobantePagoMultiple.name}</small>
+                    )}
+                  </label>
+                )}
 
                 <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
                   Marca las notas que se pagan con este importe — cada una se rellena con su saldo, pero puedes cambiarlo.
@@ -1006,13 +1063,25 @@ export function AdminCartera({ onCerrar }: Props) {
                       ❌ Cancelado{p.canceladoEn ? ` el ${formatoFechaHora(new Date(p.canceladoEn))}` : ''}
                     </div>
                   ) : (
-                    <button
-                      className="boton-secundario"
-                      onClick={() => reimprimirComprobante(p)}
-                      style={{ marginTop: 6, width: '100%' }}
-                    >
-                      🧾 Reimprimir comprobante
-                    </button>
+                    <>
+                      <button
+                        className="boton-secundario"
+                        onClick={() => reimprimirComprobante(p)}
+                        style={{ marginTop: 6, width: '100%' }}
+                      >
+                        🧾 Reimprimir comprobante
+                      </button>
+                      {p.fotoComprobanteKey && (
+                        <button
+                          className="boton-secundario"
+                          onClick={() => verComprobanteFoto(p.id)}
+                          disabled={cargandoComprobanteFoto}
+                          style={{ marginTop: 6, width: '100%' }}
+                        >
+                          📷 Ver foto de la transferencia
+                        </button>
+                      )}
+                    </>
                   )}
 
                   {!p.cancelado &&
@@ -1078,11 +1147,27 @@ export function AdminCartera({ onCerrar }: Props) {
                   Transferencia
                   <input
                     value={montoTransferencia}
-                    onChange={(e) => setMontoTransferencia(e.target.value)}
+                    onChange={(e) => {
+                      setMontoTransferencia(e.target.value);
+                      if (Number(e.target.value) <= 0) setFotoComprobantePago(null);
+                    }}
                     type="number"
                     step="0.01"
                   />
                 </label>
+                {Number(montoTransferencia) > 0 && (
+                  <label>
+                    Foto del comprobante de la transferencia (obligatoria)
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setFotoComprobantePago(e.target.files?.[0] ?? null)}
+                    />
+                    {fotoComprobantePago && (
+                      <small style={{ color: '#16a34a' }}>📎 {fotoComprobantePago.name}</small>
+                    )}
+                  </label>
+                )}
                 {saldoFavorDisponible > 0 && (
                   <label>
                     Saldo a favor del cliente ({formatoMoneda(saldoFavorDisponible)} disponible)
@@ -1199,6 +1284,18 @@ export function AdminCartera({ onCerrar }: Props) {
 
       {comprobanteActivo && (
         <ComprobantePagoModal datos={comprobanteActivo} onCerrar={() => setComprobanteActivo(null)} />
+      )}
+
+      {comprobanteFotoAbierto && (
+        <div className="modal-fondo" onClick={cerrarComprobanteFoto}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <p className="titulo">Comprobante de la transferencia</p>
+              <button className="boton-cerrar" onClick={cerrarComprobanteFoto}>✕</button>
+            </div>
+            <img src={comprobanteFotoAbierto} alt="Comprobante" style={{ maxWidth: '100%', borderRadius: 8 }} />
+          </div>
+        </div>
       )}
     </div>
   );

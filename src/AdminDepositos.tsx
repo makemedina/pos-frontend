@@ -11,6 +11,7 @@ interface Deposito {
   registradoPor: { nombre: string };
   cancelado: boolean;
   canceladoEn: string | null;
+  fotoComprobanteKey: string | null;
 }
 
 interface Props {
@@ -21,6 +22,11 @@ export function AdminDepositos({ onCerrar }: Props) {
   const [depositos, setDepositos] = useState<Deposito[]>([]);
   const [monto, setMonto] = useState('');
   const [notas, setNotas] = useState('');
+  const [fotoComprobante, setFotoComprobante] = useState<File | null>(null);
+  const [previaFoto, setPreviaFoto] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+  const [comprobanteAbierto, setComprobanteAbierto] = useState<string | null>(null);
+  const [cargandoComprobante, setCargandoComprobante] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [pestana, setPestana] = useState<'registrar' | 'historico'>('registrar');
   const [busqueda, setBusqueda] = useState('');
@@ -45,23 +51,66 @@ export function AdminDepositos({ onCerrar }: Props) {
     }
   }
 
+  function elegirFotoComprobante(e: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0] ?? null;
+    setFotoComprobante(archivo);
+    setPreviaFoto((anterior) => {
+      if (anterior) URL.revokeObjectURL(anterior);
+      return archivo ? URL.createObjectURL(archivo) : null;
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!fotoComprobante) {
+      setMensaje('Sube una foto del comprobante antes de guardar.');
+      return;
+    }
+    setGuardando(true);
     try {
+      const cuerpo = new FormData();
+      cuerpo.append('monto', monto);
+      if (notas.trim()) cuerpo.append('notas', notas.trim());
+      cuerpo.append('foto', fotoComprobante);
+
       const res = await fetch(`${API_URL}/depositos`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...headerAuth() },
-        body: JSON.stringify({ monto: Number(monto), notas: notas.trim() || undefined }),
+        headers: headerAuth(),
+        body: cuerpo,
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'No se pudo guardar');
       setMensaje('Depósito registrado: se bajó de efectivo y se subió a banco.');
       setMonto('');
       setNotas('');
+      if (previaFoto) URL.revokeObjectURL(previaFoto);
+      setFotoComprobante(null);
+      setPreviaFoto(null);
       cargar();
     } catch (err: any) {
       setMensaje(err.message || 'No se pudo registrar el depósito');
+    } finally {
+      setGuardando(false);
     }
+  }
+
+  async function verComprobante(depositoId: string) {
+    setCargandoComprobante(true);
+    try {
+      const res = await fetch(`${API_URL}/depositos/${depositoId}/comprobante`, { headers: headerAuth() });
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      setComprobanteAbierto(URL.createObjectURL(blob));
+    } catch {
+      setMensaje('No se pudo cargar la foto del comprobante.');
+    } finally {
+      setCargandoComprobante(false);
+    }
+  }
+
+  function cerrarComprobante() {
+    if (comprobanteAbierto) URL.revokeObjectURL(comprobanteAbierto);
+    setComprobanteAbierto(null);
   }
 
   async function confirmarCancelacion(depositoId: string) {
@@ -163,7 +212,44 @@ export function AdminDepositos({ onCerrar }: Props) {
             <h3>Registrar depósito</h3>
             <input value={monto} onChange={(e) => setMonto(e.target.value)} type="number" step="0.01" placeholder="Monto depositado" required />
             <input value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Notas (opcional, ej. para qué proveedor)" />
-            <button type="submit">Guardar depósito</button>
+
+            <label className="etiqueta">Foto del comprobante (obligatoria)</label>
+            <label
+              htmlFor="foto-comprobante-deposito"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                border: '2px dashed #c7c7cc',
+                borderRadius: 12,
+                padding: '1.25rem',
+                cursor: 'pointer',
+                color: '#007aff',
+                fontWeight: 600,
+                textAlign: 'center',
+              }}
+            >
+              {fotoComprobante ? `📎 ${fotoComprobante.name} (toca para cambiarla)` : '📷 Toca para elegir o tomar la foto'}
+            </label>
+            <input
+              id="foto-comprobante-deposito"
+              type="file"
+              accept="image/*"
+              onChange={elegirFotoComprobante}
+              style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+            />
+            {previaFoto && (
+              <img
+                src={previaFoto}
+                alt="Comprobante"
+                style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'contain' }}
+              />
+            )}
+
+            <button type="submit" disabled={guardando}>
+              {guardando ? 'Guardando...' : 'Guardar depósito'}
+            </button>
           </form>
         )}
 
@@ -189,6 +275,17 @@ export function AdminDepositos({ onCerrar }: Props) {
                       <small>{deposito.registradoPor.nombre}</small>
                     </div>
                   </div>
+
+                  {deposito.fotoComprobanteKey && (
+                    <button
+                      className="boton-secundario"
+                      onClick={() => verComprobante(deposito.id)}
+                      disabled={cargandoComprobante}
+                      style={{ width: '100%', marginTop: 8 }}
+                    >
+                      🧾 Ver comprobante
+                    </button>
+                  )}
 
                   {deposito.cancelado ? (
                     <div className="aviso-alerta" style={{ marginTop: 8 }}>
@@ -238,6 +335,18 @@ export function AdminDepositos({ onCerrar }: Props) {
           </>
         )}
       </div>
+
+      {comprobanteAbierto && (
+        <div className="modal-fondo" onClick={cerrarComprobante} style={{ zIndex: 40 }}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <p className="titulo">Comprobante</p>
+              <button className="boton-cerrar" onClick={cerrarComprobante}>✕</button>
+            </div>
+            <img src={comprobanteAbierto} alt="Comprobante" style={{ maxWidth: '100%', borderRadius: 8 }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
