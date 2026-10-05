@@ -35,13 +35,15 @@ export function AdminPendientes({ onCerrar }: Props) {
   const [mostrarCompletados, setMostrarCompletados] = useState(false);
 
   const [formAbierto, setFormAbierto] = useState(false);
+  // Si hay un id aqui, el formulario edita ese pendiente en vez de crear uno nuevo.
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [concepto, setConcepto] = useState('');
   const [fecha, setFecha] = useState(() => formatDateInput(new Date()));
   const [notas, setNotas] = useState('');
   const [guardando, setGuardando] = useState(false);
 
   const [clientes, setClientes] = useState<ClienteConSaldo[]>([]);
-  const [clienteElegido, setClienteElegido] = useState<ClienteConSaldo | null>(null);
+  const [clienteElegido, setClienteElegido] = useState<{ id: string; nombre: string } | null>(null);
   const [busquedaCliente, setBusquedaCliente] = useState('');
   const [listaClienteAbierta, setListaClienteAbierta] = useState(false);
 
@@ -101,21 +103,49 @@ export function AdminPendientes({ onCerrar }: Props) {
     }
   }
 
-  async function agregar() {
+  function limpiarForm() {
+    setEditandoId(null);
+    setConcepto('');
+    setNotas('');
+    setFecha(formatDateInput(new Date()));
+    setClienteElegido(null);
+    setBusquedaCliente('');
+    setFormAbierto(false);
+  }
+
+  function empezarEdicion(p: Pendiente) {
+    setEditandoId(p.id);
+    setConcepto(p.concepto);
+    setFecha(formatDateInput(new Date(p.fecha)));
+    setNotas(p.notas ?? '');
+    setClienteElegido(p.cliente ? { id: p.cliente.id, nombre: p.cliente.nombre } : null);
+    setBusquedaCliente('');
+    setFormAbierto(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function guardar() {
     if (!concepto.trim() || !fecha) return;
     setGuardando(true);
     try {
-      await crearPendiente({
-        concepto: concepto.trim(),
-        fecha,
-        notas: notas.trim() || undefined,
-        clienteId: clienteElegido?.id,
-      });
-      setConcepto('');
-      setNotas('');
-      setFecha(formatDateInput(new Date()));
-      setClienteElegido(null);
-      setFormAbierto(false);
+      if (editandoId) {
+        // notas y clienteId se mandan siempre (aunque vacios) para que se
+        // puedan borrar: el backend solo cambia lo que viene definido.
+        await actualizarPendiente(editandoId, {
+          concepto: concepto.trim(),
+          fecha,
+          notas: notas.trim(),
+          clienteId: clienteElegido?.id ?? null,
+        });
+      } else {
+        await crearPendiente({
+          concepto: concepto.trim(),
+          fecha,
+          notas: notas.trim() || undefined,
+          clienteId: clienteElegido?.id,
+        });
+      }
+      limpiarForm();
       cargar();
     } catch {
       setMensaje('No se pudo guardar el pendiente.');
@@ -190,14 +220,24 @@ export function AdminPendientes({ onCerrar }: Props) {
               <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Agregado por {p.registradoPor.nombre}</div>
             </span>
           </label>
-          <button
-            onClick={() => eliminar(p)}
-            disabled={guardandoId === p.id}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: 4 }}
-            title="Eliminar"
-          >
-            🗑️
-          </button>
+          <div style={{ display: 'flex', gap: 2 }}>
+            <button
+              onClick={() => empezarEdicion(p)}
+              disabled={guardandoId === p.id}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: 4 }}
+              title="Editar"
+            >
+              ✏️
+            </button>
+            <button
+              onClick={() => eliminar(p)}
+              disabled={guardandoId === p.id}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: 4 }}
+              title="Eliminar"
+            >
+              🗑️
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -209,7 +249,9 @@ export function AdminPendientes({ onCerrar }: Props) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0 }}>Pendientes</h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setFormAbierto((v) => !v)}>{formAbierto ? 'Cancelar' : '+ Nuevo'}</button>
+            <button onClick={() => (formAbierto ? limpiarForm() : setFormAbierto(true))}>
+              {formAbierto ? 'Cancelar' : '+ Nuevo'}
+            </button>
             <button onClick={onCerrar}>Cerrar</button>
           </div>
         </div>
@@ -239,6 +281,7 @@ export function AdminPendientes({ onCerrar }: Props) {
 
         {formAbierto && (
           <div style={{ ...CARD, display: 'grid', gap: '0.5rem' }}>
+            {editandoId && <strong style={{ fontSize: 14 }}>✏️ Editando pendiente</strong>}
             <label style={{ display: 'grid', gap: '0.25rem' }}>
               <span>¿Qué hay que hacer?</span>
               <input
@@ -306,8 +349,8 @@ export function AdminPendientes({ onCerrar }: Props) {
               <span>Notas (opcional)</span>
               <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} style={{ resize: 'vertical' }} />
             </label>
-            <button onClick={agregar} disabled={guardando || !concepto.trim() || !fecha}>
-              {guardando ? 'Guardando...' : 'Guardar pendiente'}
+            <button onClick={guardar} disabled={guardando || !concepto.trim() || !fecha}>
+              {guardando ? 'Guardando...' : editandoId ? 'Guardar cambios' : 'Guardar pendiente'}
             </button>
           </div>
         )}
