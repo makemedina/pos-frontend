@@ -231,6 +231,17 @@ export async function actualizarProducto(id: string, nombre: string): Promise<{ 
   return data;
 }
 
+export async function actualizarMarcaVariante(id: string, marca: string): Promise<{ id: string; marca: string }> {
+  const res = await fetch(`${API_URL}/catalogo/variantes/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ marca }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}
+
 export interface MovimientoVariante {
   tipo: 'entrada' | 'salida' | 'merma' | 'correccion_positiva' | 'correccion_negativa';
   id: string;

@@ -4,6 +4,7 @@ import {
   obtenerProductosGestion,
   obtenerHistorialVariante,
   actualizarProducto,
+  actualizarMarcaVariante,
   type ProductoGestion,
   type MovimientoVariante,
 } from './api';
@@ -43,6 +44,10 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
   const [nombreEdicion, setNombreEdicion] = useState('');
   const [guardandoNombre, setGuardandoNombre] = useState(false);
 
+  const [editandoMarca, setEditandoMarca] = useState(false);
+  const [marcaEdicion, setMarcaEdicion] = useState('');
+  const [guardandoMarca, setGuardandoMarca] = useState(false);
+
   useEffect(() => {
     cargar();
   }, []);
@@ -62,6 +67,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
   async function abrirProducto(p: ProductoGestion) {
     setProductoElegido(p);
     setEditandoNombre(false);
+    setEditandoMarca(false);
     setCargandoHistorial(true);
     try {
       setHistorial(await obtenerHistorialVariante(p.id));
@@ -76,6 +82,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
     setProductoElegido(null);
     setHistorial([]);
     setEditandoNombre(false);
+    setEditandoMarca(false);
   }
 
   function empezarEdicionNombre() {
@@ -101,6 +108,30 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
       setMensaje(err.error || 'No se pudo actualizar el nombre.');
     } finally {
       setGuardandoNombre(false);
+    }
+  }
+
+  function empezarEdicionMarca() {
+    if (!productoElegido) return;
+    setMarcaEdicion(productoElegido.marca);
+    setEditandoMarca(true);
+  }
+
+  async function guardarMarca() {
+    if (!productoElegido) return;
+    const marca = marcaEdicion.trim();
+    if (!marca) return;
+    setGuardandoMarca(true);
+    try {
+      await actualizarMarcaVariante(productoElegido.id, marca);
+      setProductoElegido((prev) => (prev ? { ...prev, marca } : prev));
+      setProductos((prev) => prev.map((p) => (p.id === productoElegido.id ? { ...p, marca } : p)));
+      setEditandoMarca(false);
+      setMensaje('Marca actualizada.');
+    } catch (err: any) {
+      setMensaje(err.error || 'No se pudo actualizar la marca.');
+    } finally {
+      setGuardandoMarca(false);
     }
   }
 
@@ -230,6 +261,29 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                     <strong>{productoElegido.producto}</strong>
                     <button onClick={empezarEdicionNombre} style={{ padding: '2px 10px', fontSize: 12 }}>
                       ✏️ Editar nombre
+                    </button>
+                  </div>
+                )}
+                {editandoMarca ? (
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8 }}>
+                    <input
+                      value={marcaEdicion}
+                      onChange={(e) => setMarcaEdicion(e.target.value)}
+                      style={{ flex: 1 }}
+                      autoFocus
+                    />
+                    <button onClick={guardarMarca} disabled={guardandoMarca || !marcaEdicion.trim()}>
+                      {guardandoMarca ? 'Guardando...' : 'Guardar'}
+                    </button>
+                    <button onClick={() => setEditandoMarca(false)} disabled={guardandoMarca}>
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+                    <span>Marca: {productoElegido.marca}</span>
+                    <button onClick={empezarEdicionMarca} style={{ padding: '2px 10px', fontSize: 12 }}>
+                      ✏️ Editar marca
                     </button>
                   </div>
                 )}
