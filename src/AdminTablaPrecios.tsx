@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { formatoMoneda, formatoFecha, haceDias } from './formato';
 import {
-  buscarVariantes,
+  crearVarianteRapida,
+  obtenerProductosGestion,
   obtenerTablaPrecios,
   guardarCostoProveedor,
   eliminarCostoProveedor,
-  type VarianteBusqueda,
   type FilaTablaPrecios,
   type PrecioProveedor,
 } from './api';
@@ -29,6 +29,70 @@ function fechaCorta(fecha: string): string {
   return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', ...(mismoAnio ? {} : { year: '2-digit' }) });
 }
 
+const mismoTexto = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+// Campo de texto con lista desplegable: al enfocarlo muestra las opciones
+// que ya existen (filtradas por lo que se va tecleando) y, si lo tecleado
+// no esta en la lista, lo ofrece como nuevo.
+function CampoConLista({
+  valor,
+  onCambio,
+  opciones,
+  placeholder,
+}: {
+  valor: string;
+  onCambio: (valor: string) => void;
+  opciones: string[];
+  placeholder: string;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const texto = valor.trim().toLowerCase();
+  const visibles = opciones.filter((o) => o.toLowerCase().includes(texto));
+  const esNuevo = texto !== '' && !opciones.some((o) => mismoTexto(o, valor));
+  const estiloOpcion: CSSProperties = { padding: '0.6rem 0.85rem', cursor: 'pointer', borderBottom: '1px solid #f3f4f6', color: '#1c1c1e' };
+
+  return (
+    <div style={{ position: 'relative', flex: '1 1 180px' }}>
+      <input
+        className="buscador"
+        placeholder={placeholder}
+        value={valor}
+        onChange={(e) => {
+          onCambio(e.target.value);
+          setAbierto(true);
+        }}
+        onFocus={() => setAbierto(true)}
+        onBlur={() => setAbierto(false)}
+      />
+      {abierto && (visibles.length > 0 || esNuevo) && (
+        <div
+          // Evita que el campo pierda el foco (y la lista se cierre) antes de registrar el click.
+          onMouseDown={(e) => e.preventDefault()}
+          style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5, background: '#fff', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', borderRadius: 10, marginTop: 4, maxHeight: 260, overflowY: 'auto' }}
+        >
+          {visibles.map((o) => (
+            <div
+              key={o}
+              onClick={() => {
+                onCambio(o);
+                setAbierto(false);
+              }}
+              style={estiloOpcion}
+            >
+              {o}
+            </div>
+          ))}
+          {esNuevo && (
+            <div onClick={() => setAbierto(false)} style={{ ...estiloOpcion, color: '#007aff', fontWeight: 500 }}>
+              + Agregar “{valor.trim()}” como nuevo
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AdminTablaPrecios({ onCerrar }: Props) {
   const [proveedores, setProveedores] = useState<{ id: string; nombre: string }[]>([]);
   const [filas, setFilas] = useState<FilaTablaPrecios[]>([]);
@@ -40,8 +104,12 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
   const [columnasExtra, setColumnasExtra] = useState<string[]>([]);
 
   const [filtro, setFiltro] = useState('');
-  const [busqueda, setBusqueda] = useState('');
-  const [resultados, setResultados] = useState<VarianteBusqueda[]>([]);
+  // Todo el catalogo (producto + marca), para las listas desplegables de
+  // "agregar producto" y para saber si lo tecleado ya existe o es nuevo.
+  const [catalogo, setCatalogo] = useState<{ id: string; producto: string; marca: string }[]>([]);
+  const [productoNuevo, setProductoNuevo] = useState('');
+  const [marcaNueva, setMarcaNueva] = useState('');
+  const [agregando, setAgregando] = useState(false);
 
   const [editando, setEditando] = useState<{ varianteId: string; proveedorId: string } | null>(null);
   const [valorEdicion, setValorEdicion] = useState('');
@@ -62,6 +130,9 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
 
   useEffect(() => {
     cargar();
+    obtenerProductosGestion()
+      .then((productos) => setCatalogo(productos.map((p) => ({ id: p.id, producto: p.producto, marca: p.marca }))))
+      .catch(() => setMensaje('No se pudo cargar la lista de productos.'));
   }, []);
 
   useEffect(() => {
@@ -120,21 +191,45 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
     return filas.filter((f) => `${f.producto} ${f.marca}`.toLowerCase().includes(texto));
   }, [filas, filtro]);
 
-  async function buscar(valor: string) {
-    setBusqueda(valor);
-    if (valor.length < 2) {
-      setResultados([]);
+  const sinRepetir = (valores: string[]) =>
+    [...new Map(valores.map((v) => [v.toLowerCase(), v])).values()].sort((a, b) => a.localeCompare(b, 'es'));
+  const opcionesProducto = useMemo(() => sinRepetir(catalogo.map((c) => c.producto)), [catalogo]);
+  // Marcas: primero las que ya tiene ese producto; si es un producto nuevo, todas las conocidas.
+  const opcionesMarca = useMemo(() => {
+    const delProducto = catalogo.filter((c) => mismoTexto(c.producto, productoNuevo));
+    return sinRepetir((delProducto.length > 0 ? delProducto : catalogo).map((c) => c.marca));
+  }, [catalogo, productoNuevo]);
+
+  async function agregarRenglon() {
+    const producto = productoNuevo.trim();
+    const marca = marcaNueva.trim();
+    if (!producto || !marca) {
+      setMensaje('Escribe o elige el producto y la marca.');
       return;
     }
-    setResultados(await buscarVariantes(valor));
-  }
 
-  function agregarRenglon(v: VarianteBusqueda) {
-    setResultados([]);
-    setBusqueda('');
-    setFiltro('');
-    if (filas.some((f) => f.varianteId === v.id)) return;
-    setFilas([...filas, { varianteId: v.id, producto: v.producto.nombre, marca: v.marca, precios: {} }]);
+    setAgregando(true);
+    try {
+      let variante = catalogo.find((c) => mismoTexto(c.producto, producto) && mismoTexto(c.marca, marca));
+      if (!variante) {
+        // No existe: se da de alta en el catalogo (sin precio de venta, se
+        // le pone despues en Productos o al registrar su primera compra).
+        const creada = await crearVarianteRapida(producto, marca, 0);
+        variante = { id: creada.id, producto: creada.producto.nombre, marca: creada.marca };
+        setCatalogo((previo) => [...previo, variante!]);
+      }
+      const { id, producto: nombre, marca: marcaFinal } = variante;
+      setFilas((previas) =>
+        previas.some((f) => f.varianteId === id) ? previas : [...previas, { varianteId: id, producto: nombre, marca: marcaFinal, precios: {} }]
+      );
+      setFiltro('');
+      setProductoNuevo('');
+      setMarcaNueva('');
+    } catch (err: any) {
+      setMensaje(err.message || 'No se pudo agregar el producto.');
+    } finally {
+      setAgregando(false);
+    }
   }
 
   function empezarEdicion(varianteId: string, proveedorId: string, actual?: PrecioProveedor) {
@@ -209,7 +304,7 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
         </div>
 
         <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
-          Precio por kg de cada proveedor. Parte del costo de la última compra y se actualiza solo al registrar una
+          Precio por kg de cada proveedor, solo los actualizados en los últimos 10 días. Parte del costo de la última compra y se actualiza solo al registrar una
           compra nueva; toca cualquier celda para cambiarlo si el proveedor te avisa de otro precio. En{' '}
           <span style={{ background: '#dcfce7', color: '#166534', fontWeight: 600, padding: '0 4px', borderRadius: 4 }}>verde</span>{' '}
           el mejor precio de cada producto, y con ✎ los capturados a mano (distintos a la última compra).
@@ -225,27 +320,6 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
             onChange={(e) => setFiltro(e.target.value)}
             style={{ flex: '1 1 180px', width: 'auto' }}
           />
-          <div style={{ position: 'relative', flex: '1 1 220px' }}>
-            <input
-              className="buscador"
-              placeholder="+ Agregar producto a la tabla..."
-              value={busqueda}
-              onChange={(e) => buscar(e.target.value)}
-            />
-            {resultados.length > 0 && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5, background: '#fff', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
-                {resultados.map((v) => (
-                  <div
-                    key={v.id}
-                    onClick={() => agregarRenglon(v)}
-                    style={{ padding: '0.6rem 0.85rem', cursor: 'pointer', borderBottom: '1px solid #f3f4f6', color: '#1c1c1e' }}
-                  >
-                    <strong>{v.producto.nombre}</strong> · {v.marca}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
           {proveedoresSinColumna.length > 0 && (
             <select
               value=""
@@ -260,11 +334,19 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
           )}
         </div>
 
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <CampoConLista valor={productoNuevo} onCambio={setProductoNuevo} opciones={opcionesProducto} placeholder="Producto a agregar..." />
+          <CampoConLista valor={marcaNueva} onCambio={setMarcaNueva} opciones={opcionesMarca} placeholder="Marca..." />
+          <button onClick={agregarRenglon} disabled={agregando} style={{ height: 40 }}>
+            + Agregar
+          </button>
+        </div>
+
         {cargando ? (
           <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>
         ) : filas.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#6b7280' }}>
-            Todavía no hay precios. Agrega un producto y un proveedor para empezar, o registra una compra.
+            No hay precios de los últimos 10 días. Agrega un producto y un proveedor para empezar, o registra una compra.
           </p>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr)' }}>
