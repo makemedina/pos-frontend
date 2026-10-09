@@ -976,3 +976,26 @@ textarea:focus {
   background: rgba(0, 122, 255, 0.1);
   color: var(--ios-blue);
 }
+
+/* Barras de desplazamiento de la Tabla de precios (AdminTablaPrecios):
+   siempre visibles y gruesas para poder arrastrarlas con el dedo o el
+   mouse -- las nativas de macOS/iOS se esconden solas. */
+.deslizador-tabla::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+.deslizador-tabla::-webkit-scrollbar-track {
+  background: var(--ios-gray-fill);
+  border-radius: 7px;
+}
+
+.deslizador-tabla::-webkit-scrollbar-thumb {
+  background: #9ca0aa;
+  border-radius: 7px;
+  border: 3px solid var(--ios-gray-fill);
+}
+
+.deslizador-tabla::-webkit-scrollbar-corner {
+  background: transparent;
+}

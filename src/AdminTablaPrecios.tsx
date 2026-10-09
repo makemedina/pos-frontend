@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { formatoMoneda, formatoFecha, haceDias } from './formato';
 import {
   buscarVariantes,
@@ -15,8 +15,11 @@ interface Props {
 }
 
 const BORDE = '1px solid #d1d5db';
-const celdaBase: CSSProperties = { border: BORDE, padding: '6px 8px', whiteSpace: 'nowrap' };
-const celdaEncabezado: CSSProperties = { ...celdaBase, background: '#f3f4f6', fontWeight: 600, textAlign: 'left' };
+// Bordes solo a la derecha y abajo (mas arriba en el encabezado y a la
+// izquierda en la primera columna): con encabezado/columna fijos la tabla
+// no puede usar border-collapse, y con borde completo se verian dobles.
+const celdaBase: CSSProperties = { borderRight: BORDE, borderBottom: BORDE, padding: '6px 8px', whiteSpace: 'nowrap' };
+const celdaEncabezado: CSSProperties = { ...celdaBase, borderTop: BORDE, background: '#f3f4f6', fontWeight: 600, textAlign: 'left' };
 
 // Fecha corta para que quepa debajo del precio en la celda (ej. "8 oct"),
 // con el año solo cuando no es el actual.
@@ -43,9 +46,47 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
   const [editando, setEditando] = useState<{ varianteId: string; proveedorId: string } | null>(null);
   const [valorEdicion, setValorEdicion] = useState('');
 
+  // La tabla se desliza con barras en los cuatro lados: abajo y a la
+  // derecha son las del propio contenedor; arriba y a la izquierda son
+  // barras "espejo" (un div vacio del mismo tamaño que la tabla) que se
+  // mantienen sincronizadas con el, para no tener que ir hasta el fondo
+  // o hasta la orilla derecha para moverse.
+  const contenedorRef = useRef<HTMLDivElement>(null);
+  const tablaRef = useRef<HTMLTableElement>(null);
+  const barraArribaRef = useRef<HTMLDivElement>(null);
+  const barraIzquierdaRef = useRef<HTMLDivElement>(null);
+  const [medidas, setMedidas] = useState({ ancho: 0, alto: 0, desbordaX: false, desbordaY: false });
+
   useEffect(() => {
     cargar();
   }, []);
+
+  useEffect(() => {
+    const contenedor = contenedorRef.current;
+    const tabla = tablaRef.current;
+    if (!contenedor || !tabla) return;
+    const medir = () =>
+      setMedidas({
+        ancho: contenedor.scrollWidth,
+        alto: contenedor.scrollHeight,
+        desbordaX: contenedor.scrollWidth > contenedor.clientWidth + 1,
+        desbordaY: contenedor.scrollHeight > contenedor.clientHeight + 1,
+      });
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(contenedor);
+    observador.observe(tabla);
+    return () => observador.disconnect();
+  }, [cargando, filas.length === 0]);
+
+  function sincronizar(origen: HTMLDivElement) {
+    for (const ref of [contenedorRef, barraArribaRef, barraIzquierdaRef]) {
+      const el = ref.current;
+      if (!el || el === origen) continue;
+      if (el !== barraIzquierdaRef.current && origen !== barraIzquierdaRef.current) el.scrollLeft = origen.scrollLeft;
+      if (el !== barraArribaRef.current && origen !== barraArribaRef.current) el.scrollTop = origen.scrollTop;
+    }
+  }
 
   async function cargar() {
     try {
@@ -222,14 +263,37 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
             Todavía no hay precios. Agrega un producto y un proveedor para empezar, o registra una compra.
           </p>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 14, color: '#1c1c1e' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr)' }}>
+            <div />
+            <div
+              ref={barraArribaRef}
+              className="deslizador-tabla"
+              onScroll={(e) => sincronizar(e.currentTarget)}
+              style={{ overflowX: 'scroll', overflowY: 'hidden', display: medidas.desbordaX ? undefined : 'none' }}
+            >
+              <div style={{ width: medidas.ancho, height: 1 }} />
+            </div>
+            <div
+              ref={barraIzquierdaRef}
+              className="deslizador-tabla"
+              onScroll={(e) => sincronizar(e.currentTarget)}
+              style={{ overflowY: 'scroll', overflowX: 'hidden', maxHeight: '60vh', display: medidas.desbordaY ? undefined : 'none' }}
+            >
+              <div style={{ height: medidas.alto, width: 1 }} />
+            </div>
+            <div
+              ref={contenedorRef}
+              className="deslizador-tabla"
+              onScroll={(e) => sincronizar(e.currentTarget)}
+              style={{ overflow: 'auto', maxHeight: '60vh', gridColumn: 2 }}
+            >
+            <table ref={tablaRef} style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', fontSize: 14, color: '#1c1c1e' }}>
               <thead>
                 <tr>
-                  <th style={{ ...celdaEncabezado, position: 'sticky', left: 0, zIndex: 1 }}>Producto</th>
-                  <th style={celdaEncabezado}>Marca</th>
+                  <th style={{ ...celdaEncabezado, borderLeft: BORDE, position: 'sticky', top: 0, left: 0, zIndex: 3 }}>Producto</th>
+                  <th style={{ ...celdaEncabezado, position: 'sticky', top: 0, zIndex: 2 }}>Marca</th>
                   {columnas.map((p) => (
-                    <th key={p.id} style={{ ...celdaEncabezado, textAlign: 'right' }}>{p.nombre}</th>
+                    <th key={p.id} style={{ ...celdaEncabezado, position: 'sticky', top: 0, zIndex: 2, textAlign: 'right' }}>{p.nombre}</th>
                   ))}
                 </tr>
               </thead>
@@ -239,7 +303,7 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
                   const mejor = costos.length > 0 ? Math.min(...costos) : null;
                   return (
                     <tr key={f.varianteId}>
-                      <td style={{ ...celdaBase, position: 'sticky', left: 0, background: '#fff', fontWeight: 500 }}>{f.producto}</td>
+                      <td style={{ ...celdaBase, borderLeft: BORDE, position: 'sticky', left: 0, zIndex: 1, background: '#fff', fontWeight: 500 }}>{f.producto}</td>
                       <td style={celdaBase}>{f.marca}</td>
                       {columnas.map((p) => {
                         const precio = f.precios[p.id];
@@ -295,6 +359,7 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>
