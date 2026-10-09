@@ -822,6 +822,36 @@ export async function guardarCostoProveedor(
   return res.json();
 }
 
+export interface PrecioProveedor {
+  costo: number;
+  actualizadoEn: string;
+  // 'compra' = es el mismo costo de la ultima compra; 'manual' = alguien
+  // lo capturo distinto (el proveedor aviso de un precio nuevo).
+  origen: 'compra' | 'manual';
+  ultimaCompra: { costo: number; fecha: string } | null;
+}
+
+export interface FilaTablaPrecios {
+  varianteId: string;
+  producto: string;
+  marca: string;
+  precios: Record<string, PrecioProveedor>; // por proveedorId
+}
+
+export interface TablaPrecios {
+  proveedores: { id: string; nombre: string }[];
+  filas: FilaTablaPrecios[];
+}
+
+export async function obtenerTablaPrecios(): Promise<TablaPrecios> {
+  const res = await fetch(`${API_URL}/costos-proveedores/tabla`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar la tabla de precios');
+  }
+  return res.json();
+}
+
 export async function eliminarCostoProveedor(proveedorId: string, varianteId: string): Promise<void> {
   const res = await fetch(`${API_URL}/proveedores/${proveedorId}/costos/${varianteId}`, {
     method: 'DELETE',

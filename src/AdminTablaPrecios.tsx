@@ -1,0 +1,303 @@
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { formatoMoneda, formatoFecha, haceDias } from './formato';
+import {
+  buscarVariantes,
+  obtenerTablaPrecios,
+  guardarCostoProveedor,
+  eliminarCostoProveedor,
+  type VarianteBusqueda,
+  type FilaTablaPrecios,
+  type PrecioProveedor,
+} from './api';
+
+interface Props {
+  onCerrar: () => void;
+}
+
+const BORDE = '1px solid #d1d5db';
+const celdaBase: CSSProperties = { border: BORDE, padding: '6px 8px', whiteSpace: 'nowrap' };
+const celdaEncabezado: CSSProperties = { ...celdaBase, background: '#f3f4f6', fontWeight: 600, textAlign: 'left' };
+
+// Fecha corta para que quepa debajo del precio en la celda (ej. "8 oct"),
+// con el año solo cuando no es el actual.
+function fechaCorta(fecha: string): string {
+  const d = new Date(fecha);
+  const mismoAnio = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', ...(mismoAnio ? {} : { year: '2-digit' }) });
+}
+
+export function AdminTablaPrecios({ onCerrar }: Props) {
+  const [proveedores, setProveedores] = useState<{ id: string; nombre: string }[]>([]);
+  const [filas, setFilas] = useState<FilaTablaPrecios[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [mensaje, setMensaje] = useState<string | null>(null);
+
+  // Proveedores que se agregaron como columna a mano (todavia sin ningun
+  // precio capturado) -- los que ya tienen al menos un precio salen solos.
+  const [columnasExtra, setColumnasExtra] = useState<string[]>([]);
+
+  const [filtro, setFiltro] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [resultados, setResultados] = useState<VarianteBusqueda[]>([]);
+
+  const [editando, setEditando] = useState<{ varianteId: string; proveedorId: string } | null>(null);
+  const [valorEdicion, setValorEdicion] = useState('');
+
+  useEffect(() => {
+    cargar();
+  }, []);
+
+  async function cargar() {
+    try {
+      const tabla = await obtenerTablaPrecios();
+      setProveedores(tabla.proveedores);
+      // Conserva los renglones agregados a mano que todavia no tienen precio.
+      setFilas((previas) => [
+        ...tabla.filas,
+        ...previas.filter((p) => Object.keys(p.precios).length === 0 && !tabla.filas.some((f) => f.varianteId === p.varianteId)),
+      ]);
+    } catch {
+      setMensaje('No se pudo cargar la tabla de precios.');
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  const columnas = useMemo(
+    () => proveedores.filter((p) => columnasExtra.includes(p.id) || filas.some((f) => f.precios[p.id])),
+    [proveedores, filas, columnasExtra]
+  );
+  const proveedoresSinColumna = proveedores.filter((p) => !columnas.some((c) => c.id === p.id));
+
+  const filasVisibles = useMemo(() => {
+    const texto = filtro.trim().toLowerCase();
+    if (!texto) return filas;
+    return filas.filter((f) => `${f.producto} ${f.marca}`.toLowerCase().includes(texto));
+  }, [filas, filtro]);
+
+  async function buscar(valor: string) {
+    setBusqueda(valor);
+    if (valor.length < 2) {
+      setResultados([]);
+      return;
+    }
+    setResultados(await buscarVariantes(valor));
+  }
+
+  function agregarRenglon(v: VarianteBusqueda) {
+    setResultados([]);
+    setBusqueda('');
+    setFiltro('');
+    if (filas.some((f) => f.varianteId === v.id)) return;
+    setFilas([...filas, { varianteId: v.id, producto: v.producto.nombre, marca: v.marca, precios: {} }]);
+  }
+
+  function empezarEdicion(varianteId: string, proveedorId: string, actual?: PrecioProveedor) {
+    setEditando({ varianteId, proveedorId });
+    setValorEdicion(actual ? String(actual.costo) : '');
+  }
+
+  async function guardarEdicion() {
+    if (!editando) return;
+    const { varianteId, proveedorId } = editando;
+    setEditando(null);
+
+    const actual = filas.find((f) => f.varianteId === varianteId)?.precios[proveedorId];
+    const texto = valorEdicion.trim();
+
+    // Celda vacia = quitar el precio de ese proveedor.
+    if (texto === '') {
+      if (!actual) return;
+      try {
+        await eliminarCostoProveedor(proveedorId, varianteId);
+      } catch {
+        // Si el precio venia solo del historial de compras no hay nada guardado que quitar.
+      }
+      cargar();
+      return;
+    }
+
+    const costo = Number(texto);
+    if (!costo || costo <= 0) {
+      setMensaje('Escribe un precio válido.');
+      return;
+    }
+    if (actual && actual.costo === costo) return;
+
+    try {
+      const guardado = await guardarCostoProveedor(proveedorId, varianteId, costo);
+      const ultimaCompra = actual?.ultimaCompra ?? null;
+      const nuevo: PrecioProveedor = {
+        costo: guardado.costo,
+        actualizadoEn: guardado.actualizadoEn,
+        origen: ultimaCompra && ultimaCompra.costo === guardado.costo ? 'compra' : 'manual',
+        ultimaCompra,
+      };
+      setFilas((previas) =>
+        previas.map((f) => (f.varianteId === varianteId ? { ...f, precios: { ...f.precios, [proveedorId]: nuevo } } : f))
+      );
+    } catch (err: any) {
+      setMensaje(err.message || 'No se pudo guardar el precio.');
+    }
+  }
+
+  function detalleCelda(p: PrecioProveedor): string {
+    const partes = [`Actualizado el ${formatoFecha(p.actualizadoEn)} (${haceDias(p.actualizadoEn)})`];
+    if (p.origen === 'manual') {
+      partes.push(
+        p.ultimaCompra
+          ? `Precio capturado a mano. Última compra: ${formatoMoneda(p.ultimaCompra.costo)} el ${formatoFecha(p.ultimaCompra.fecha)}`
+          : 'Precio capturado a mano, todavía no se le ha comprado.'
+      );
+    } else {
+      partes.push('Precio de la última compra.');
+    }
+    return partes.join('\n');
+  }
+
+  return (
+    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+      <div style={{ width: '100%', maxWidth: 960, display: 'grid', gap: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2>Tabla de precios</h2>
+          <button onClick={onCerrar}>Cerrar</button>
+        </div>
+
+        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+          Precio por kg de cada proveedor. Parte del costo de la última compra y se actualiza solo al registrar una
+          compra nueva; toca cualquier celda para cambiarlo si el proveedor te avisa de otro precio. En{' '}
+          <span style={{ background: '#dcfce7', color: '#166534', fontWeight: 600, padding: '0 4px', borderRadius: 4 }}>verde</span>{' '}
+          el mejor precio de cada producto, y con ✎ los capturados a mano (distintos a la última compra).
+        </p>
+
+        {mensaje && <div className="banner-mensaje" style={{ marginBottom: 0 }} onClick={() => setMensaje(null)}>{mensaje}</div>}
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <input
+            className="buscador"
+            placeholder="Filtrar la tabla..."
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            style={{ flex: '1 1 180px', width: 'auto' }}
+          />
+          <div style={{ position: 'relative', flex: '1 1 220px' }}>
+            <input
+              className="buscador"
+              placeholder="+ Agregar producto a la tabla..."
+              value={busqueda}
+              onChange={(e) => buscar(e.target.value)}
+            />
+            {resultados.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5, background: '#fff', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
+                {resultados.map((v) => (
+                  <div
+                    key={v.id}
+                    onClick={() => agregarRenglon(v)}
+                    style={{ padding: '0.6rem 0.85rem', cursor: 'pointer', borderBottom: '1px solid #f3f4f6', color: '#1c1c1e' }}
+                  >
+                    <strong>{v.producto.nombre}</strong> · {v.marca}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {proveedoresSinColumna.length > 0 && (
+            <select
+              value=""
+              onChange={(e) => e.target.value && setColumnasExtra([...columnasExtra, e.target.value])}
+              style={{ flex: '0 1 200px' }}
+            >
+              <option value="">+ Agregar proveedor...</option>
+              {proveedoresSinColumna.map((p) => (
+                <option key={p.id} value={p.id}>{p.nombre}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {cargando ? (
+          <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>
+        ) : filas.length === 0 ? (
+          <p style={{ textAlign: 'center', color: '#6b7280' }}>
+            Todavía no hay precios. Agrega un producto y un proveedor para empezar, o registra una compra.
+          </p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 14, color: '#1c1c1e' }}>
+              <thead>
+                <tr>
+                  <th style={{ ...celdaEncabezado, position: 'sticky', left: 0, zIndex: 1 }}>Producto</th>
+                  <th style={celdaEncabezado}>Marca</th>
+                  {columnas.map((p) => (
+                    <th key={p.id} style={{ ...celdaEncabezado, textAlign: 'right' }}>{p.nombre}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filasVisibles.map((f) => {
+                  const costos = columnas.map((p) => f.precios[p.id]?.costo).filter((c): c is number => c !== undefined);
+                  const mejor = costos.length > 0 ? Math.min(...costos) : null;
+                  return (
+                    <tr key={f.varianteId}>
+                      <td style={{ ...celdaBase, position: 'sticky', left: 0, background: '#fff', fontWeight: 500 }}>{f.producto}</td>
+                      <td style={celdaBase}>{f.marca}</td>
+                      {columnas.map((p) => {
+                        const precio = f.precios[p.id];
+                        const enEdicion = editando?.varianteId === f.varianteId && editando.proveedorId === p.id;
+                        const esMejor = !!precio && precio.costo === mejor;
+                        if (enEdicion) {
+                          return (
+                            <td key={p.id} style={{ ...celdaBase, padding: 2 }}>
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                autoFocus
+                                value={valorEdicion}
+                                onChange={(e) => setValorEdicion(e.target.value)}
+                                onFocus={(e) => e.target.select()}
+                                onBlur={guardarEdicion}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') e.currentTarget.blur();
+                                  if (e.key === 'Escape') setEditando(null);
+                                }}
+                                style={{ width: 86, textAlign: 'right', padding: '6px 8px', borderRadius: 6 }}
+                              />
+                            </td>
+                          );
+                        }
+                        return (
+                          <td
+                            key={p.id}
+                            onClick={() => empezarEdicion(f.varianteId, p.id, precio)}
+                            title={precio ? detalleCelda(precio) : 'Toca para capturar un precio'}
+                            style={{
+                              ...celdaBase,
+                              textAlign: 'right',
+                              cursor: 'pointer',
+                              minWidth: 90,
+                              background: esMejor ? '#dcfce7' : undefined,
+                            }}
+                          >
+                            {precio && (
+                              <>
+                                <div style={{ fontWeight: esMejor ? 700 : 400, color: esMejor ? '#166534' : undefined }}>
+                                  {precio.origen === 'manual' && <span style={{ fontSize: 11, marginRight: 4 }}>✎</span>}
+                                  {formatoMoneda(precio.costo)}
+                                </div>
+                                <div style={{ fontSize: 11, color: '#6b7280' }}>{fechaCorta(precio.actualizadoEn)}</div>
+                              </>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

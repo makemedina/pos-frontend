@@ -44,6 +44,7 @@ import { AdminClientes } from './AdminClientes';
 import { AdminLlamadasHoy } from './AdminLlamadasHoy';
 import { AdminPendientes } from './AdminPendientes';
 import { AdminProveedores } from './AdminProveedores';
+import { AdminTablaPrecios } from './AdminTablaPrecios';
 import { AdminMovimientosInventario } from './AdminMovimientosInventario';
 import { AdminAntiguedadStock } from './AdminAntiguedadStock';
 import { AdminNotasAntiguas } from './AdminNotasAntiguas';
@@ -94,6 +95,7 @@ type Pantalla =
   | 'historialCortes'
   | 'facturasPendientes'
   | 'historialCompras'
+  | 'tablaPrecios'
   | 'ventasOffline'
   | 'configuracion'
   | 'configuracionRecibo'
@@ -139,6 +141,7 @@ const SECCION_DE_PANTALLA: Partial<Record<Pantalla, Pantalla>> = {
   proveedores: 'proveedoresMenu',
   compra: 'proveedoresMenu',
   historialCompras: 'proveedoresMenu',
+  tablaPrecios: 'proveedoresMenu',
   cuentas: 'proveedoresMenu',
   facturasPendientes: 'proveedoresMenu',
   productos: 'inventarioMenu',
@@ -172,6 +175,7 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
     case 'proveedores':
       return !!usuario.permisos?.puedeRegistrarCompras;
     case 'historialCompras':
+    case 'tablaPrecios':
       return !!usuario.permisos?.puedeVerCostos;
     case 'ventasOffline':
       return true; // cualquiera puede ver y reintentar sus ventas guardadas sin conexion
@@ -224,6 +228,7 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
         puedeVer('compra', usuario) ||
         puedeVer('proveedores', usuario) ||
         puedeVer('historialCompras', usuario) ||
+        puedeVer('tablaPrecios', usuario) ||
         puedeVer('cuentas', usuario) ||
         puedeVer('facturasPendientes', usuario)
       );
@@ -811,6 +816,7 @@ export default function App() {
       return renderSubmenu('Proveedores', [
         { pantalla: 'proveedores', icono: '🚚', titulo: 'Proveedores', descripcion: 'Alta y edición de proveedores', clase: '' },
         { pantalla: 'compra', icono: '📦', titulo: 'Registrar compra', descripcion: 'Nueva compra a proveedor', clase: '' },
+        { pantalla: 'tablaPrecios', icono: '🏷️', titulo: 'Tabla de precios', descripcion: 'Comparar el mejor precio de compra entre proveedores', clase: '' },
         { pantalla: 'historialCompras', icono: '📜', titulo: 'Historial de compras', descripcion: 'Todas, pagadas y pendientes', clase: 'boton-flotante-historial' },
         { pantalla: 'cuentas', icono: '💳', titulo: 'Registrar pago a factura', descripcion: 'Abonar una factura pendiente (cuentas por pagar)', clase: 'boton-flotante-cuentas' },
         { pantalla: 'facturasPendientes', icono: '📋', titulo: 'Facturas por pagar', descripcion: 'Solo ver el listado', clase: 'boton-flotante-historial' },
@@ -840,6 +846,9 @@ export default function App() {
           puedeVerCostos={!!usuario.permisos?.puedeVerCostos}
         />
       );
+    }
+    if (pantallaActiva === 'tablaPrecios') {
+      return <AdminTablaPrecios onCerrar={() => abrirPantalla('proveedoresMenu')} />;
     }
     if (pantallaActiva === 'historialCompras') {
       return <AdminHistorialCompras onCerrar={() => abrirPantalla('proveedoresMenu')} />;
