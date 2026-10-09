@@ -55,7 +55,10 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
   const tablaRef = useRef<HTMLTableElement>(null);
   const barraArribaRef = useRef<HTMLDivElement>(null);
   const barraIzquierdaRef = useRef<HTMLDivElement>(null);
-  const [medidas, setMedidas] = useState({ ancho: 0, alto: 0, desbordaX: false, desbordaY: false });
+  // Ancho real de la columna Producto: la de Marca tambien queda fija al
+  // deslizar hacia los lados, pegada justo despues de ella.
+  const thProductoRef = useRef<HTMLTableCellElement>(null);
+  const [medidas, setMedidas] = useState({ ancho: 0, alto: 0, desbordaX: false, desbordaY: false, anchoProducto: 0 });
 
   useEffect(() => {
     cargar();
@@ -71,6 +74,7 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
         alto: contenedor.scrollHeight,
         desbordaX: contenedor.scrollWidth > contenedor.clientWidth + 1,
         desbordaY: contenedor.scrollHeight > contenedor.clientHeight + 1,
+        anchoProducto: thProductoRef.current?.getBoundingClientRect().width ?? 0,
       });
     medir();
     const observador = new ResizeObserver(medir);
@@ -290,8 +294,8 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
             <table ref={tablaRef} style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', fontSize: 14, color: '#1c1c1e' }}>
               <thead>
                 <tr>
-                  <th style={{ ...celdaEncabezado, borderLeft: BORDE, position: 'sticky', top: 0, left: 0, zIndex: 3 }}>Producto</th>
-                  <th style={{ ...celdaEncabezado, position: 'sticky', top: 0, zIndex: 2 }}>Marca</th>
+                  <th ref={thProductoRef} style={{ ...celdaEncabezado, borderLeft: BORDE, position: 'sticky', top: 0, left: 0, zIndex: 3 }}>Producto</th>
+                  <th style={{ ...celdaEncabezado, position: 'sticky', top: 0, left: medidas.anchoProducto, zIndex: 3 }}>Marca</th>
                   {columnas.map((p) => (
                     <th key={p.id} style={{ ...celdaEncabezado, position: 'sticky', top: 0, zIndex: 2, textAlign: 'right' }}>{p.nombre}</th>
                   ))}
@@ -304,7 +308,7 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
                   return (
                     <tr key={f.varianteId}>
                       <td style={{ ...celdaBase, borderLeft: BORDE, position: 'sticky', left: 0, zIndex: 1, background: '#fff', fontWeight: 500 }}>{f.producto}</td>
-                      <td style={celdaBase}>{f.marca}</td>
+                      <td style={{ ...celdaBase, position: 'sticky', left: medidas.anchoProducto, zIndex: 1, background: '#fff' }}>{f.marca}</td>
                       {columnas.map((p) => {
                         const precio = f.precios[p.id];
                         const enEdicion = editando?.varianteId === f.varianteId && editando.proveedorId === p.id;
