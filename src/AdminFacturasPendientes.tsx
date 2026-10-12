@@ -93,6 +93,7 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
                       <strong>{f.proveedor.nombre}</strong>
                       <div style={{ fontSize: 13, color: '#6b7280' }}>{f.proveedor.telefono || ''}</div>
                       <div style={{ fontSize: 13 }}>Factura: {f.numeroFactura || 'Sin factura'}</div>
+                      <div style={{ fontSize: 13 }}>Compra: {formatoFecha(new Date(f.fecha))}</div>
                       <div style={{ fontSize: 13 }}>
                         Vence: {f.fechaVencimiento ? formatoFecha(new Date(f.fechaVencimiento)) : 'Sin fecha'}
                       </div>
