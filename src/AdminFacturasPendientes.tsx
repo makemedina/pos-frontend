@@ -31,14 +31,16 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
   const [busqueda, setBusqueda] = useState('');
   const totalPendiente = facturas.reduce((acc, f) => acc + f.saldoPendiente, 0);
 
-  const facturasFiltradas = facturas.filter((f) => {
-    if (!busqueda.trim()) return true;
-    const q = busqueda.trim().toLowerCase();
-    return (
-      f.proveedor.nombre.toLowerCase().includes(q) ||
-      (f.numeroFactura || '').toLowerCase().includes(q)
-    );
-  });
+  const facturasFiltradas = facturas
+    .filter((f) => {
+      if (!busqueda.trim()) return true;
+      const q = busqueda.trim().toLowerCase();
+      return (
+        f.proveedor.nombre.toLowerCase().includes(q) ||
+        (f.numeroFactura || '').toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
   async function exportar() {
     try {

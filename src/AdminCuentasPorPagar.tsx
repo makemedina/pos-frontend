@@ -136,7 +136,9 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
   }
 
   const facturasDelProveedor = proveedorElegido
-    ? facturas.filter((f) => f.proveedor.id === proveedorElegido.id)
+    ? facturas
+        .filter((f) => f.proveedor.id === proveedorElegido.id)
+        .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
     : [];
 
   function abrirPagoMultiple() {
