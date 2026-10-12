@@ -603,6 +603,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <strong>Factura: {f.numeroFactura || 'Sin factura'}</strong>
+                      <div style={{ fontSize: 13 }}>Compra: {formatoFecha(new Date(f.fecha))}</div>
                       <div style={{ fontSize: 13 }}>
                         Vence: {f.fechaVencimiento ? formatoFecha(new Date(f.fechaVencimiento)) : 'Sin fecha'}
                       </div>
