@@ -543,7 +543,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                         <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => toggleFacturaPago(f)}>
                           <strong>{f.numeroFactura || 'Sin numero'}</strong>
                           <div style={{ fontSize: 12, color: '#6b7280' }}>
-                            Saldo: {formatoMoneda(f.saldoPendiente)}
+                            Compra: {formatoFecha(new Date(f.fecha))} · Saldo: {formatoMoneda(f.saldoPendiente)}
                           </div>
                         </div>
                         {seleccionada && (
