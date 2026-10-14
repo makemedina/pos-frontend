@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { formatoMoneda, formatoKg } from './formato';
+import { formatoMoneda, formatoKg, formatoFecha, etiquetaMetodoPago } from './formato';
 import { headerAuth, API_URL, obtenerPendientesDeHoy, actualizarPendiente, type Pendiente } from './api';
 import { exportarVariasHojas } from './exportarExcel';
 import { intentarActivarNotificacionesAutomatico } from './push';
@@ -13,9 +13,26 @@ interface DiaResumen {
   utilidadCobrada: number;
   kgVendidos: number;
   totalCobrado: number;
+  gastos: number;
   utilidadNeta: number;
   utilidadNetaCobrada: number;
   porcentajeEfectivo: number;
+}
+
+interface GastoDetalle {
+  id: string;
+  fecha: string;
+  concepto: string;
+  monto: number;
+  metodoPago: string;
+  proveedor: string | null;
+}
+
+interface GastosCategoria {
+  categoria: string;
+  departamento: string;
+  total: number;
+  gastos: GastoDetalle[];
 }
 
 interface DashboardData {
@@ -25,6 +42,8 @@ interface DashboardData {
   utilidadCobrada: number;
   kgVendidos: number;
   totalGastos: number;
+  gastosCantidad: number;
+  gastosPorCategoria: GastosCategoria[];
   utilidadNeta: number;
   utilidadNetaCobrada: number;
   ventasCantidad: number;
@@ -52,6 +71,7 @@ type MetricaClave =
   | 'utilidadCobrada'
   | 'kgVendidos'
   | 'totalCobrado'
+  | 'gastos'
   | 'utilidadNeta'
   | 'utilidadNetaCobrada'
   | 'medioDePago';
@@ -64,6 +84,7 @@ const METRICAS_INFO: Record<MetricaClave, { titulo: string; obtenerValor: (d: Di
   utilidadCobrada: { titulo: 'Utilidad cobrada por día', obtenerValor: (d) => formatoMoneda(d.utilidadCobrada) },
   kgVendidos: { titulo: 'Kg vendidos por día', obtenerValor: (d) => `${formatoKg(d.kgVendidos)} kg` },
   totalCobrado: { titulo: 'Total cobrado por día', obtenerValor: (d) => formatoMoneda(d.totalCobrado) },
+  gastos: { titulo: 'Gastos por día', obtenerValor: (d) => formatoMoneda(d.gastos) },
   utilidadNeta: { titulo: 'Utilidad neta por día', obtenerValor: (d) => formatoMoneda(d.utilidadNeta) },
   utilidadNetaCobrada: { titulo: 'Utilidad neta cobrada por día', obtenerValor: (d) => formatoMoneda(d.utilidadNetaCobrada) },
   medioDePago: { titulo: 'Medio de pago por día', obtenerValor: (d) => `${d.porcentajeEfectivo.toFixed(1)}% efectivo` },
@@ -110,6 +131,10 @@ export function AdminDashboard({ onCerrar }: Props) {
   const [mostrarTodosProductos, setMostrarTodosProductos] = useState(false);
   const [mostrarTodosClientes, setMostrarTodosClientes] = useState(false);
   const [mostrarTodosVendedores, setMostrarTodosVendedores] = useState(false);
+  const [mostrarTodosGastos, setMostrarTodosGastos] = useState(false);
+  // Detalle al hacer click en una categoria de la seccion Gastos: los
+  // gastos individuales de esa categoria en el periodo.
+  const [detalleGastos, setDetalleGastos] = useState<GastosCategoria | null>(null);
   const [pendientesHoy, setPendientesHoy] = useState<Pendiente[]>([]);
   const [guardandoPendienteId, setGuardandoPendienteId] = useState<string | null>(null);
 
@@ -134,6 +159,7 @@ export function AdminDashboard({ onCerrar }: Props) {
     setMostrarTodosProductos(false);
     setMostrarTodosClientes(false);
     setMostrarTodosVendedores(false);
+    setMostrarTodosGastos(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodo, desde, hasta]);
 
@@ -216,6 +242,20 @@ export function AdminDashboard({ onCerrar }: Props) {
               Cliente: nombre,
               Valor: valor,
             })),
+          },
+          {
+            nombre: 'Gastos',
+            filas: data.gastosPorCategoria.flatMap((c) =>
+              c.gastos.map((g) => ({
+                Fecha: formatoFecha(g.fecha),
+                Categoría: c.categoria,
+                Departamento: c.departamento,
+                Concepto: g.concepto,
+                Proveedor: g.proveedor ?? '',
+                'Método de pago': etiquetaMetodoPago(g.metodoPago),
+                Monto: g.monto,
+              }))
+            ),
           },
           {
             nombre: 'Ventas por vendedor',
@@ -387,6 +427,48 @@ export function AdminDashboard({ onCerrar }: Props) {
             </div>
 
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <div
+                onClick={() => setMetricaExpandida('gastos')}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', cursor: 'pointer', marginBottom: 8 }}
+              >
+                <h3 style={{ margin: 0 }}>Gastos</h3>
+                <div style={{ textAlign: 'right' }}>
+                  <strong style={{ color: '#b91c1c' }}>{formatoMoneda(data.totalGastos)}</strong>
+                  <div style={{ fontSize: 12, color: '#6b7280' }}>
+                    {data.gastosCantidad} gasto{data.gastosCantidad === 1 ? '' : 's'} · ver por día
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {data.gastosPorCategoria.length === 0 && <p style={{ color: '#6b7280' }}>Sin gastos en este periodo.</p>}
+                {(mostrarTodosGastos ? data.gastosPorCategoria : data.gastosPorCategoria.slice(0, ESPACIOS_POR_SECCION)).map((c) => (
+                  <div
+                    key={`${c.departamento}-${c.categoria}`}
+                    onClick={() => setDetalleGastos(c)}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                  >
+                    <span>
+                      {c.categoria}
+                      <div style={{ fontSize: 12, color: '#6b7280' }}>
+                        {c.departamento} · {data.totalGastos > 0 ? ((c.total / data.totalGastos) * 100).toFixed(1) : '0.0'}%
+                      </div>
+                    </span>
+                    <strong>{formatoMoneda(c.total)}</strong>
+                  </div>
+                ))}
+              </div>
+              {data.gastosPorCategoria.length > ESPACIOS_POR_SECCION && (
+                <button
+                  className="boton-secundario"
+                  onClick={() => setMostrarTodosGastos((v) => !v)}
+                  style={{ width: '100%', marginTop: 8 }}
+                >
+                  {mostrarTodosGastos ? 'Mostrar menos' : `Mostrar todos (${data.gastosPorCategoria.length})`}
+                </button>
+              )}
+            </div>
+
+            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
               <h3>Productos más vendidos por volumen</h3>
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {data.productosMasVendidos.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
@@ -507,6 +589,33 @@ export function AdminDashboard({ onCerrar }: Props) {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {detalleGastos && (
+        <div className="modal-fondo" onClick={() => setDetalleGastos(null)}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <p className="titulo">
+                {detalleGastos.categoria} — {formatoMoneda(detalleGastos.total)}
+              </p>
+              <button className="boton-cerrar" onClick={() => setDetalleGastos(null)}>✕</button>
+            </div>
+            <div style={{ display: 'grid', gap: '0.5rem' }}>
+              {detalleGastos.gastos.map((g) => (
+                <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                  <span>
+                    {g.concepto}
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>
+                      {formatoFecha(g.fecha)} · {etiquetaMetodoPago(g.metodoPago)}
+                      {g.proveedor ? ` · ${g.proveedor}` : ''}
+                    </div>
+                  </span>
+                  <strong>{formatoMoneda(g.monto)}</strong>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
