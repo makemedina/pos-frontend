@@ -54,7 +54,7 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Ventas sin sincronizar</h2>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -70,7 +70,7 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
         {ventas.length === 0 ? (
           <p style={{ color: '#6b7280' }}>No hay ventas pendientes por subir. Todo está sincronizado.</p>
         ) : (
-          <div style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {ventas.map((v) => (
               <div
                 key={v.id}

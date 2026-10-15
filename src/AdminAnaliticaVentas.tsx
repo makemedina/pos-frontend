@@ -35,7 +35,7 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Analítica de ventas</h2>
           <button onClick={onCerrar}>Cerrar</button>
@@ -62,7 +62,7 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
         ) : clientes.length === 0 ? (
           <p style={{ color: '#6b7280' }}>No hay clientes en riesgo por ahora — necesitas al menos 3 compras de un cliente para poder comparar su ritmo.</p>
         ) : (
-          <div style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {clientes.map((c) => (
               <div
                 key={c.id}

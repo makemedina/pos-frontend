@@ -129,7 +129,7 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Movimientos de inventario</h2>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -227,7 +227,7 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
               </div>
             )}
 
-            <div style={{ display: 'grid', gap: '0.5rem' }}>
+            <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
               {movimientos.length === 0 && <p style={{ color: '#6b7280' }}>No hay movimientos con esos filtros.</p>}
               {movimientos.map((m) => {
                 const info = ETIQUETAS_TIPO[m.tipo];

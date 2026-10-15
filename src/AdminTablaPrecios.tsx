@@ -297,7 +297,7 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 960, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 960, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Tabla de precios</h2>
           <button onClick={onCerrar}>Cerrar</button>

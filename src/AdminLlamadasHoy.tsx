@@ -153,7 +153,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 620, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 620, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, textTransform: 'capitalize' }}>Llamadas de hoy ({hoyNombre})</h2>
           <button onClick={onCerrar}>Cerrar</button>
@@ -209,14 +209,14 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
         ) : (
           <>
             {pendientes.length > 0 && (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
                 <strong style={{ fontSize: 13, color: '#6b7280' }}>Por llamar ({pendientes.length})</strong>
                 {pendientes.map(tarjeta)}
               </div>
             )}
 
             {hechas.length > 0 && (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
                 <strong style={{ fontSize: 13, color: '#6b7280' }}>Ya llamados ({hechas.length})</strong>
                 {hechas.map(tarjeta)}
               </div>

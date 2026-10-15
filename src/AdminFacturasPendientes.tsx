@@ -63,7 +63,7 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Facturas pendientes</h2>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -87,7 +87,7 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
           <p style={{ color: '#6b7280' }}>No hay facturas pendientes que coincidan.</p>
         ) : (
           <>
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
+            <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
               {facturasFiltradas.map((f) => (
                 <div key={f.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

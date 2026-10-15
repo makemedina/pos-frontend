@@ -705,7 +705,7 @@ export function AdminCartera({ onCerrar }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>
             {nivel === 'clientes' && 'Cartera'}
@@ -782,7 +782,7 @@ export function AdminCartera({ onCerrar }: Props) {
               Ocultar clientes sin saldo en cartera
             </label>
             <div id={ELEMENT_ID_REPORTE_CARTERA} style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
-              <div style={{ display: 'grid', gap: '0.75rem' }}>
+              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
                 {clientesFiltrados.length === 0 && <p style={{ color: '#6b7280' }}>No hay clientes que coincidan.</p>}
                 {clientesFiltrados.map((c) => (
                   <div
@@ -993,7 +993,7 @@ export function AdminCartera({ onCerrar }: Props) {
                 <div style={{ fontSize: 13, color: '#6b7280' }}>{clienteElegido?.telefono}</div>
               </div>
 
-              <div style={{ display: 'grid', gap: '0.75rem' }}>
+              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
                 {notas.length === 0 && <p style={{ color: '#6b7280' }}>No hay notas para mostrar.</p>}
                 {notas.map((n) => (
                   <div

@@ -156,7 +156,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>{productoElegido ? `${productoElegido.producto} · ${productoElegido.marca}` : 'Productos'}</h2>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -203,7 +203,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
             {cargando ? (
               <p>Cargando...</p>
             ) : (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
                 {productosVisibles.length === 0 && <p style={{ color: '#6b7280' }}>No hay productos que coincidan.</p>}
                 {productosVisibles.map((p) => (
                   <div

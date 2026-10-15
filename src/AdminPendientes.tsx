@@ -245,7 +245,7 @@ export function AdminPendientes({ onCerrar }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 620, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 620, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0 }}>Pendientes</h2>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -362,21 +362,21 @@ export function AdminPendientes({ onCerrar }: Props) {
         ) : (
           <>
             {vencidos.length > 0 && (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
                 <strong style={{ fontSize: 13, color: '#b91c1c' }}>Vencidos ({vencidos.length})</strong>
                 {vencidos.map((p) => tarjeta(p, true))}
               </div>
             )}
 
             {deHoy.length > 0 && (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
                 <strong style={{ fontSize: 13, color: '#6b7280' }}>Hoy ({deHoy.length})</strong>
                 {deHoy.map((p) => tarjeta(p))}
               </div>
             )}
 
             {proximos.length > 0 && (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
                 <strong style={{ fontSize: 13, color: '#6b7280' }}>Próximos ({proximos.length})</strong>
                 {proximos.map((p) => tarjeta(p))}
               </div>

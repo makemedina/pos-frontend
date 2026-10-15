@@ -109,13 +109,14 @@ textarea:focus {
     align-items: flex-start;
     justify-content: center;
     gap: 24px;
-    max-width: 1300px;
+    max-width: 1760px;
     margin: 0 auto;
     padding: 24px 24px 0;
   }
 
   .app {
-    max-width: 960px;
+    max-width: none;
+    min-width: 0;
     flex: 1 1 auto;
     margin: 0;
     padding: 0 0 60px;
@@ -998,4 +999,99 @@ textarea:focus {
 
 .deslizador-tabla::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* ---------- VISTA DE COMPUTADORA ----------
+   En celular todo queda igual. En pantallas anchas se aprovecha el
+   espacio horizontal: las pantallas con listados (contenido-pantalla)
+   se ensanchan, y sus listados de tarjetas (lista-tarjetas) se acomodan
+   en 2-3 columnas en vez de una sola fila larga hacia abajo. */
+
+/* .pantalla-centrada le pone estilo de "tarjeta de 480px" a todos sus
+   hijos directos -- incluidos los modales que se abren dentro de una
+   pantalla, que por eso salian angostos y pegados a la izquierda. */
+.pantalla-centrada > .modal-fondo {
+  max-width: none;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: none;
+  padding: 0;
+}
+
+@media (min-width: 900px) {
+  /* !important: el ancho maximo de cada pantalla viene en un style inline. */
+  .contenido-pantalla {
+    max-width: 1440px !important;
+  }
+
+  .lista-tarjetas {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    align-items: start;
+  }
+
+  /* Titulos y mensajes dentro de un listado ocupan todo el ancho. */
+  .lista-tarjetas > p,
+  .lista-tarjetas > strong,
+  .lista-tarjetas > h3 {
+    grid-column: 1 / -1;
+  }
+
+  /* Modales: ventana centrada en vez de hoja que sube desde abajo. */
+  .modal-fondo {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .modal-contenido {
+    border-radius: 20px;
+    max-width: 560px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+
+  .modal-contenido::before {
+    display: none;
+  }
+
+  /* Ventas: productos en cuadricula y la nota (carrito) fija a la
+     derecha, en vez de una barra que tapa la parte de abajo. */
+  .lista-productos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+  }
+
+  .app.con-carrito {
+    padding-right: 364px;
+  }
+
+  .barra-carrito {
+    top: 24px;
+    bottom: auto;
+    left: auto;
+    right: 24px;
+    width: 340px;
+    max-width: none;
+    max-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    border: none;
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .barra-carrito .carrito-detalle {
+    max-height: none;
+    flex: 1 1 auto;
+  }
+
+  /* Estadisticas: las secciones (gastos, productos, clientes,
+     vendedores) lado a lado. */
+  .secciones-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1rem;
+    align-items: start;
+  }
 }

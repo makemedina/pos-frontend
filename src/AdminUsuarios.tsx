@@ -139,7 +139,7 @@ export function AdminUsuarios({ onCerrar }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Usuarios</h2>
           <button onClick={onCerrar}>Cerrar</button>
@@ -157,7 +157,7 @@ export function AdminUsuarios({ onCerrar }: Props) {
 
         {cargando ? <p>Cargando...</p> : null}
 
-        <div style={{ display: 'grid', gap: '0.75rem' }}>
+        <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
           {usuarios.map((usuario) => (
             <div key={usuario.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

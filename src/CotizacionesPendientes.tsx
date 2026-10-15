@@ -181,7 +181,7 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>{detalle ? `Cotización #${detalle.folio}` : 'Cotizaciones pendientes'}</h2>
           <button onClick={detalle ? volverALista : onCerrar}>{detalle ? '← Pendientes' : 'Cerrar'}</button>
@@ -196,7 +196,7 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
             ) : cotizaciones.length === 0 ? (
               <p style={{ color: '#6b7280' }}>No hay cotizaciones pendientes.</p>
             ) : (
-              <div style={{ display: 'grid', gap: '0.75rem' }}>
+              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
                 {cotizaciones.map((c) => (
                   <div
                     key={c.id}

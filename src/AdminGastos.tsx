@@ -401,7 +401,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Gastos</h2>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -671,7 +671,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
               value={busquedaGasto}
               onChange={(e) => setBusquedaGasto(e.target.value)}
             />
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
+            <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
               {cargandoHistorial && <p>Cargando...</p>}
               {!cargandoHistorial && gastosFiltrados.length === 0 && (
                 <p style={{ color: '#6b7280' }}>No hay gastos que coincidan.</p>

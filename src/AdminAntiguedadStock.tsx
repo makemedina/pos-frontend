@@ -35,7 +35,7 @@ export function AdminAntiguedadStock({ onCerrar }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Antigüedad de stock</h2>
           <button onClick={onCerrar}>Cerrar</button>
@@ -70,7 +70,7 @@ export function AdminAntiguedadStock({ onCerrar }: Props) {
         ) : lotesVisibles.length === 0 ? (
           <p style={{ color: '#6b7280' }}>{soloCriticos ? 'No hay lotes críticos ahora mismo.' : 'No hay lotes en stock.'}</p>
         ) : (
-          <div style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {lotesVisibles.map((l) => (
               <div
                 key={l.id}

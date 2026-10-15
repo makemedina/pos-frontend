@@ -274,7 +274,7 @@ export function AdminDashboard({ onCerrar }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 860, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 860, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2 style={{ margin: 0 }}>Dashboard</h2>
@@ -426,145 +426,147 @@ export function AdminDashboard({ onCerrar }: Props) {
               </div>
             </div>
 
-            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-              <div
-                onClick={() => setMetricaExpandida('gastos')}
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', cursor: 'pointer', marginBottom: 8 }}
-              >
-                <h3 style={{ margin: 0 }}>Gastos</h3>
-                <div style={{ textAlign: 'right' }}>
-                  <strong style={{ color: '#b91c1c' }}>{formatoMoneda(data.totalGastos)}</strong>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>
-                    {data.gastosCantidad} gasto{data.gastosCantidad === 1 ? '' : 's'} · ver por día
+            <div className="secciones-dashboard" style={{ display: 'grid', gap: '1rem' }}>
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+                <div
+                  onClick={() => setMetricaExpandida('gastos')}
+                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', cursor: 'pointer', marginBottom: 8 }}
+                >
+                  <h3 style={{ margin: 0 }}>Gastos</h3>
+                  <div style={{ textAlign: 'right' }}>
+                    <strong style={{ color: '#b91c1c' }}>{formatoMoneda(data.totalGastos)}</strong>
+                    <div style={{ fontSize: 12, color: '#6b7280' }}>
+                      {data.gastosCantidad} gasto{data.gastosCantidad === 1 ? '' : 's'} · ver por día
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
-                {data.gastosPorCategoria.length === 0 && <p style={{ color: '#6b7280' }}>Sin gastos en este periodo.</p>}
-                {(mostrarTodosGastos ? data.gastosPorCategoria : data.gastosPorCategoria.slice(0, ESPACIOS_POR_SECCION)).map((c) => (
-                  <div
-                    key={`${c.departamento}-${c.categoria}`}
-                    onClick={() => setDetalleGastos(c)}
-                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                  {data.gastosPorCategoria.length === 0 && <p style={{ color: '#6b7280' }}>Sin gastos en este periodo.</p>}
+                  {(mostrarTodosGastos ? data.gastosPorCategoria : data.gastosPorCategoria.slice(0, ESPACIOS_POR_SECCION)).map((c) => (
+                    <div
+                      key={`${c.departamento}-${c.categoria}`}
+                      onClick={() => setDetalleGastos(c)}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                    >
+                      <span>
+                        {c.categoria}
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                          {c.departamento} · {data.totalGastos > 0 ? ((c.total / data.totalGastos) * 100).toFixed(1) : '0.0'}%
+                        </div>
+                      </span>
+                      <strong>{formatoMoneda(c.total)}</strong>
+                    </div>
+                  ))}
+                </div>
+                {data.gastosPorCategoria.length > ESPACIOS_POR_SECCION && (
+                  <button
+                    className="boton-secundario"
+                    onClick={() => setMostrarTodosGastos((v) => !v)}
+                    style={{ width: '100%', marginTop: 8 }}
                   >
-                    <span>
-                      {c.categoria}
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>
-                        {c.departamento} · {data.totalGastos > 0 ? ((c.total / data.totalGastos) * 100).toFixed(1) : '0.0'}%
-                      </div>
-                    </span>
-                    <strong>{formatoMoneda(c.total)}</strong>
-                  </div>
-                ))}
+                    {mostrarTodosGastos ? 'Mostrar menos' : `Mostrar todos (${data.gastosPorCategoria.length})`}
+                  </button>
+                )}
               </div>
-              {data.gastosPorCategoria.length > ESPACIOS_POR_SECCION && (
-                <button
-                  className="boton-secundario"
-                  onClick={() => setMostrarTodosGastos((v) => !v)}
-                  style={{ width: '100%', marginTop: 8 }}
-                >
-                  {mostrarTodosGastos ? 'Mostrar menos' : `Mostrar todos (${data.gastosPorCategoria.length})`}
-                </button>
-              )}
-            </div>
 
-            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-              <h3>Productos más vendidos por volumen</h3>
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
-                {data.productosMasVendidos.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
-                {(mostrarTodosProductosVolumen ? data.productosMasVendidos : data.productosMasVendidos.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, cantidad]) => (
-                  <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{nombre}</span>
-                    <strong>{formatoKg(cantidad)} kg</strong>
-                  </div>
-                ))}
-              </div>
-              {data.productosMasVendidos.length > ESPACIOS_POR_SECCION && (
-                <button
-                  className="boton-secundario"
-                  onClick={() => setMostrarTodosProductosVolumen((v) => !v)}
-                  style={{ width: '100%', marginTop: 8 }}
-                >
-                  {mostrarTodosProductosVolumen ? 'Mostrar menos' : `Mostrar todos (${data.productosMasVendidos.length})`}
-                </button>
-              )}
-            </div>
-
-            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-              <h3>Productos más vendidos por valor</h3>
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
-                {data.productosMasVendidosPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
-                {(mostrarTodosProductos ? data.productosMasVendidosPorValor : data.productosMasVendidosPorValor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
-                  <div
-                    key={nombre}
-                    onClick={() => setDetalleProducto(nombre)}
-                    style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+                <h3>Productos más vendidos por volumen</h3>
+                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                  {data.productosMasVendidos.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                  {(mostrarTodosProductosVolumen ? data.productosMasVendidos : data.productosMasVendidos.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, cantidad]) => (
+                    <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>{nombre}</span>
+                      <strong>{formatoKg(cantidad)} kg</strong>
+                    </div>
+                  ))}
+                </div>
+                {data.productosMasVendidos.length > ESPACIOS_POR_SECCION && (
+                  <button
+                    className="boton-secundario"
+                    onClick={() => setMostrarTodosProductosVolumen((v) => !v)}
+                    style={{ width: '100%', marginTop: 8 }}
                   >
-                    <span>{nombre}</span>
-                    <strong>{formatoMoneda(valor)}</strong>
-                  </div>
-                ))}
+                    {mostrarTodosProductosVolumen ? 'Mostrar menos' : `Mostrar todos (${data.productosMasVendidos.length})`}
+                  </button>
+                )}
               </div>
-              {data.productosMasVendidosPorValor.length > ESPACIOS_POR_SECCION && (
-                <button
-                  className="boton-secundario"
-                  onClick={() => setMostrarTodosProductos((v) => !v)}
-                  style={{ width: '100%', marginTop: 8 }}
-                >
-                  {mostrarTodosProductos ? 'Mostrar menos' : `Mostrar todos (${data.productosMasVendidosPorValor.length})`}
-                </button>
-              )}
-            </div>
 
-            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-              <h3>Mejores clientes por valor</h3>
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
-                {data.mejoresClientesPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
-                {(mostrarTodosClientes ? data.mejoresClientesPorValor : data.mejoresClientesPorValor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
-                  <div
-                    key={nombre}
-                    onClick={() => {
-                      setDetalleCliente(nombre);
-                      setDetalleClientePestana('valor');
-                    }}
-                    style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+                <h3>Productos más vendidos por valor</h3>
+                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                  {data.productosMasVendidosPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                  {(mostrarTodosProductos ? data.productosMasVendidosPorValor : data.productosMasVendidosPorValor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
+                    <div
+                      key={nombre}
+                      onClick={() => setDetalleProducto(nombre)}
+                      style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}
+                    >
+                      <span>{nombre}</span>
+                      <strong>{formatoMoneda(valor)}</strong>
+                    </div>
+                  ))}
+                </div>
+                {data.productosMasVendidosPorValor.length > ESPACIOS_POR_SECCION && (
+                  <button
+                    className="boton-secundario"
+                    onClick={() => setMostrarTodosProductos((v) => !v)}
+                    style={{ width: '100%', marginTop: 8 }}
                   >
-                    <span>{nombre}</span>
-                    <strong>{formatoMoneda(valor)}</strong>
-                  </div>
-                ))}
+                    {mostrarTodosProductos ? 'Mostrar menos' : `Mostrar todos (${data.productosMasVendidosPorValor.length})`}
+                  </button>
+                )}
               </div>
-              {data.mejoresClientesPorValor.length > ESPACIOS_POR_SECCION && (
-                <button
-                  className="boton-secundario"
-                  onClick={() => setMostrarTodosClientes((v) => !v)}
-                  style={{ width: '100%', marginTop: 8 }}
-                >
-                  {mostrarTodosClientes ? 'Mostrar menos' : `Mostrar todos (${data.mejoresClientesPorValor.length})`}
-                </button>
-              )}
-            </div>
 
-            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-              <h3>Ventas por vendedor</h3>
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
-                {data.ventasPorVendedor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
-                {(mostrarTodosVendedores ? data.ventasPorVendedor : data.ventasPorVendedor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
-                  <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{nombre}</span>
-                    <strong>{formatoMoneda(valor)}</strong>
-                  </div>
-                ))}
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+                <h3>Mejores clientes por valor</h3>
+                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                  {data.mejoresClientesPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                  {(mostrarTodosClientes ? data.mejoresClientesPorValor : data.mejoresClientesPorValor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
+                    <div
+                      key={nombre}
+                      onClick={() => {
+                        setDetalleCliente(nombre);
+                        setDetalleClientePestana('valor');
+                      }}
+                      style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }}
+                    >
+                      <span>{nombre}</span>
+                      <strong>{formatoMoneda(valor)}</strong>
+                    </div>
+                  ))}
+                </div>
+                {data.mejoresClientesPorValor.length > ESPACIOS_POR_SECCION && (
+                  <button
+                    className="boton-secundario"
+                    onClick={() => setMostrarTodosClientes((v) => !v)}
+                    style={{ width: '100%', marginTop: 8 }}
+                  >
+                    {mostrarTodosClientes ? 'Mostrar menos' : `Mostrar todos (${data.mejoresClientesPorValor.length})`}
+                  </button>
+                )}
               </div>
-              {data.ventasPorVendedor.length > ESPACIOS_POR_SECCION && (
-                <button
-                  className="boton-secundario"
-                  onClick={() => setMostrarTodosVendedores((v) => !v)}
-                  style={{ width: '100%', marginTop: 8 }}
-                >
-                  {mostrarTodosVendedores ? 'Mostrar menos' : `Mostrar todos (${data.ventasPorVendedor.length})`}
-                </button>
-              )}
+
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+                <h3>Ventas por vendedor</h3>
+                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                  {data.ventasPorVendedor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                  {(mostrarTodosVendedores ? data.ventasPorVendedor : data.ventasPorVendedor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
+                    <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>{nombre}</span>
+                      <strong>{formatoMoneda(valor)}</strong>
+                    </div>
+                  ))}
+                </div>
+                {data.ventasPorVendedor.length > ESPACIOS_POR_SECCION && (
+                  <button
+                    className="boton-secundario"
+                    onClick={() => setMostrarTodosVendedores((v) => !v)}
+                    style={{ width: '100%', marginTop: 8 }}
+                  >
+                    {mostrarTodosVendedores ? 'Mostrar menos' : `Mostrar todos (${data.ventasPorVendedor.length})`}
+                  </button>
+                )}
+              </div>
             </div>
           </>
         )}

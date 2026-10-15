@@ -135,7 +135,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 620, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 620, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Costos de {proveedorNombre}</h2>
           <button onClick={onCerrar}>Cerrar</button>
@@ -212,7 +212,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
         ) : costos.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#6b7280' }}>Este proveedor no tiene costos registrados todavía.</p>
         ) : (
-          <div style={{ display: 'grid', gap: '0.5rem' }}>
+          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
             {costos.map((c) => (
               <div key={c.varianteId} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

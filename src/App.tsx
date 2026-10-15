@@ -1094,7 +1094,7 @@ export default function App() {
         </div>
       </aside>
 
-      <div className="app">
+      <div className={`app${pantallaActiva === 'catalogo' && carrito.length > 0 ? ' con-carrito' : ''}`}>
       <div
         className="barra-logo-movil"
         style={{

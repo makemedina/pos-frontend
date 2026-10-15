@@ -108,7 +108,7 @@ export function AdminTransacciones({ onCerrar }: Props) {
 
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2>Transacciones</h2>
@@ -148,7 +148,7 @@ export function AdminTransacciones({ onCerrar }: Props) {
         ) : transaccionesFiltradas.length === 0 ? (
           <p style={{ color: '#6b7280' }}>No se encontraron transacciones.</p>
         ) : (
-          <div style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {transaccionesFiltradas.map((transaccion) => (
               <div key={`${transaccion.tipo}-${transaccion.id}`} style={{ border: '1px solid #ddd', padding: '0.75rem', borderRadius: 8, background: 'white' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
