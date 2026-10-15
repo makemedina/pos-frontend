@@ -121,7 +121,9 @@ interface OpcionMenu {
 // de inicio -- Ventas ya no es un grupo aparte, es la pantalla de inicio
 // misma. Cada una se filtra segun los permisos reales del usuario.
 const OPCIONES_MENU: OpcionMenu[] = [
-  { pantalla: 'clientesMenu', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Datos, cartera y cuentas por cobrar', clase: 'boton-flotante-cartera' },
+  { pantalla: 'inicio', icono: '🛒', titulo: 'Ventas', descripcion: 'Pantalla principal: ventas y nueva venta', clase: '' },
+  { pantalla: 'clientes', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Lista de clientes: alta, edición y datos', clase: 'boton-flotante-cartera' },
+  { pantalla: 'clientesMenu', icono: '💵', titulo: 'Cobranza', descripcion: 'Cartera, notas antiguas, llamadas y pendientes', clase: 'boton-flotante-cartera' },
   { pantalla: 'proveedoresMenu', icono: '🚚', titulo: 'Proveedores', descripcion: 'Compras, facturas y cuentas por pagar', clase: 'boton-flotante-cuentas' },
   { pantalla: 'inventarioMenu', icono: '🥩', titulo: 'Inventario', descripcion: 'Productos, stock y movimientos', clase: 'boton-flotante-ajuste' },
   { pantalla: 'finanzasMenu', icono: '💸', titulo: 'Finanzas', descripcion: 'Corte, gastos y estadísticas', clase: 'boton-flotante-gastos' },
@@ -133,7 +135,7 @@ const OPCIONES_MENU: OpcionMenu[] = [
 // para resaltar el item correcto en la barra lateral de escritorio (ver
 // sidebar-desktop) cuando se esta en una pantalla "hija" de esa seccion.
 const SECCION_DE_PANTALLA: Partial<Record<Pantalla, Pantalla>> = {
-  clientes: 'clientesMenu',
+  catalogo: 'inicio',
   cartera: 'clientesMenu',
   notasAntiguas: 'clientesMenu',
   llamadasHoy: 'clientesMenu',
@@ -776,7 +778,7 @@ export default function App() {
     }
 
     if (pantallaActiva === 'clientesMenu') {
-      return renderSubmenu('Clientes', [
+      return renderSubmenu('Cobranza', [
         { pantalla: 'clientes', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Alta, edición y datos', clase: 'boton-flotante-cartera' },
         { pantalla: 'cartera', icono: '💵', titulo: 'Cartera (cuentas por cobrar)', descripcion: 'Clientes con saldo pendiente', clase: 'boton-flotante-cartera' },
         { pantalla: 'notasAntiguas', icono: '📆', titulo: 'Notas antiguas', descripcion: 'Notas con más de 7 días sin liquidarse', clase: 'boton-flotante-cartera' },
@@ -924,7 +926,7 @@ export default function App() {
       );
     }
     if (pantallaActiva === 'clientes') {
-      return <AdminClientes onCerrar={() => abrirPantalla('clientesMenu')} esAdmin={usuario.rolBase === 'administrador'} />;
+      return <AdminClientes onCerrar={() => abrirPantalla('inicio')} esAdmin={usuario.rolBase === 'administrador'} />;
     }
     if (pantallaActiva === 'llamadasHoy') {
       return <AdminLlamadasHoy onCerrar={() => abrirPantalla('clientesMenu')} />;
