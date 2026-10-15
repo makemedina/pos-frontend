@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda, formatoDireccion, formatoFecha, formatoFechaHora } from './formato';
+import { formatoMoneda, formatoDireccion, formatoFecha, formatoFechaHora, haceDias } from './formato';
 import {
   obtenerClientesConSaldo,
   obtenerClienteDetalle,
@@ -119,6 +119,7 @@ function FormularioDireccion({
 }
 
 type Filtro = 'todos' | 'conDeuda' | 'sinDeuda';
+type Orden = 'monto' | 'ultimaCompra' | 'nombre';
 type Pestana = 'datos' | 'transacciones' | 'movimientos';
 
 // valor = lo que regresa Date.getDay() (0=domingo...6=sabado), mismo
@@ -136,7 +137,9 @@ const DIAS_SEMANA = [
 export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [filtro, setFiltro] = useState<Filtro>('todos');
   const [busquedaCliente, setBusquedaCliente] = useState('');
-  const [soloActivos, setSoloActivos] = useState(true);
+  // Switch entre clientes activos (compraron en el ultimo mes) e inactivos.
+  const [verActivos, setVerActivos] = useState(true);
+  const [orden, setOrden] = useState<Orden>('monto');
   const [clientes, setClientes] = useState<ClienteConSaldo[]>([]);
   const [cargandoLista, setCargandoLista] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -388,12 +391,24 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
     }
   }
 
-  const clientesFiltrados = clientes.filter((c) => {
-    if (soloActivos && !c.activo) return false;
-    if (!busquedaCliente.trim()) return true;
-    const q = busquedaCliente.trim().toLowerCase();
-    return c.nombre.toLowerCase().includes(q) || c.telefono.includes(busquedaCliente.trim());
-  });
+  const clientesFiltrados = clientes
+    .filter((c) => {
+      if (c.activo !== verActivos) return false;
+      if (!busquedaCliente.trim()) return true;
+      const q = busquedaCliente.trim().toLowerCase();
+      return c.nombre.toLowerCase().includes(q) || c.telefono.includes(busquedaCliente.trim());
+    })
+    .sort((a, b) => {
+      // monto: saldo pendiente de mayor a menor; ultimaCompra: la mas
+      // reciente primero (los que nunca han comprado al final); nombre: A-Z.
+      if (orden === 'monto') return b.saldoTotal - a.saldoTotal || a.nombre.localeCompare(b.nombre, 'es');
+      if (orden === 'ultimaCompra') {
+        const fa = a.ultimaCompra ? new Date(a.ultimaCompra).getTime() : -Infinity;
+        const fb = b.ultimaCompra ? new Date(b.ultimaCompra).getTime() : -Infinity;
+        return fb - fa || a.nombre.localeCompare(b.nombre, 'es');
+      }
+      return a.nombre.localeCompare(b.nombre, 'es');
+    });
 
   const totalActivos = clientes.filter((c) => c.activo).length;
   const totalInactivos = clientes.length - totalActivos;
@@ -457,12 +472,36 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
               </div>
             </div>
 
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
-              <input type="checkbox" checked={soloActivos} onChange={(e) => setSoloActivos(e.target.checked)} />
-              Solo clientes activos (compraron en el último mes)
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ display: 'inline-flex', background: '#eef0f4', borderRadius: 10, padding: 3 }}>
+                {[true, false].map((activos) => (
+                  <button
+                    key={String(activos)}
+                    onClick={() => setVerActivos(activos)}
+                    style={{
+                      padding: '7px 14px',
+                      borderRadius: 8,
+                      background: verActivos === activos ? '#fff' : 'transparent',
+                      color: verActivos === activos ? '#1c1c1e' : '#6b7280',
+                      fontWeight: verActivos === activos ? 600 : 500,
+                      boxShadow: verActivos === activos ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
+                    }}
+                  >
+                    {activos ? `Activos (${totalActivos})` : `Inactivos (${totalInactivos})`}
+                  </button>
+                ))}
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
+                Ordenar por
+                <select value={orden} onChange={(e) => setOrden(e.target.value as Orden)}>
+                  <option value="monto">Monto (saldo)</option>
+                  <option value="ultimaCompra">Última compra</option>
+                  <option value="nombre">Nombre</option>
+                </select>
+              </label>
+            </div>
             <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
-              {totalActivos} activo{totalActivos !== 1 ? 's' : ''} · {totalInactivos} inactivo{totalInactivos !== 1 ? 's' : ''}
+              {verActivos ? 'Activos: compraron en el último mes.' : 'Inactivos: no han comprado en el último mes.'}
             </p>
 
             {mostrarAlta && (
@@ -530,6 +569,11 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                     <div>
                       <strong>{c.nombre}</strong>
                       <div style={{ fontSize: 13, color: '#6b7280' }}>{c.telefono}</div>
+                      <div style={{ fontSize: 12, color: '#9ca3af' }}>
+                        {c.ultimaCompra
+                          ? `Última compra: ${formatoFecha(c.ultimaCompra)} (${haceDias(c.ultimaCompra)})`
+                          : 'Sin compras'}
+                      </div>
                     </div>
                     <div style={{ textAlign: 'right', fontWeight: 700, color: c.saldoTotal > 0 ? '#b91c1c' : '#16a34a' }}>
                       {formatoMoneda(c.saldoTotal)}
