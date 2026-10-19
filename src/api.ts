@@ -286,11 +286,21 @@ export async function obtenerSaldoAFavor(clienteId: string): Promise<number> {
   return Number(data.disponible ?? 0);
 }
 
-export async function crearClienteRapido(nombre: string, telefono: string): Promise<Cliente> {
+// Como llego el cliente. Solo los de "anuncio" se le reportan a Meta como
+// cliente potencial (ver pos-backend metaCapi.service.ts).
+export const ORIGENES_CLIENTE = [
+  { valor: 'anuncio', etiqueta: 'Anuncio (Facebook / Instagram)' },
+  { valor: 'vendedor', etiqueta: 'Lo consiguió un vendedor' },
+  { valor: 'recomendacion', etiqueta: 'Recomendación' },
+  { valor: 'ya_cliente', etiqueta: 'Ya era cliente' },
+  { valor: 'otro', etiqueta: 'Otro' },
+] as const;
+
+export async function crearClienteRapido(nombre: string, telefono: string, origen?: string): Promise<Cliente> {
   const res = await fetch(`${API_URL}/clientes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ nombre, telefono }),
+    body: JSON.stringify({ nombre, telefono, origen }),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -312,6 +322,7 @@ export interface ClienteConSaldo extends DireccionCampos {
   nombre: string;
   nombreContacto: string | null;
   telefono: string;
+  origen?: string | null;
   // Adonde se le entrega la mercancia -- si esta vacia, se asume que es
   // la misma que la de arriba (algunos clientes reciben en su negocio).
   calleEntrega: string | null;
@@ -479,7 +490,7 @@ export interface DireccionInput {
 }
 
 export async function crearClienteCompleto(
-  datos: { nombre: string; telefono: string; nombreContacto?: string } & DireccionInput
+  datos: { nombre: string; telefono: string; nombreContacto?: string; origen?: string } & DireccionInput
 ): Promise<Cliente> {
   const res = await fetch(`${API_URL}/clientes`, {
     method: 'POST',
@@ -557,6 +568,7 @@ export async function actualizarCliente(
     nombre?: string;
     nombreContacto?: string;
     telefono?: string;
+    origen?: string;
     permiteVentaCredito?: boolean;
   } & DireccionInput
 ): Promise<ClienteConSaldo> {

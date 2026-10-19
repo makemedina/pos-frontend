@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { buscarClientes, crearClienteRapido, type Cliente } from './api';
+import { buscarClientes, crearClienteRapido, type Cliente, ORIGENES_CLIENTE } from './api';
 import { obtenerClientesCache } from './offline';
 
 interface Props {
@@ -19,6 +19,7 @@ export function SeleccionarClienteVenta({ onSeleccionar, onCerrar }: Props) {
   const [mostrarAltaRapida, setMostrarAltaRapida] = useState(false);
   const [nombreNuevo, setNombreNuevo] = useState('');
   const [telefonoNuevo, setTelefonoNuevo] = useState('');
+  const [origenNuevo, setOrigenNuevo] = useState('');
   const [mensaje, setMensaje] = useState<string | null>(null);
 
   async function buscar(valor: string) {
@@ -42,8 +43,12 @@ export function SeleccionarClienteVenta({ onSeleccionar, onCerrar }: Props) {
 
   async function guardarClienteNuevo() {
     if (!nombreNuevo || !telefonoNuevo) return;
+    if (!origenNuevo) {
+      setMensaje('Elige cómo llegó el cliente.');
+      return;
+    }
     try {
-      const cliente = await crearClienteRapido(nombreNuevo, telefonoNuevo);
+      const cliente = await crearClienteRapido(nombreNuevo, telefonoNuevo, origenNuevo);
       onSeleccionar(cliente);
     } catch {
       setMensaje('No se pudo crear el cliente.');
@@ -103,6 +108,12 @@ export function SeleccionarClienteVenta({ onSeleccionar, onCerrar }: Props) {
               value={telefonoNuevo}
               onChange={(e) => setTelefonoNuevo(e.target.value)}
             />
+            <select value={origenNuevo} onChange={(e) => setOrigenNuevo(e.target.value)}>
+              <option value="">¿Cómo llegó?</option>
+              {ORIGENES_CLIENTE.map((o) => (
+                <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
+              ))}
+            </select>
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="boton-primario" onClick={guardarClienteNuevo} style={{ flex: 1 }}>
                 Guardar cliente

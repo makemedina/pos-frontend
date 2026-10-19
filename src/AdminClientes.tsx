@@ -13,6 +13,7 @@ import {
   type ClienteConSaldo,
   type VentaDeCliente,
   type MovimientoCliente,
+  ORIGENES_CLIENTE,
 } from './api';
 import { VentaDetalleModal } from './VentaDetalleModal';
 import { exportarAExcel } from './exportarExcel';
@@ -151,6 +152,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [nombreNuevo, setNombreNuevo] = useState('');
   const [nombreContactoNuevo, setNombreContactoNuevo] = useState('');
   const [telefonoNuevo, setTelefonoNuevo] = useState('');
+  const [origenNuevo, setOrigenNuevo] = useState('');
   const [direccionNegocioNueva, setDireccionNegocioNueva] = useState<CamposDireccion>(DIRECCION_VACIA);
   const [direccionEntregaNueva, setDireccionEntregaNueva] = useState<CamposDireccion>(DIRECCION_VACIA);
 
@@ -162,6 +164,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [editNombre, setEditNombre] = useState('');
   const [editNombreContacto, setEditNombreContacto] = useState('');
   const [editTelefono, setEditTelefono] = useState('');
+  const [editOrigen, setEditOrigen] = useState('');
   const [editDireccionNegocio, setEditDireccionNegocio] = useState<CamposDireccion>(DIRECCION_VACIA);
   const [editDireccionEntrega, setEditDireccionEntrega] = useState<CamposDireccion>(DIRECCION_VACIA);
   const [editGoogleMapsUrl, setEditGoogleMapsUrl] = useState('');
@@ -215,11 +218,16 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
 
   async function crearNuevoCliente() {
     if (!nombreNuevo || !telefonoNuevo) return;
+    if (!origenNuevo) {
+      setMensaje('Elige cómo llegó el cliente.');
+      return;
+    }
     try {
       await crearClienteCompleto({
         nombre: nombreNuevo,
         nombreContacto: nombreContactoNuevo || undefined,
         telefono: telefonoNuevo,
+        origen: origenNuevo,
         calle: direccionNegocioNueva.calle || undefined,
         colonia: direccionNegocioNueva.colonia || undefined,
         ciudad: direccionNegocioNueva.ciudad || undefined,
@@ -234,6 +242,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       setNombreNuevo('');
       setNombreContactoNuevo('');
       setTelefonoNuevo('');
+      setOrigenNuevo('');
+      setMensaje(null);
       setDireccionNegocioNueva(DIRECCION_VACIA);
       setDireccionEntregaNueva(DIRECCION_VACIA);
       setMostrarAlta(false);
@@ -272,6 +282,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       setEditNombre(data.nombre);
       setEditNombreContacto(data.nombreContacto || '');
       setEditTelefono(data.telefono);
+      setEditOrigen(data.origen || '');
       setEditDireccionNegocio(direccionNegocioDe(data));
       const entregaCargada = direccionEntregaDe(data);
       setEditDireccionEntrega(entregaCargada);
@@ -289,6 +300,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         setEditNombre(enLista.nombre);
         setEditNombreContacto(enLista.nombreContacto || '');
         setEditTelefono(enLista.telefono);
+        setEditOrigen(enLista.origen || '');
         setEditDireccionNegocio(direccionNegocioDe(enLista));
         const entregaCache = direccionEntregaDe(enLista);
         setEditDireccionEntrega(entregaCache);
@@ -322,6 +334,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         nombre: editNombre,
         nombreContacto: editNombreContacto,
         telefono: editTelefono,
+        origen: editOrigen || undefined,
         calle: editDireccionNegocio.calle,
         colonia: editDireccionNegocio.colonia,
         ciudad: editDireccionNegocio.ciudad,
@@ -513,6 +526,12 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                   onChange={(e) => setNombreContactoNuevo(e.target.value)}
                 />
                 <input placeholder="Teléfono" value={telefonoNuevo} onChange={(e) => setTelefonoNuevo(e.target.value)} />
+                <select value={origenNuevo} onChange={(e) => setOrigenNuevo(e.target.value)}>
+                  <option value="">¿Cómo llegó?</option>
+                  {ORIGENES_CLIENTE.map((o) => (
+                    <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
+                  ))}
+                </select>
                 <label className="etiqueta">Domicilio del negocio (opcional)</label>
                 <FormularioDireccion valores={direccionNegocioNueva} onChange={setDireccionNegocioNueva} />
 
@@ -627,6 +646,15 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 <label>
                   Teléfono
                   <input value={editTelefono} onChange={(e) => setEditTelefono(e.target.value)} />
+                </label>
+                <label>
+                  ¿Cómo llegó?
+                  <select value={editOrigen} onChange={(e) => setEditOrigen(e.target.value)}>
+                    <option value="">Sin dato</option>
+                    {ORIGENES_CLIENTE.map((o) => (
+                      <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
+                    ))}
+                  </select>
                 </label>
                 <label className="etiqueta">Domicilio (dirección del negocio)</label>
                 <FormularioDireccion valores={editDireccionNegocio} onChange={setEditDireccionNegocio} />
