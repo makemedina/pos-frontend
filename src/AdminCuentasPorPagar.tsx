@@ -8,11 +8,52 @@ import {
   cancelarPagoCompra,
   obtenerPagosDeProveedor,
   cancelarGrupoPagoCompra,
+  obtenerComprobanteFotoPagoCompra,
   type FacturaPendiente,
   type PagoCompraHistorial,
   type GrupoPagoProveedor,
 } from './api';
 import { ComprobantePagoModal, type DatosComprobantePago } from './ComprobantePagoModal';
+
+// Campo de foto del comprobante de pago (obligatorio en todo pago a
+// proveedor). Mismo estilo que el de Gastos: el <input type="file"> queda
+// oculto y se dispara desde un recuadro grande facil de tocar; sin
+// "capture", para que en celular se pueda elegir camara o galeria.
+function CampoFotoComprobante({ id, archivo, onCambio }: { id: string; archivo: File | null; onCambio: (archivo: File | null) => void }) {
+  const previa = useMemo(() => (archivo ? URL.createObjectURL(archivo) : null), [archivo]);
+  useEffect(() => () => { if (previa) URL.revokeObjectURL(previa); }, [previa]);
+  return (
+    <div style={{ display: 'grid', gap: '0.5rem' }}>
+      <span>Foto del comprobante (obligatoria)</span>
+      <label
+        htmlFor={id}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          border: '2px dashed #c7c7cc',
+          borderRadius: 12,
+          padding: '1.25rem',
+          cursor: 'pointer',
+          color: '#007aff',
+          fontWeight: 600,
+          textAlign: 'center',
+        }}
+      >
+        {archivo ? `📎 ${archivo.name} (toca para cambiarla)` : '📷 Toca para elegir o tomar la foto'}
+      </label>
+      <input
+        id={id}
+        type="file"
+        accept="image/*"
+        onChange={(e) => onCambio(e.target.files?.[0] ?? null)}
+        style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+      />
+      {previa && <img src={previa} alt="Comprobante" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'contain' }} />}
+    </div>
+  );
+}
 
 interface Props {
   onCerrar: () => void;
@@ -44,6 +85,11 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
   const [montoPagoMultiple, setMontoPagoMultiple] = useState('');
   const [asignacionesPago, setAsignacionesPago] = useState<Record<string, string>>({});
   const [guardandoPagoMultiple, setGuardandoPagoMultiple] = useState(false);
+  const [fotoPagoMultiple, setFotoPagoMultiple] = useState<File | null>(null);
+  const [fotoPago, setFotoPago] = useState<File | null>(null);
+  // URL (blob) de la foto de comprobante que se esta viendo, o null.
+  const [fotoComprobanteAbierta, setFotoComprobanteAbierta] = useState<string | null>(null);
+  const [cargandoFotoComprobante, setCargandoFotoComprobante] = useState(false);
   const [guardandoPago, setGuardandoPago] = useState(false);
 
   // Comprobante de cada pago a proveedor, sea parcial o deje la factura
@@ -152,6 +198,24 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     setMostrarPagoMultiple(false);
     setAsignacionesPago({});
     setMontoPagoMultiple('');
+    setFotoPagoMultiple(null);
+  }
+
+  async function verFotoComprobante(pagoId: string) {
+    setCargandoFotoComprobante(true);
+    try {
+      const blob = await obtenerComprobanteFotoPagoCompra(pagoId);
+      setFotoComprobanteAbierta(URL.createObjectURL(blob));
+    } catch {
+      setMensaje('No se pudo cargar la foto del comprobante.');
+    } finally {
+      setCargandoFotoComprobante(false);
+    }
+  }
+
+  function cerrarFotoComprobante() {
+    if (fotoComprobanteAbierta) URL.revokeObjectURL(fotoComprobanteAbierta);
+    setFotoComprobanteAbierta(null);
   }
 
   function actualizarAsignacion(facturaId: string, valor: string) {
@@ -189,10 +253,14 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
       setMensaje('Asigna un monto mayor a cero a al menos una factura.');
       return;
     }
+    if (!fotoPagoMultiple) {
+      setMensaje('Sube la foto del comprobante del pago antes de registrarlo.');
+      return;
+    }
 
     setGuardandoPagoMultiple(true);
     try {
-      const resultado = await registrarPagoMultiCompra(proveedorElegido.id, asignaciones, metodoPagoMultiple);
+      const resultado = await registrarPagoMultiCompra(proveedorElegido.id, asignaciones, metodoPagoMultiple, fotoPagoMultiple);
       setMensaje(`Pago registrado para ${proveedorElegido.nombre}`);
       cerrarPagoMultiple();
       const facturasData = await cargar();
@@ -314,12 +382,18 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     e.preventDefault();
     if (!facturaElegida || guardandoPago) return;
 
+    if (!fotoPago) {
+      setMensaje('Sube la foto del comprobante del pago antes de guardarlo.');
+      return;
+    }
+
     const montoPagado = Number(monto);
     setGuardandoPago(true);
     try {
-      await registrarPagoCompra(facturaElegida.id, montoPagado, metodoPago);
+      await registrarPagoCompra(facturaElegida.id, montoPagado, metodoPago, fotoPago);
       setMensaje(`Pago registrado para ${facturaElegida.proveedor.nombre}`);
       setMonto('');
+      setFotoPago(null);
       // Refresca el saldo de la factura y su historial de pagos
       const [facturasData, pagosData] = await Promise.all([
         obtenerFacturasPendientes(),
@@ -353,7 +427,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         volverAFacturas();
       }
     } catch (err: any) {
-      if (err.code === 'MONTO_INVALIDO') {
+      if (err.code === 'MONTO_INVALIDO' || err.code === 'FOTO_REQUERIDA' || err.code === 'FOTO_INVALIDA') {
         setMensaje(err.error || 'El monto del pago no es válido.');
       } else {
         setMensaje('No se pudo registrar el pago');
@@ -588,6 +662,8 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                   <span>{formatoMoneda(totalAsignadoPago)}</span>
                 </div>
 
+                <CampoFotoComprobante id="foto-comprobante-pago-multiple" archivo={fotoPagoMultiple} onCambio={setFotoPagoMultiple} />
+
                 <button type="submit" disabled={totalAsignadoPago <= 0 || guardandoPagoMultiple}>
                   {guardandoPagoMultiple ? 'Guardando...' : 'Registrar pago'}
                 </button>
@@ -654,6 +730,17 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                       {formatoMoneda(p.monto)}
                     </strong>
                   </div>
+
+                  {p.tieneComprobante && (
+                    <button
+                      className="boton-secundario"
+                      onClick={() => verFotoComprobante(p.id)}
+                      disabled={cargandoFotoComprobante}
+                      style={{ marginTop: 6 }}
+                    >
+                      🧾 Ver comprobante
+                    </button>
+                  )}
 
                   {p.cancelado && (
                     <div className="aviso-alerta" style={{ marginTop: 6 }}>
@@ -725,6 +812,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     <option value="transferencia">Transferencia</option>
                   </select>
                 </label>
+                <CampoFotoComprobante id="foto-comprobante-pago" archivo={fotoPago} onCambio={setFotoPago} />
                 <button type="submit" disabled={guardandoPago}>
                   {guardandoPago ? 'Guardando...' : 'Guardar pago'}
                 </button>
@@ -766,6 +854,17 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                       </span>
                     ))}
                   </div>
+
+                  {g.comprobantePagoId && (
+                    <button
+                      className="boton-secundario"
+                      onClick={() => verFotoComprobante(g.comprobantePagoId!)}
+                      disabled={cargandoFotoComprobante}
+                      style={{ marginTop: 6 }}
+                    >
+                      🧾 Ver comprobante
+                    </button>
+                  )}
 
                   {g.cancelado && (
                     <div className="aviso-alerta" style={{ marginTop: 6 }}>
@@ -822,6 +921,18 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
 
       {comprobanteActivo && (
         <ComprobantePagoModal datos={comprobanteActivo} onCerrar={() => setComprobanteActivo(null)} />
+      )}
+
+      {fotoComprobanteAbierta && (
+        <div className="modal-fondo" onClick={cerrarFotoComprobante} style={{ zIndex: 40 }}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <p className="titulo">Comprobante</p>
+              <button className="boton-cerrar" onClick={cerrarFotoComprobante}>✕</button>
+            </div>
+            <img src={fotoComprobanteAbierta} alt="Comprobante" style={{ maxWidth: '100%', borderRadius: 8 }} />
+          </div>
+        </div>
       )}
     </div>
   );

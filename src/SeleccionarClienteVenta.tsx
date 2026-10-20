@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { buscarClientes, crearClienteRapido, type Cliente, ORIGENES_CLIENTE } from './api';
 import { obtenerClientesCache } from './offline';
+import { telefonoValido, MENSAJE_TELEFONO_INVALIDO } from './formato';
 
 interface Props {
   onSeleccionar: (cliente: Cliente) => void;
@@ -43,6 +44,10 @@ export function SeleccionarClienteVenta({ onSeleccionar, onCerrar }: Props) {
 
   async function guardarClienteNuevo() {
     if (!nombreNuevo || !telefonoNuevo) return;
+    if (!telefonoValido(telefonoNuevo)) {
+      setMensaje(MENSAJE_TELEFONO_INVALIDO);
+      return;
+    }
     if (!origenNuevo) {
       setMensaje('Elige cómo llegó el cliente.');
       return;

@@ -81,3 +81,14 @@ export function formatoDireccion(partes: {
     .filter((p) => p && p.trim())
     .join(', ');
 }
+
+// Telefono del cliente: tiene que ser un celular de 10 digitos (se aceptan
+// espacios, guiones y el 52/521 de lada). Es con lo que Meta empareja cada
+// venta con quien vio el anuncio -- el servidor aplica la misma regla.
+export function telefonoValido(telefono: string): boolean {
+  const d = telefono.replace(/\D/g, '');
+  return d.length === 10 || (d.length === 12 && d.startsWith('52')) || (d.length === 13 && d.startsWith('521'));
+}
+
+export const MENSAJE_TELEFONO_INVALIDO =
+  'El teléfono debe tener 10 dígitos (el número de WhatsApp del cliente, ej. 667 159 1730).';

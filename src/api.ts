@@ -941,11 +941,17 @@ export async function registrarCompra(payload: CrearCompraPayload, fotoFactura: 
   return res.json();
 }
 
-export async function registrarPagoCompra(compraId: string, monto: number, metodoPago: string) {
+// La foto del comprobante del pago es obligatoria en todos los pagos a
+// proveedor (el backend regresa FOTO_REQUERIDA si falta).
+export async function registrarPagoCompra(compraId: string, monto: number, metodoPago: string, fotoComprobante: File) {
+  const cuerpo = new FormData();
+  cuerpo.append('monto', String(monto));
+  cuerpo.append('metodoPago', metodoPago);
+  cuerpo.append('foto', fotoComprobante);
   const res = await fetch(`${API_URL}/compras/${compraId}/pagos`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ monto, metodoPago }),
+    headers: headerAuth(),
+    body: cuerpo,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw { ...data, status: res.status };
@@ -972,12 +978,17 @@ export interface ResultadoPagoMultiCompra {
 export async function registrarPagoMultiCompra(
   proveedorId: string,
   asignaciones: AsignacionPagoMultipleCompra[],
-  metodoPago: string
+  metodoPago: string,
+  fotoComprobante: File
 ): Promise<ResultadoPagoMultiCompra> {
+  const cuerpo = new FormData();
+  cuerpo.append('asignaciones', JSON.stringify(asignaciones));
+  cuerpo.append('metodoPago', metodoPago);
+  cuerpo.append('foto', fotoComprobante);
   const res = await fetch(`${API_URL}/proveedores/${proveedorId}/pagos`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...headerAuth() },
-    body: JSON.stringify({ asignaciones, metodoPago }),
+    headers: headerAuth(),
+    body: cuerpo,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw { ...data, status: res.status };
@@ -1010,6 +1021,7 @@ export interface PagoCompraHistorial {
   fecha: string;
   cancelado: boolean;
   canceladoEn: string | null;
+  tieneComprobante: boolean;
   registradoPor: { nombre: string };
 }
 
@@ -1052,6 +1064,9 @@ export interface GrupoPagoProveedor {
   facturas: FacturaDeGrupoPago[];
   registradoPor: string;
   cancelado: boolean;
+  // Id del pago cuya foto de comprobante se puede ver (null en pagos
+  // registrados antes de que el comprobante fuera obligatorio).
+  comprobantePagoId: string | null;
 }
 
 // Todos los pagos que se le han entregado a un proveedor, sin importar a
@@ -2051,6 +2066,12 @@ export async function registrarPagoVenta(
 
 export async function obtenerComprobanteFotoPago(pagoId: string): Promise<Blob> {
   const res = await fetch(`${API_URL}/ventas/pagos/${pagoId}/comprobante`, { headers: headerAuth() });
+  if (!res.ok) throw new Error('No se pudo cargar la foto del comprobante.');
+  return res.blob();
+}
+
+export async function obtenerComprobanteFotoPagoCompra(pagoId: string): Promise<Blob> {
+  const res = await fetch(`${API_URL}/compras/pagos/${pagoId}/comprobante`, { headers: headerAuth() });
   if (!res.ok) throw new Error('No se pudo cargar la foto del comprobante.');
   return res.blob();
 }

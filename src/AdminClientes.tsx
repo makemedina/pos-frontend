@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatoMoneda, formatoDireccion, formatoFecha, formatoFechaHora, haceDias } from './formato';
+import { formatoMoneda, formatoDireccion, formatoFecha, formatoFechaHora, haceDias, telefonoValido, MENSAJE_TELEFONO_INVALIDO } from './formato';
 import {
   obtenerClientesConSaldo,
   obtenerClienteDetalle,
@@ -218,6 +218,10 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
 
   async function crearNuevoCliente() {
     if (!nombreNuevo || !telefonoNuevo) return;
+    if (!telefonoValido(telefonoNuevo)) {
+      setMensaje(MENSAJE_TELEFONO_INVALIDO);
+      return;
+    }
     if (!origenNuevo) {
       setMensaje('Elige cómo llegó el cliente.');
       return;
@@ -327,6 +331,10 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
 
   async function guardarDatosGenerales() {
     if (!clienteId) return;
+    if (!telefonoValido(editTelefono)) {
+      setMensaje(MENSAJE_TELEFONO_INVALIDO);
+      return;
+    }
     setGuardando(true);
     try {
       const entregaAGuardar = entregaIgualQueNegocio ? DIRECCION_VACIA : editDireccionEntrega;
