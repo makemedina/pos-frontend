@@ -7,6 +7,7 @@ import {
   type Proveedor,
 } from './api';
 import { ProveedorCostos } from './ProveedorCostos';
+import { AdminHistorialCompras } from './AdminHistorialCompras';
 
 interface Props {
   onCerrar: () => void;
@@ -32,6 +33,7 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
   const [eliminando, setEliminando] = useState(false);
 
   const [proveedorCostos, setProveedorCostos] = useState<Proveedor | null>(null);
+  const [proveedorCompras, setProveedorCompras] = useState<Proveedor | null>(null);
 
   useEffect(() => {
     cargar();
@@ -109,6 +111,10 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
     );
   }
 
+  if (proveedorCompras) {
+    return <AdminHistorialCompras proveedor={proveedorCompras} onCerrar={() => setProveedorCompras(null)} />;
+  }
+
   return (
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
       <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
@@ -162,9 +168,15 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
+                    <div
+                      onClick={puedeVerCostos ? () => setProveedorCompras(p) : undefined}
+                      style={{ cursor: puedeVerCostos ? 'pointer' : undefined, flex: 1 }}
+                    >
                       <strong>{p.nombre}</strong>
-                      <div style={{ fontSize: 13, color: '#6b7280' }}>{p.telefono || 'Sin teléfono'}</div>
+                      <div style={{ fontSize: 13, color: '#6b7280' }}>
+                        {p.telefono || 'Sin teléfono'}
+                        {puedeVerCostos && <span style={{ color: '#007aff' }}> · Ver compras ›</span>}
+                      </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {puedeVerCostos && (

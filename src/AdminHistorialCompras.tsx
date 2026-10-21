@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import {
   obtenerHistorialCompras,
@@ -13,9 +13,14 @@ import { CompraDetalleModal } from './CompraDetalleModal';
 
 interface Props {
   onCerrar: () => void;
+  // Si viene, el historial queda fijo a este proveedor (se abre desde
+  // Proveedores al dar click en uno): sin filtro de proveedor y con todo
+  // su historial por default.
+  proveedor?: Proveedor;
 }
 
 type Periodo =
+  | 'todos'
   | 'dia'
   | 'ayer'
   | 'antier'
@@ -34,17 +39,28 @@ function formatDateInput(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+type Orden = 'fecha_desc' | 'fecha_asc' | 'total_desc' | 'total_asc' | 'saldo_desc';
+
+const ORDENADORES: Record<Orden, (a: CompraHistorial, b: CompraHistorial) => number> = {
+  fecha_desc: (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
+  fecha_asc: (a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime(),
+  total_desc: (a, b) => b.total - a.total,
+  total_asc: (a, b) => a.total - b.total,
+  saldo_desc: (a, b) => b.saldoPendiente - a.saldoPendiente,
+};
+
 const CARD = { border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 };
 
-export function AdminHistorialCompras({ onCerrar }: Props) {
-  const [periodo, setPeriodo] = useState<Periodo>('mes');
+export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
+  const [periodo, setPeriodo] = useState<Periodo>(proveedor ? 'todos' : 'mes');
+  const [orden, setOrden] = useState<Orden>('fecha_desc');
   const [desde, setDesde] = useState(() => formatDateInput(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
   const [hasta, setHasta] = useState(() => formatDateInput(new Date()));
   const [estadoPago, setEstadoPago] = useState('');
 
   const [busquedaProveedor, setBusquedaProveedor] = useState('');
   const [resultadosProveedor, setResultadosProveedor] = useState<Proveedor[]>([]);
-  const [proveedorElegido, setProveedorElegido] = useState<Proveedor | null>(null);
+  const [proveedorElegido, setProveedorElegido] = useState<Proveedor | null>(proveedor ?? null);
 
   const [busquedaProducto, setBusquedaProducto] = useState('');
   const [resultadosProducto, setResultadosProducto] = useState<Producto[]>([]);
@@ -132,11 +148,13 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
           'Cancelada el': c.canceladaEn ? formatoFechaHora(new Date(c.canceladaEn)) : '',
         }))
       );
-      await exportarAExcel(filas, 'historial-compras');
+      await exportarAExcel(filas, proveedor ? `compras-${proveedor.nombre}` : 'historial-compras');
     } catch {
       setMensaje('No hay compras para exportar con estos filtros.');
     }
   }
+
+  const comprasOrdenadas = useMemo(() => [...compras].sort(ORDENADORES[orden]), [compras, orden]);
 
   const totalPeriodo = compras.reduce((acc, c) => acc + c.total, 0);
   const pendientePeriodo = compras.reduce((acc, c) => acc + c.saldoPendiente, 0);
@@ -145,7 +163,7 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
     <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
       <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2>Historial de compras</h2>
+          <h2>{proveedor ? `Compras — ${proveedor.nombre}` : 'Historial de compras'}</h2>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={exportar}>📊 Exportar Excel</button>
             <button onClick={onCerrar}>Cerrar</button>
@@ -159,6 +177,7 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
             <label style={{ display: 'grid', gap: '0.25rem' }}>
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
+                <option value="todos">Todo el historial</option>
                 <option value="dia">Hoy</option>
                 <option value="ayer">Ayer</option>
                 <option value="antier">Antier</option>
@@ -194,8 +213,20 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
                 <option value="pendiente">Pendiente</option>
               </select>
             </label>
+
+            <label style={{ display: 'grid', gap: '0.25rem' }}>
+              <span>Ordenar por</span>
+              <select value={orden} onChange={(e) => setOrden(e.target.value as Orden)}>
+                <option value="fecha_desc">Más recientes</option>
+                <option value="fecha_asc">Más antiguas</option>
+                <option value="total_desc">Mayor monto</option>
+                <option value="total_asc">Menor monto</option>
+                <option value="saldo_desc">Mayor saldo pendiente</option>
+              </select>
+            </label>
           </div>
 
+          {!proveedor && (
           <div>
             <span style={{ display: 'block', marginBottom: 4 }}>Proveedor</span>
             {proveedorElegido ? (
@@ -219,6 +250,7 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
               </>
             )}
           </div>
+          )}
 
           <div>
             <span style={{ display: 'block', marginBottom: 4 }}>Producto</span>
@@ -265,14 +297,19 @@ export function AdminHistorialCompras({ onCerrar }: Props) {
           <p style={{ color: '#6b7280' }}>No hay compras con esos filtros.</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
-            {compras.map((c) => (
+            {comprasOrdenadas.map((c) => (
               <div key={c.id} style={{ ...CARD, cursor: 'pointer' }} onClick={() => setCompraAbierta(c.id)}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <strong>{c.proveedor.nombre}</strong>
+                    <strong>{proveedor ? formatoFecha(new Date(c.fecha)) : c.proveedor.nombre}</strong>
                     <div style={{ fontSize: 13, color: '#6b7280' }}>
-                      {formatoFecha(new Date(c.fecha))} · Factura: {c.numeroFactura || 'sin número'}
+                      {proveedor ? '' : `${formatoFecha(new Date(c.fecha))} · `}Factura: {c.numeroFactura || 'sin número'}
                     </div>
+                    {proveedor && c.items.length > 0 && (
+                      <div style={{ fontSize: 12, color: '#374151' }}>
+                        {c.items.map((it) => `${it.producto} ${it.cantidad} kg`).join(' · ')}
+                      </div>
+                    )}
                     <div style={{ fontSize: 12, color: '#6b7280' }}>
                       {c.metodosPago.join(', ') || 'Sin pago registrado'}
                     </div>

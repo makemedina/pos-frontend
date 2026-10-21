@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { formatoMoneda, formatoKg, formatoFecha, etiquetaMetodoPago } from './formato';
-import { headerAuth, API_URL, obtenerPendientesDeHoy, actualizarPendiente, type Pendiente } from './api';
+import { headerAuth, API_URL, obtenerPendientesDeHoy, actualizarPendiente, type Pendiente, ORIGENES_CLIENTE } from './api';
 import { exportarVariasHojas } from './exportarExcel';
 import { intentarActivarNotificacionesAutomatico } from './push';
 
@@ -35,6 +35,22 @@ interface GastosCategoria {
   gastos: GastoDetalle[];
 }
 
+interface VentasOrigen {
+  origen: string;
+  totalVentas: number;
+  utilidadBruta: number;
+  ventasCantidad: number;
+  clientesConCompra: number;
+  clientesNuevos: number;
+  clientesNuevosQueCompraron: number;
+  clientes: Array<[string, number]>;
+}
+
+function etiquetaOrigen(origen: string) {
+  if (origen === 'sin_dato') return 'Sin dato';
+  return ORIGENES_CLIENTE.find((o) => o.valor === origen)?.etiqueta ?? origen;
+}
+
 interface DashboardData {
   totalVentas: number;
   totalCobrado: number;
@@ -56,6 +72,7 @@ interface DashboardData {
   detalleClientesPorValor: Record<string, Array<[string, number]>>;
   detalleClientesPorVolumen: Record<string, Array<[string, number]>>;
   ventasPorVendedor: Array<[string, number]>;
+  ventasPorOrigen: VentasOrigen[];
   detallePorDia: DiaResumen[];
 }
 
@@ -135,6 +152,7 @@ export function AdminDashboard({ onCerrar }: Props) {
   // Detalle al hacer click en una categoria de la seccion Gastos: los
   // gastos individuales de esa categoria en el periodo.
   const [detalleGastos, setDetalleGastos] = useState<GastosCategoria | null>(null);
+  const [detalleOrigen, setDetalleOrigen] = useState<VentasOrigen | null>(null);
   const [pendientesHoy, setPendientesHoy] = useState<Pendiente[]>([]);
   const [guardandoPendienteId, setGuardandoPendienteId] = useState<string | null>(null);
 
@@ -256,6 +274,18 @@ export function AdminDashboard({ onCerrar }: Props) {
                 Monto: g.monto,
               }))
             ),
+          },
+          {
+            nombre: 'Ventas por origen',
+            filas: data.ventasPorOrigen.map((o) => ({
+              Origen: etiquetaOrigen(o.origen),
+              Facturación: o.totalVentas,
+              'Utilidad en papel': o.utilidadBruta,
+              Ventas: o.ventasCantidad,
+              'Clientes que compraron': o.clientesConCompra,
+              'Clientes nuevos': o.clientesNuevos,
+              'Clientes nuevos que ya compraron': o.clientesNuevosQueCompraron,
+            })),
           },
           {
             nombre: 'Ventas por vendedor',
@@ -547,6 +577,39 @@ export function AdminDashboard({ onCerrar }: Props) {
               </div>
 
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+                <h3 style={{ marginBottom: 4 }}>Ventas por origen del cliente</h3>
+                <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 8px' }}>
+                  Cómo llegaron los clientes que compraron. "Nuevos" son los dados de alta en este periodo.
+                </p>
+                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                  {data.ventasPorOrigen.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                  {data.ventasPorOrigen.map((o) => (
+                    <div
+                      key={o.origen}
+                      onClick={() => setDetalleOrigen(o)}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+                    >
+                      <span>
+                        {etiquetaOrigen(o.origen)}
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                          {o.ventasCantidad} venta{o.ventasCantidad === 1 ? '' : 's'} · {o.clientesConCompra} cliente
+                          {o.clientesConCompra === 1 ? '' : 's'}
+                          {o.clientesNuevos > 0 &&
+                            ` · ${o.clientesNuevos} nuevo${o.clientesNuevos === 1 ? '' : 's'} (${o.clientesNuevosQueCompraron} ya compr${o.clientesNuevosQueCompraron === 1 ? 'ó' : 'aron'})`}
+                        </div>
+                      </span>
+                      <div style={{ textAlign: 'right' }}>
+                        <strong>{formatoMoneda(o.totalVentas)}</strong>
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                          {data.totalVentas > 0 ? ((o.totalVentas / data.totalVentas) * 100).toFixed(1) : '0.0'}%
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Ventas por vendedor</h3>
                 <div style={{ display: 'grid', gap: '0.5rem' }}>
                   {data.ventasPorVendedor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
@@ -618,6 +681,35 @@ export function AdminDashboard({ onCerrar }: Props) {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {detalleOrigen && (
+        <div className="modal-fondo" onClick={() => setDetalleOrigen(null)}>
+          <div className="modal-contenido" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <p className="titulo">
+                {etiquetaOrigen(detalleOrigen.origen)} — {formatoMoneda(detalleOrigen.totalVentas)}
+              </p>
+              <button className="boton-cerrar" onClick={() => setDetalleOrigen(null)}>✕</button>
+            </div>
+            <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 8 }}>
+              Utilidad en papel: {formatoMoneda(detalleOrigen.utilidadBruta)} · Clientes nuevos en el periodo:{' '}
+              {detalleOrigen.clientesNuevos} ({detalleOrigen.clientesNuevosQueCompraron} ya compraron)
+            </div>
+            {detalleOrigen.clientes.length === 0 ? (
+              <p style={{ color: '#6b7280' }}>Ningún cliente de este origen compró en el periodo.</p>
+            ) : (
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {detalleOrigen.clientes.map(([cliente, valor]) => (
+                  <div key={cliente} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                    <span>{cliente}</span>
+                    <strong>{formatoMoneda(valor)}</strong>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
