@@ -9,6 +9,7 @@ import {
   type FilaTablaPrecios,
   type PrecioProveedor,
 } from './api';
+import { exportarVariasHojas } from './exportarExcel';
 
 interface Props {
   onCerrar: () => void;
@@ -281,6 +282,57 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
     }
   }
 
+  // Exporta lo que se ve en la tabla (respeta el filtro): una hoja con la
+  // misma forma que la tabla mas el mejor precio de cada producto, y otra
+  // con el detalle de cada precio (fecha y de donde viene).
+  async function exportar() {
+    try {
+      await exportarVariasHojas(
+        [
+          {
+            nombre: 'Precios',
+            filas: filasVisibles.map((f) => {
+              const costos = columnas
+                .filter((p) => f.precios[p.id])
+                .map((p) => ({ proveedor: p.nombre, costo: f.precios[p.id].costo }));
+              const mejor = costos.length > 0 ? Math.min(...costos.map((c) => c.costo)) : null;
+              return {
+                Producto: f.producto,
+                Marca: f.marca,
+                ...Object.fromEntries(columnas.map((p) => [p.nombre, f.precios[p.id]?.costo ?? ''])),
+                'Mejor precio': mejor ?? '',
+                'Mejor proveedor': costos.filter((c) => c.costo === mejor).map((c) => c.proveedor).join(', '),
+              };
+            }),
+          },
+          {
+            nombre: 'Detalle',
+            filas: filasVisibles.flatMap((f) =>
+              columnas
+                .filter((p) => f.precios[p.id])
+                .map((p) => {
+                  const precio = f.precios[p.id];
+                  return {
+                    Producto: f.producto,
+                    Marca: f.marca,
+                    Proveedor: p.nombre,
+                    Precio: precio.costo,
+                    Actualizado: formatoFecha(precio.actualizadoEn),
+                    Origen: precio.origen === 'manual' ? 'Capturado a mano' : 'Última compra',
+                    'Última compra': precio.ultimaCompra ? precio.ultimaCompra.costo : '',
+                    'Fecha última compra': precio.ultimaCompra ? formatoFecha(precio.ultimaCompra.fecha) : '',
+                  };
+                })
+            ),
+          },
+        ],
+        'tabla-de-precios'
+      );
+    } catch {
+      setMensaje('No hay precios para exportar.');
+    }
+  }
+
   function detalleCelda(p: PrecioProveedor): string {
     const partes = [`Actualizado el ${formatoFecha(p.actualizadoEn)} (${haceDias(p.actualizadoEn)})`];
     if (p.origen === 'manual') {
@@ -300,7 +352,10 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
       <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 960, display: 'grid', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Tabla de precios</h2>
-          <button onClick={onCerrar}>Cerrar</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={exportar}>📊 Exportar Excel</button>
+            <button onClick={onCerrar}>Cerrar</button>
+          </div>
         </div>
 
         <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
