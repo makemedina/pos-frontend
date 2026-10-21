@@ -72,7 +72,8 @@ interface DashboardData {
   detalleClientesPorValor: Record<string, Array<[string, number]>>;
   detalleClientesPorVolumen: Record<string, Array<[string, number]>>;
   ventasPorVendedor: Array<[string, number]>;
-  ventasPorOrigen: VentasOrigen[];
+  // Opcional: un backend anterior a este reporte no lo manda.
+  ventasPorOrigen?: VentasOrigen[];
   detallePorDia: DiaResumen[];
 }
 
@@ -277,7 +278,7 @@ export function AdminDashboard({ onCerrar }: Props) {
           },
           {
             nombre: 'Ventas por origen',
-            filas: data.ventasPorOrigen.map((o) => ({
+            filas: (data.ventasPorOrigen ?? []).map((o) => ({
               Origen: etiquetaOrigen(o.origen),
               Facturación: o.totalVentas,
               'Utilidad en papel': o.utilidadBruta,
@@ -576,6 +577,7 @@ export function AdminDashboard({ onCerrar }: Props) {
                 )}
               </div>
 
+              {data.ventasPorOrigen && (
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3 style={{ marginBottom: 4 }}>Ventas por origen del cliente</h3>
                 <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 8px' }}>
@@ -608,6 +610,7 @@ export function AdminDashboard({ onCerrar }: Props) {
                   ))}
                 </div>
               </div>
+              )}
 
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Ventas por vendedor</h3>
