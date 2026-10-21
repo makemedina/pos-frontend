@@ -35,6 +35,23 @@ export async function generarPdfRecibo(elementId: string): Promise<Blob> {
 export class CompartirCanceladoError extends Error {}
 
 /**
+ * En la computadora, el menu de "Compartir" del sistema copia el ARCHIVO
+ * (su ruta), no la imagen -- al pegarlo en WhatsApp Web sale la ruta en
+ * texto. Esto pone la imagen misma en el portapapeles, lista para pegar
+ * con Ctrl+V / Cmd+V. Igual que compartir, debe llamarse directo desde el
+ * click (con el blob ya generado), sin awaits antes.
+ */
+export function puedeCopiarImagen() {
+  return typeof ClipboardItem !== 'undefined' && !!navigator.clipboard?.write;
+}
+
+export async function copiarImagen(blob: Blob) {
+  await navigator.clipboard.write([new ClipboardItem({ [blob.type || 'image/png']: blob })]);
+}
+
+export const MENSAJE_IMAGEN_COPIADA = 'Imagen copiada. Pégala en WhatsApp con Ctrl+V (⌘V en Mac).';
+
+/**
  * Comparte un archivo (imagen o PDF) usando el Web Share API -- en
  * Android Chrome esto abre el menu nativo de compartir, donde
  * WhatsApp aparece como una opcion mas. Si el navegador no soporta

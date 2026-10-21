@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
 import { obtenerCorteDelDia, guardarCorte, type ResumenCorteDia } from './api';
-import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
+import {
+  generarImagenRecibo,
+  generarPdfRecibo,
+  compartirArchivo,
+  CompartirCanceladoError,
+  puedeCopiarImagen,
+  copiarImagen,
+  MENSAJE_IMAGEN_COPIADA,
+} from './reciboExport';
 import { ReporteCorte } from './ReporteCorte';
 
 interface Props {
@@ -94,6 +102,16 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
     }
   }
 
+  async function copiarImagenLista() {
+    if (!imagenBlob) return;
+    try {
+      await copiarImagen(imagenBlob);
+      setMensaje(MENSAJE_IMAGEN_COPIADA);
+    } catch {
+      setMensaje('No se pudo copiar la imagen. Usa "Compartir imagen".');
+    }
+  }
+
   async function generarPdf() {
     setExportando('pdf');
     setMensaje(null);
@@ -131,7 +149,10 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                     {exportando === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
                   </button>
                 ) : (
-                  <button onClick={compartirImagenLista}>📤 Compartir imagen</button>
+                  <>
+                    <button onClick={compartirImagenLista}>📤 Compartir imagen</button>
+                    {puedeCopiarImagen() && <button onClick={copiarImagenLista}>📋 Copiar imagen</button>}
+                  </>
                 )}
                 {!pdfBlob ? (
                   <button onClick={generarPdf} disabled={!!exportando}>

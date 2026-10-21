@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { formatoMoneda, etiquetaMetodoPago, formatoFecha, formatoFechaHora } from './formato';
 import { exportarAExcel } from './exportarExcel';
-import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
+import {
+  generarImagenRecibo,
+  generarPdfRecibo,
+  compartirArchivo,
+  CompartirCanceladoError,
+  puedeCopiarImagen,
+  copiarImagen,
+  MENSAJE_IMAGEN_COPIADA,
+} from './reciboExport';
 import { ComprobantePagoModal, type DatosComprobantePago } from './ComprobantePagoModal';
 import {
   obtenerResumenCartera,
@@ -605,6 +613,16 @@ export function AdminCartera({ onCerrar }: Props) {
     }
   }
 
+  async function copiarImagenCartera() {
+    if (!imagenCarteraBlob) return;
+    try {
+      await copiarImagen(imagenCarteraBlob);
+      setMensaje(MENSAJE_IMAGEN_COPIADA);
+    } catch {
+      setMensaje('No se pudo copiar la imagen. Usa "Compartir imagen".');
+    }
+  }
+
   async function generarPdfCartera() {
     setExportandoFormato('pdf');
     setMensaje(null);
@@ -649,6 +667,16 @@ export function AdminCartera({ onCerrar }: Props) {
       if (!(err instanceof CompartirCanceladoError)) {
         setMensaje(err?.message || 'No se pudo compartir la imagen.');
       }
+    }
+  }
+
+  async function copiarImagenNotas() {
+    if (!imagenNotasBlob) return;
+    try {
+      await copiarImagen(imagenNotasBlob);
+      setMensaje(MENSAJE_IMAGEN_COPIADA);
+    } catch {
+      setMensaje('No se pudo copiar la imagen. Usa "Compartir imagen".');
     }
   }
 
@@ -724,7 +752,10 @@ export function AdminCartera({ onCerrar }: Props) {
                     {exportandoFormato === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
                   </button>
                 ) : (
-                  <button onClick={compartirImagenCartera}>📤 Compartir imagen</button>
+                  <>
+                    <button onClick={compartirImagenCartera}>📤 Compartir imagen</button>
+                    {puedeCopiarImagen() && <button onClick={copiarImagenCartera}>📋 Copiar imagen</button>}
+                  </>
                 )}
                 {!pdfCarteraBlob ? (
                   <button onClick={generarPdfCartera} disabled={!!exportandoFormato}>
@@ -745,7 +776,10 @@ export function AdminCartera({ onCerrar }: Props) {
                     {exportandoFormatoNotas === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
                   </button>
                 ) : (
-                  <button onClick={compartirImagenNotas}>📤 Compartir imagen</button>
+                  <>
+                    <button onClick={compartirImagenNotas}>📤 Compartir imagen</button>
+                    {puedeCopiarImagen() && <button onClick={copiarImagenNotas}>📋 Copiar imagen</button>}
+                  </>
                 )}
                 {!pdfNotasBlob ? (
                   <button onClick={generarPdfNotas} disabled={!!exportandoFormatoNotas}>

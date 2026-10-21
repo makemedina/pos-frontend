@@ -3,7 +3,15 @@ import { obtenerConfiguracion, type Configuracion } from './api';
 import { obtenerConfiguracionCache } from './offline';
 import { ReciboVenta } from './ReciboVenta';
 import { construirLineasRecibo, type DatosRecibo } from './construirRecibo';
-import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
+import {
+  generarImagenRecibo,
+  generarPdfRecibo,
+  compartirArchivo,
+  CompartirCanceladoError,
+  puedeCopiarImagen,
+  copiarImagen,
+  MENSAJE_IMAGEN_COPIADA,
+} from './reciboExport';
 import {
   impresoraConectada,
   nombreImpresoraConectada,
@@ -70,6 +78,16 @@ export function ReciboModal({ datos, onCerrar }: Props) {
       if (!(err instanceof CompartirCanceladoError)) {
         setMensaje(err?.message || 'No se pudo compartir la imagen.');
       }
+    }
+  }
+
+  async function copiarImagenLista() {
+    if (!imagenBlob) return;
+    try {
+      await copiarImagen(imagenBlob);
+      setMensaje(MENSAJE_IMAGEN_COPIADA);
+    } catch {
+      setMensaje('No se pudo copiar la imagen. Usa "Compartir imagen".');
     }
   }
 
@@ -140,9 +158,16 @@ export function ReciboModal({ datos, onCerrar }: Props) {
                   {ocupado === 'imagen' ? 'Generando...' : '🖼️ Generar imagen (WhatsApp)'}
                 </button>
               ) : (
-                <button className="boton-primario" onClick={compartirImagenLista}>
-                  📤 Compartir imagen
-                </button>
+                <>
+                  <button className="boton-primario" onClick={compartirImagenLista}>
+                    📤 Compartir imagen
+                  </button>
+                  {puedeCopiarImagen() && (
+                    <button className="boton-secundario" onClick={copiarImagenLista} style={{ width: '100%', marginTop: 0 }}>
+                      📋 Copiar imagen
+                    </button>
+                  )}
+                </>
               )}
 
               {!pdfBlob ? (
