@@ -904,40 +904,40 @@ textarea:focus {
   box-shadow: 0 4px 16px rgba(var(--acento-rgb), 0.35);
 }
 
-.boton-flotante-cartera {
-  background: #3b82f6;
+.icono-menu.boton-flotante-cartera {
+  background: #ab6f47;
 }
 
-.boton-flotante-cuentas {
-  background: #6366f1;
+.icono-menu.boton-flotante-cuentas {
+  background: #3f6b73;
 }
 
-.boton-flotante-usuarios {
-  background: #8b5cf6;
+.icono-menu.boton-flotante-usuarios {
+  background: #6b7f4e;
 }
 
-.boton-flotante-gastos {
-  background: var(--ios-orange);
+.icono-menu.boton-flotante-gastos {
+  background: #b8892f;
 }
 
-.boton-flotante-corte {
-  background: #14b8a6;
+.icono-menu.boton-flotante-corte {
+  background: #4f7a5f;
 }
 
-.boton-flotante-dashboard {
-  background: var(--ios-green);
-}
-
-.boton-flotante-ajuste {
-  background: #64748b;
-}
-
-.boton-flotante-ventas {
+.icono-menu.boton-flotante-dashboard {
   background: var(--acento);
 }
 
-.boton-flotante-historial {
-  background: #a855f7;
+.icono-menu.boton-flotante-ajuste {
+  background: #64748b;
+}
+
+.icono-menu.boton-flotante-ventas {
+  background: var(--acento);
+}
+
+.icono-menu.boton-flotante-historial {
+  background: #8a5a6e;
 }
 
 /* Pantalla de inicio: menu principal de navegacion, tipo iOS Home Screen */

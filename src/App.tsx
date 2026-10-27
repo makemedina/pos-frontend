@@ -736,7 +736,7 @@ export default function App() {
 
   interface OpcionSubmenu {
     pantalla: Pantalla;
-    icono: string;
+    icono: NombreIcono;
     titulo: string;
     descripcion: string;
     clase: string;
@@ -755,7 +755,7 @@ export default function App() {
         <div className="grid-menu">
           {visibles.map((o) => (
             <div key={o.pantalla} className="tarjeta-menu" onClick={() => abrirPantalla(o.pantalla)}>
-              <div className={`icono-menu ${o.clase}`}>{o.icono}</div>
+              <div className={`icono-menu ${o.clase}`}><Icono nombre={o.icono} size={22} /></div>
               <div>
                 <p className="titulo-menu">{o.titulo}</p>
                 <p className="descripcion-menu">{o.descripcion}</p>
@@ -780,49 +780,49 @@ export default function App() {
 
     if (pantallaActiva === 'clientesMenu') {
       return renderSubmenu('Cobranza', [
-        { pantalla: 'clientes', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Alta, edición y datos', clase: 'boton-flotante-cartera' },
-        { pantalla: 'cartera', icono: '💵', titulo: 'Cartera (cuentas por cobrar)', descripcion: 'Clientes con saldo pendiente', clase: 'boton-flotante-cartera' },
-        { pantalla: 'notasAntiguas', icono: '📆', titulo: 'Notas antiguas', descripcion: 'Notas con más de 7 días sin liquidarse', clase: 'boton-flotante-cartera' },
-        { pantalla: 'llamadasHoy', icono: '📞', titulo: 'Llamadas de hoy', descripcion: 'A quién hablarle hoy para ofrecer producto', clase: 'boton-flotante-cartera' },
-        { pantalla: 'pendientes', icono: '📝', titulo: 'Pendientes', descripcion: 'Recordatorios y tareas programadas', clase: 'boton-flotante-cartera' },
+        { pantalla: 'clientes', icono: 'clientes', titulo: 'Clientes', descripcion: 'Alta, edición y datos', clase: 'boton-flotante-cartera' },
+        { pantalla: 'cartera', icono: 'cobranza', titulo: 'Cartera (cuentas por cobrar)', descripcion: 'Clientes con saldo pendiente', clase: 'boton-flotante-cartera' },
+        { pantalla: 'notasAntiguas', icono: 'calendario', titulo: 'Notas antiguas', descripcion: 'Notas con más de 7 días sin liquidarse', clase: 'boton-flotante-cartera' },
+        { pantalla: 'llamadasHoy', icono: 'telefono', titulo: 'Llamadas de hoy', descripcion: 'A quién hablarle hoy para ofrecer producto', clase: 'boton-flotante-cartera' },
+        { pantalla: 'pendientes', icono: 'tarea', titulo: 'Pendientes', descripcion: 'Recordatorios y tareas programadas', clase: 'boton-flotante-cartera' },
       ]);
     }
     if (pantallaActiva === 'inventarioMenu') {
       return renderSubmenu('Inventario', [
-        { pantalla: 'productos', icono: '🥩', titulo: 'Productos', descripcion: 'Stock, historial y ajustes', clase: 'boton-flotante-ajuste' },
-        { pantalla: 'movimientosInventario', icono: '📈', titulo: 'Movimientos de inventario', descripcion: 'Entradas, salidas, merma y correcciones', clase: 'boton-flotante-historial' },
-        { pantalla: 'antiguedadStock', icono: '⏳', titulo: 'Antigüedad de stock', descripcion: 'Lotes con más de 15 días sin venderse', clase: 'boton-flotante-historial' },
+        { pantalla: 'productos', icono: 'bolsa', titulo: 'Productos', descripcion: 'Stock, historial y ajustes', clase: 'boton-flotante-ajuste' },
+        { pantalla: 'movimientosInventario', icono: 'movimientos', titulo: 'Movimientos de inventario', descripcion: 'Entradas, salidas, merma y correcciones', clase: 'boton-flotante-historial' },
+        { pantalla: 'antiguedadStock', icono: 'reloj', titulo: 'Antigüedad de stock', descripcion: 'Lotes con más de 15 días sin venderse', clase: 'boton-flotante-historial' },
       ]);
     }
     if (pantallaActiva === 'finanzasMenu') {
       return renderSubmenu('Finanzas', [
-        { pantalla: 'corte', icono: '🗒️', titulo: 'Corte de caja', descripcion: 'Cierre diario de efectivo y banco', clase: 'boton-flotante-corte' },
-        { pantalla: 'gastos', icono: '💸', titulo: 'Gastos', descripcion: 'Registrar y ver gastos operativos', clase: 'boton-flotante-gastos' },
-        { pantalla: 'depositos', icono: '🏦', titulo: 'Depósitos a banco', descripcion: 'Traspasar efectivo a banco', clase: 'boton-flotante-gastos' },
-        { pantalla: 'dashboard', icono: '📊', titulo: 'Estadísticas', descripcion: 'Ventas, utilidad y mas vendidos', clase: 'boton-flotante-dashboard' },
-        { pantalla: 'analiticaVentas', icono: '🎯', titulo: 'Analítica de ventas', descripcion: 'Clientes que dejaron de comprar o compran menos', clase: 'boton-flotante-dashboard' },
+        { pantalla: 'corte', icono: 'calculadora', titulo: 'Corte de caja', descripcion: 'Cierre diario de efectivo y banco', clase: 'boton-flotante-corte' },
+        { pantalla: 'gastos', icono: 'cartera', titulo: 'Gastos', descripcion: 'Registrar y ver gastos operativos', clase: 'boton-flotante-gastos' },
+        { pantalla: 'depositos', icono: 'banco', titulo: 'Depósitos a banco', descripcion: 'Traspasar efectivo a banco', clase: 'boton-flotante-gastos' },
+        { pantalla: 'dashboard', icono: 'finanzas', titulo: 'Estadísticas', descripcion: 'Ventas, utilidad y mas vendidos', clase: 'boton-flotante-dashboard' },
+        { pantalla: 'analiticaVentas', icono: 'objetivo', titulo: 'Analítica de ventas', descripcion: 'Clientes que dejaron de comprar o compran menos', clase: 'boton-flotante-dashboard' },
       ]);
     }
     if (pantallaActiva === 'configuracionMenu') {
       return renderSubmenu('Configuración', [
-        { pantalla: 'configuracion', icono: '⚙️', titulo: 'Datos del negocio', descripcion: 'Negocio, recibo e impresora', clase: 'boton-flotante-ajuste' },
-        { pantalla: 'configuracionRecibo', icono: '🧾', titulo: 'Recibo e impresora', descripcion: 'Encabezado, pie de página y conectar impresora', clase: 'boton-flotante-ajuste' },
-        { pantalla: 'usuarios', icono: '👤', titulo: 'Usuarios', descripcion: 'Altas, PIN y permisos', clase: 'boton-flotante-usuarios' },
-        { pantalla: 'herramientas', icono: '🛠️', titulo: 'Herramientas', descripcion: 'Carga inicial y reinicio de datos', clase: 'boton-flotante-ajuste' },
+        { pantalla: 'configuracion', icono: 'configuracion', titulo: 'Datos del negocio', descripcion: 'Negocio, recibo e impresora', clase: 'boton-flotante-ajuste' },
+        { pantalla: 'configuracionRecibo', icono: 'impresora', titulo: 'Recibo e impresora', descripcion: 'Encabezado, pie de página y conectar impresora', clase: 'boton-flotante-ajuste' },
+        { pantalla: 'usuarios', icono: 'usuario', titulo: 'Usuarios', descripcion: 'Altas, PIN y permisos', clase: 'boton-flotante-usuarios' },
+        { pantalla: 'herramientas', icono: 'herramientas', titulo: 'Herramientas', descripcion: 'Carga inicial y reinicio de datos', clase: 'boton-flotante-ajuste' },
         ...(usuario.rolBase === 'administrador'
-          ? [{ pantalla: 'respaldos' as Pantalla, icono: '💾', titulo: 'Respaldos', descripcion: 'Crear, descargar y restaurar respaldos', clase: 'boton-flotante-ajuste' }]
+          ? [{ pantalla: 'respaldos' as Pantalla, icono: 'respaldo' as NombreIcono, titulo: 'Respaldos', descripcion: 'Crear, descargar y restaurar respaldos', clase: 'boton-flotante-ajuste' }]
           : []),
       ]);
     }
 
     if (pantallaActiva === 'proveedoresMenu') {
       return renderSubmenu('Proveedores', [
-        { pantalla: 'proveedores', icono: '🚚', titulo: 'Proveedores', descripcion: 'Alta y edición de proveedores', clase: '' },
-        { pantalla: 'compra', icono: '📦', titulo: 'Registrar compra', descripcion: 'Nueva compra a proveedor', clase: '' },
-        { pantalla: 'tablaPrecios', icono: '🏷️', titulo: 'Tabla de precios', descripcion: 'Comparar el mejor precio de compra entre proveedores', clase: '' },
-        { pantalla: 'historialCompras', icono: '📜', titulo: 'Historial de compras', descripcion: 'Todas, pagadas y pendientes', clase: 'boton-flotante-historial' },
-        { pantalla: 'cuentas', icono: '💳', titulo: 'Registrar pago a factura', descripcion: 'Abonar una factura pendiente (cuentas por pagar)', clase: 'boton-flotante-cuentas' },
-        { pantalla: 'facturasPendientes', icono: '📋', titulo: 'Facturas por pagar', descripcion: 'Solo ver el listado', clase: 'boton-flotante-historial' },
+        { pantalla: 'proveedores', icono: 'proveedores', titulo: 'Proveedores', descripcion: 'Alta y edición de proveedores', clase: 'boton-flotante-cuentas' },
+        { pantalla: 'compra', icono: 'inventario', titulo: 'Registrar compra', descripcion: 'Nueva compra a proveedor', clase: 'boton-flotante-cuentas' },
+        { pantalla: 'tablaPrecios', icono: 'etiqueta', titulo: 'Tabla de precios', descripcion: 'Comparar el mejor precio de compra entre proveedores', clase: 'boton-flotante-cuentas' },
+        { pantalla: 'historialCompras', icono: 'documento', titulo: 'Historial de compras', descripcion: 'Todas, pagadas y pendientes', clase: 'boton-flotante-historial' },
+        { pantalla: 'cuentas', icono: 'tarjeta', titulo: 'Registrar pago a factura', descripcion: 'Abonar una factura pendiente (cuentas por pagar)', clase: 'boton-flotante-cuentas' },
+        { pantalla: 'facturasPendientes', icono: 'pendientes', titulo: 'Facturas por pagar', descripcion: 'Solo ver el listado', clase: 'boton-flotante-historial' },
       ]);
     }
 
