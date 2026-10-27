@@ -5,7 +5,7 @@ interface Props {
   onCerrar: () => void;
 }
 
-const UMBRAL_RIESGO = 70;
+const UMBRAL_RIESGO = 50;
 
 function etiquetaMotivo(motivo: ClienteEnRiesgo['motivo']): string {
   if (motivo === 'ambos') return 'Dejó de comprar y compra menos';
