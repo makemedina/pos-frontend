@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import {
   obtenerLlamadasDeHoy,
@@ -116,7 +117,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
             href={`tel:${c.telefono}`}
             style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 10, background: 'var(--fondo-gris)', color: '#111', textDecoration: 'none', fontSize: 14 }}
           >
-            📞 Llamar
+            <Icono nombre="telefono" size={16} /> Llamar
           </a>
           <a
             href={linkWhatsapp(c.telefono, `Hola ${c.nombre}, te habla Mr Carnes para ofrecerte producto.`)}
@@ -190,7 +191,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
                   />
                   <span>
                     <strong style={{ textDecoration: p.hecho ? 'line-through' : 'none' }}>{p.concepto}</strong>
-                    {p.cliente && <div style={{ fontSize: 13, color: 'var(--texto-fuerte)' }}>🧑‍🤝‍🧑 {p.cliente.nombre}</div>}
+                    {p.cliente && <div style={{ fontSize: 13, color: 'var(--texto-fuerte)' }}><Icono nombre="clientes" size={16} /> {p.cliente.nombre}</div>}
                     {p.notas && <div style={{ fontSize: 13, color: 'var(--texto-fuerte)' }}>{p.notas}</div>}
                   </span>
                 </label>

@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useMemo, useState } from 'react';
 import { formatoMoneda, formatoKg, formatoFecha, etiquetaMetodoPago } from './formato';
 import { headerAuth, API_URL, obtenerPendientesDeHoy, actualizarPendiente, type Pendiente, ORIGENES_CLIENTE } from './api';
@@ -312,7 +313,7 @@ export function AdminDashboard({ onCerrar }: Props) {
             <small style={{ color: '#666' }}>{filtroLabel}</small>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={exportar}>📊 Exportar Excel</button>
+            <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>
             <button onClick={onCerrar}>Cerrar</button>
           </div>
         </div>
@@ -355,7 +356,7 @@ export function AdminDashboard({ onCerrar }: Props) {
 
         {pendientesHoy.length > 0 && (
           <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
-            <h3 style={{ margin: 0 }}>📝 Pendientes de hoy</h3>
+            <h3 style={{ margin: 0 }}><Icono nombre="tarea" size={16} /> Pendientes de hoy</h3>
             {pendientesHoy.map((p) => (
               <label
                 key={p.id}
@@ -370,7 +371,7 @@ export function AdminDashboard({ onCerrar }: Props) {
                 />
                 <span>
                   <span style={{ textDecoration: p.hecho ? 'line-through' : 'none' }}>{p.concepto}</span>
-                  {p.cliente && <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>🧑‍🤝‍🧑 {p.cliente.nombre}</div>}
+                  {p.cliente && <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}><Icono nombre="clientes" size={16} /> {p.cliente.nombre}</div>}
                   {p.notas && <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{p.notas}</div>}
                 </span>
               </label>

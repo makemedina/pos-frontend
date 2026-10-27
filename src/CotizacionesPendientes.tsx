@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoFechaHora } from './formato';
 import {
@@ -332,7 +333,7 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
                   onClick={() => setConfirmandoCancelar(true)}
                   style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                 >
-                  🗑️ Cancelar cotización
+                  <Icono nombre="papelera" size={16} /> Cancelar cotización
                 </button>
               ) : (
                 <div className="bloque-autorizacion">

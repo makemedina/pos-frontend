@@ -1128,7 +1128,7 @@ export default function App() {
             padding: '6px 0',
           }}
         >
-          📴 Sin conexión — puedes seguir vendiendo, se sincronizará solo
+          <Icono nombre="sinconexion" size={16} /> Sin conexión — puedes seguir vendiendo, se sincronizará solo
         </div>
       )}
       {renderPantalla()}

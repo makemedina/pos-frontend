@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { obtenerCorteDelDia, type ResumenCorteDia } from './api';
 import { generarImagenRecibo, generarPdfRecibo, compartirArchivo, CompartirCanceladoError } from './reciboExport';
@@ -98,17 +99,17 @@ export function CorteHistoricoModal({ fecha, onCerrar }: Props) {
               <>
                 {!imagenBlob ? (
                   <button onClick={generarImagen} disabled={!!exportando}>
-                    {exportando === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
+                    {exportando === 'imagen' ? 'Generando...' : <><Icono nombre="imagen" size={16} /> Imagen</>}
                   </button>
                 ) : (
-                  <button onClick={compartirImagenLista}>📤 Compartir imagen</button>
+                  <button onClick={compartirImagenLista}><Icono nombre="compartir" size={16} /> Compartir imagen</button>
                 )}
                 {!pdfBlob ? (
                   <button onClick={generarPdf} disabled={!!exportando}>
-                    {exportando === 'pdf' ? 'Generando...' : '📄 PDF'}
+                    {exportando === 'pdf' ? 'Generando...' : <><Icono nombre="documento" size={16} /> PDF</>}
                   </button>
                 ) : (
-                  <button onClick={compartirPdfListo}>📤 Compartir PDF</button>
+                  <button onClick={compartirPdfListo}><Icono nombre="compartir" size={16} /> Compartir PDF</button>
                 )}
               </>
             )}

@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import {
   obtenerPendientes,
@@ -209,10 +210,10 @@ export function AdminPendientes({ onCerrar }: Props) {
               </div>
               {p.cliente && (
                 <div style={{ fontSize: 13, color: 'var(--texto-fuerte)', marginTop: 4 }}>
-                  🧑‍🤝‍🧑 {p.cliente.nombre}
+                  <Icono nombre="clientes" size={16} /> {p.cliente.nombre}
                   {' · '}
                   <a href={`tel:${p.cliente.telefono}`} onClick={(e) => e.stopPropagation()}>
-                    📞 {p.cliente.telefono}
+                    <Icono nombre="telefono" size={16} /> {p.cliente.telefono}
                   </a>
                 </div>
               )}
@@ -227,7 +228,7 @@ export function AdminPendientes({ onCerrar }: Props) {
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: 4 }}
               title="Editar"
             >
-              ✏️
+              <Icono nombre="editar" size={16} />
             </button>
             <button
               onClick={() => eliminar(p)}
@@ -235,7 +236,7 @@ export function AdminPendientes({ onCerrar }: Props) {
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: 4 }}
               title="Eliminar"
             >
-              🗑️
+              <Icono nombre="papelera" size={16} />
             </button>
           </div>
         </div>
@@ -281,7 +282,7 @@ export function AdminPendientes({ onCerrar }: Props) {
 
         {formAbierto && (
           <div style={{ ...CARD, display: 'grid', gap: '0.5rem' }}>
-            {editandoId && <strong style={{ fontSize: 14 }}>✏️ Editando pendiente</strong>}
+            {editandoId && <strong style={{ fontSize: 14 }}><Icono nombre="editar" size={16} /> Editando pendiente</strong>}
             <label style={{ display: 'grid', gap: '0.25rem' }}>
               <span>¿Qué hay que hacer?</span>
               <input

@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import {
@@ -405,7 +406,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Gastos</h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            {pestana === 'historico' && <button onClick={exportar}>📊 Exportar Excel</button>}
+            {pestana === 'historico' && <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>}
             <button onClick={onCerrar}>Cerrar</button>
           </div>
         </div>
@@ -534,7 +535,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                 textAlign: 'center',
               }}
             >
-              {fotoComprobante ? `📎 ${fotoComprobante.name} (toca para cambiarla)` : '📷 Toca para elegir o tomar la foto'}
+              {fotoComprobante ? <><Icono nombre="adjunto" size={16} /> {fotoComprobante.name} (toca para cambiarla)</> : <><Icono nombre="camara" size={16} /> Toca para elegir o tomar la foto</>}
             </label>
             <input
               id="foto-comprobante-gasto"
@@ -731,7 +732,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                           onClick={() => iniciarEdicion(gasto)}
                           style={{ width: '100%', marginTop: 8 }}
                         >
-                          ✏️ Editar
+                          <Icono nombre="editar" size={16} /> Editar
                         </button>
                       )}
                     </>
@@ -744,7 +745,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                       disabled={cargandoComprobante}
                       style={{ width: '100%', marginTop: 8 }}
                     >
-                      🧾 Ver comprobante
+                      <Icono nombre="recibo" size={16} /> Ver comprobante
                     </button>
                   )}
 
@@ -787,7 +788,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                       onClick={() => setConfirmandoId(gasto.id)}
                       style={{ width: '100%', marginTop: 8, background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                     >
-                      🗑️ Cancelar gasto
+                      <Icono nombre="papelera" size={16} /> Cancelar gasto
                     </button>
                   )}
                 </div>

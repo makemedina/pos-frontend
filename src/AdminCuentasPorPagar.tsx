@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useMemo, useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import {
@@ -41,7 +42,7 @@ function CampoFotoComprobante({ id, archivo, onCambio }: { id: string; archivo: 
           textAlign: 'center',
         }}
       >
-        {archivo ? `📎 ${archivo.name} (toca para cambiarla)` : '📷 Toca para elegir o tomar la foto'}
+        {archivo ? <><Icono nombre="adjunto" size={16} /> {archivo.name} (toca para cambiarla)</> : <><Icono nombre="camara" size={16} /> Toca para elegir o tomar la foto</>}
       </label>
       <input
         id={id}
@@ -563,7 +564,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                 </button>
               )}
               <button onClick={abrirHistorialPagos} className="boton-secundario" style={{ justifySelf: 'start' }}>
-                📋 Ver todos los pagos
+                <Icono nombre="pendientes" size={16} /> Ver todos los pagos
               </button>
             </div>
 
@@ -738,7 +739,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                       disabled={cargandoFotoComprobante}
                       style={{ marginTop: 6 }}
                     >
-                      🧾 Ver comprobante
+                      <Icono nombre="recibo" size={16} /> Ver comprobante
                     </button>
                   )}
 
@@ -784,7 +785,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                         onClick={() => pedirCancelarPago(p.id)}
                         style={{ marginTop: 6, width: '100%', background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                       >
-                        🗑️ Cancelar pago
+                        <Icono nombre="papelera" size={16} /> Cancelar pago
                       </button>
                     ))}
                 </div>
@@ -862,7 +863,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                       disabled={cargandoFotoComprobante}
                       style={{ marginTop: 6 }}
                     >
-                      🧾 Ver comprobante
+                      <Icono nombre="recibo" size={16} /> Ver comprobante
                     </button>
                   )}
 
@@ -909,7 +910,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                         onClick={() => pedirCancelarGrupo(g.grupoKey)}
                         style={{ marginTop: 6, width: '100%', background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                       >
-                        🗑️ Cancelar este pago
+                        <Icono nombre="papelera" size={16} /> Cancelar este pago
                       </button>
                     ))}
                 </div>

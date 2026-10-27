@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { obtenerConfiguracion, guardarConfiguracion, type Configuracion } from './api';
 
@@ -180,7 +181,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
             </div>
 
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
-              <h3>💵 Saldo en efectivo</h3>
+              <h3><Icono nombre="cobranza" size={16} /> Saldo en efectivo</h3>
               <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                 Sube solo con cada venta/abono en efectivo, y baja solo con cada gasto, compra o
                 pago a proveedor en efectivo.

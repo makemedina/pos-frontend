@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import {
@@ -338,7 +339,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
                             onClick={() => pedirCancelarPago(p.id)}
                             style={{ marginTop: 6, width: '100%', background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                           >
-                            🗑️ Cancelar pago
+                            <Icono nombre="papelera" size={16} /> Cancelar pago
                           </button>
                         ))}
                     </div>
@@ -354,7 +355,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
                 disabled={cargandoFactura}
                 style={{ width: '100%', marginTop: 8 }}
               >
-                {cargandoFactura ? 'Cargando...' : '🧾 Ver foto de la factura'}
+                {cargandoFactura ? 'Cargando...' : <><Icono nombre="recibo" size={16} /> Ver foto de la factura</>}
               </button>
             )}
 
@@ -372,17 +373,17 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               {!imagenBlob ? (
                 <button onClick={generarImagen} disabled={!!exportando} style={{ flex: 1 }}>
-                  {exportando === 'imagen' ? 'Generando...' : '🖼️ Generar imagen'}
+                  {exportando === 'imagen' ? 'Generando...' : <><Icono nombre="imagen" size={16} /> Generar imagen</>}
                 </button>
               ) : (
-                <button onClick={compartirImagenLista} style={{ flex: 1 }}>📤 Compartir imagen</button>
+                <button onClick={compartirImagenLista} style={{ flex: 1 }}><Icono nombre="compartir" size={16} /> Compartir imagen</button>
               )}
               {!pdfBlob ? (
                 <button onClick={generarPdf} disabled={!!exportando} style={{ flex: 1 }}>
-                  {exportando === 'pdf' ? 'Generando...' : '📄 Generar PDF'}
+                  {exportando === 'pdf' ? 'Generando...' : <><Icono nombre="documento" size={16} /> Generar PDF</>}
                 </button>
               ) : (
-                <button onClick={compartirPdfListo} style={{ flex: 1 }}>📤 Compartir PDF</button>
+                <button onClick={compartirPdfListo} style={{ flex: 1 }}><Icono nombre="compartir" size={16} /> Compartir PDF</button>
               )}
             </div>
 
@@ -392,7 +393,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
                 onClick={() => setConfirmandoCancelacion(true)}
                 style={{ width: '100%', marginTop: 8, background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
               >
-                🗑️ Cancelar compra
+                <Icono nombre="papelera" size={16} /> Cancelar compra
               </button>
             )}
 

@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, etiquetaMetodoPago, formatoFecha, formatoFechaHora } from './formato';
 import { exportarAExcel, numeroSemana } from './exportarExcel';
@@ -179,13 +180,13 @@ export function AdminHistorialVentas({
             <h2 style={{ margin: 0 }}>Ventas</h2>
             <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
               <button onClick={exportar} style={{ width: 'auto', padding: '0 12px' }} aria-label="Exportar a Excel">
-                📊
+                <Icono nombre="tabla" size={16} />
               </button>
               <button onClick={onVerSinSincronizar} style={{ width: 'auto', padding: '0 12px' }} aria-label="Sincronizar">
-                🔄{ventasPendientesCount > 0 ? ` ${ventasPendientesCount}` : ''}
+                <Icono nombre="sincronizar" size={16} />{ventasPendientesCount > 0 ? ` ${ventasPendientesCount}` : ''}
               </button>
               <button onClick={onVerCotizaciones} style={{ width: 'auto', padding: '0 12px' }} aria-label="Cotizaciones pendientes">
-                📋{cotizacionesPendientesCount > 0 ? ` ${cotizacionesPendientesCount}` : ''}
+                <Icono nombre="pendientes" size={16} />{cotizacionesPendientesCount > 0 ? ` ${cotizacionesPendientesCount}` : ''}
               </button>
               <button className="boton-primario" onClick={onNuevaVenta} style={{ width: 'auto', padding: '0 16px' }} aria-label="Nueva venta">
                 Nuevo
@@ -196,7 +197,7 @@ export function AdminHistorialVentas({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2>Historial de ventas</h2>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={exportar}>📊 Exportar Excel</button>
+              <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>
               <button onClick={onCerrar}>Cerrar</button>
             </div>
           </div>
@@ -217,7 +218,7 @@ export function AdminHistorialVentas({
                 onClick={onVerSinSincronizar}
                 title={`Tienes ${ventasPendientesCount} venta${ventasPendientesCount !== 1 ? 's' : ''} sin sincronizar — toca para verlas`}
               >
-                📴 {ventasPendientesCount} sin sincronizar
+                <Icono nombre="sinconexion" size={16} /> {ventasPendientesCount} sin sincronizar
               </button>
             )}
             {lotesAntiguosCount > 0 && (
@@ -227,7 +228,7 @@ export function AdminHistorialVentas({
                 onClick={onVerAntiguedadStock}
                 title={`Tienes ${lotesAntiguosCount} lote${lotesAntiguosCount !== 1 ? 's' : ''} con más de 15 días en stock — toca para verlos`}
               >
-                ⏳ {lotesAntiguosCount} lote{lotesAntiguosCount !== 1 ? 's' : ''} +15 días
+                <Icono nombre="reloj" size={16} /> {lotesAntiguosCount} lote{lotesAntiguosCount !== 1 ? 's' : ''} +15 días
               </button>
             )}
             {clientesEnRiesgoCount > 0 && (
@@ -237,7 +238,7 @@ export function AdminHistorialVentas({
                 onClick={onVerAnaliticaVentas}
                 title={`Tienes ${clientesEnRiesgoCount} cliente${clientesEnRiesgoCount !== 1 ? 's' : ''} en riesgo — toca para ver a quién llamarle`}
               >
-                🎯 {clientesEnRiesgoCount} cliente{clientesEnRiesgoCount !== 1 ? 's' : ''} en riesgo
+                <Icono nombre="objetivo" size={16} /> {clientesEnRiesgoCount} cliente{clientesEnRiesgoCount !== 1 ? 's' : ''} en riesgo
               </button>
             )}
             {llamadasPendientesHoyCount > 0 && (
@@ -247,7 +248,7 @@ export function AdminHistorialVentas({
                 onClick={onVerLlamadasHoy}
                 title={`Tienes ${llamadasPendientesHoyCount} llamada${llamadasPendientesHoyCount !== 1 ? 's' : ''} pendiente${llamadasPendientesHoyCount !== 1 ? 's' : ''} hoy — toca para ver`}
               >
-                📞 {llamadasPendientesHoyCount} llamada{llamadasPendientesHoyCount !== 1 ? 's' : ''} hoy
+                <Icono nombre="telefono" size={16} /> {llamadasPendientesHoyCount} llamada{llamadasPendientesHoyCount !== 1 ? 's' : ''} hoy
               </button>
             )}
             {notasAntiguasCount > 0 && (
@@ -257,7 +258,7 @@ export function AdminHistorialVentas({
                 onClick={onVerNotasAntiguas}
                 title={`Tienes ${notasAntiguasCount} nota${notasAntiguasCount !== 1 ? 's' : ''} con más de 7 días sin liquidarse — toca para ver`}
               >
-                📆 {notasAntiguasCount} nota{notasAntiguasCount !== 1 ? 's' : ''} +7 días
+                <Icono nombre="calendario" size={16} /> {notasAntiguasCount} nota{notasAntiguasCount !== 1 ? 's' : ''} +7 días
               </button>
             )}
           </div>

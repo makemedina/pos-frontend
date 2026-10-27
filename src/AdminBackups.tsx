@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoFechaHora } from './formato';
 import {
@@ -131,7 +132,7 @@ export function AdminBackups({ onCerrar }: Props) {
           <h2>Respaldos</h2>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={hacerBackupAhora} disabled={creando || !!noConfigurado}>
-              {creando ? 'Creando...' : '💾 Hacer backup ahora'}
+              {creando ? 'Creando...' : <><Icono nombre="respaldo" size={16} /> Hacer backup ahora</>}
             </button>
             <button onClick={onCerrar}>Cerrar</button>
           </div>
@@ -169,7 +170,7 @@ export function AdminBackups({ onCerrar }: Props) {
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       <button onClick={() => descargar(b.key)} disabled={ocupadoKey === b.key}>
-                        ⬇️ Descargar
+                        <Icono nombre="descargar" size={16} /> Descargar
                       </button>
                       <button
                         onClick={() => pedirRestaurar(b.key)}

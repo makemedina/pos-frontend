@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, etiquetaMetodoPago, formatoFechaHora } from './formato';
 import { obtenerDetalleVenta, cancelarVenta, obtenerUtilidadVenta, type VentaDetalle, type UtilidadVenta } from './api';
@@ -210,7 +211,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
             )}
 
             <button className="boton-primario" onClick={() => setMostrarRecibo(true)} style={{ marginTop: 12 }}>
-              🧾 Generar recibo
+              <Icono nombre="recibo" size={16} /> Generar recibo
             </button>
 
             {!venta.cancelada && !confirmandoCancelacion && (
@@ -219,7 +220,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
                 onClick={() => setConfirmandoCancelacion(true)}
                 style={{ width: '100%', marginTop: 8, background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
               >
-                🗑️ Cancelar venta
+                <Icono nombre="papelera" size={16} /> Cancelar venta
               </button>
             )}
 

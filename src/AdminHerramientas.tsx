@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useState } from 'react';
 import { API_URL, headerAuth, cargarSaldosIniciales, importarProveedores, cargarFacturasIniciales, migrarSaldoInicialANotas } from './api';
 
@@ -352,7 +353,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
 
         {/* ---------- Cargar facturas iniciales de proveedores ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
-          <h3>🧾 Cargar facturas iniciales de proveedores</h3>
+          <h3><Icono nombre="recibo" size={16} /> Cargar facturas iniciales de proveedores</h3>
           <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
             Pega Proveedor, Teléfono, Factura e Importe (desde Excel o con comas). Si el
             proveedor no existe, se crea con ese teléfono. Cada fila queda como una factura

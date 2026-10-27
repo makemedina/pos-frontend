@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useState } from 'react';
 import { formatoMoneda, formatoFechaHora } from './formato';
 import {
@@ -59,7 +60,7 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
           <h2>Ventas sin sincronizar</h2>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={sincronizarAhora} disabled={sincronizando}>
-              {sincronizando ? 'Sincronizando...' : '🔄 Sincronizar ahora'}
+              {sincronizando ? 'Sincronizando...' : <><Icono nombre="sincronizar" size={16} /> Sincronizar ahora</>}
             </button>
             <button onClick={onCerrar}>Cerrar</button>
           </div>

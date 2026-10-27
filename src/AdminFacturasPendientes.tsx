@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoFecha } from './formato';
 import { obtenerFacturasPendientes, type FacturaPendiente } from './api';
@@ -67,7 +68,7 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Facturas pendientes</h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={exportar}>📊 Exportar Excel</button>
+            <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>
             <button onClick={onCerrar}>Cerrar</button>
           </div>
         </div>

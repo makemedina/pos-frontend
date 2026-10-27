@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { obtenerConfiguracion, type Configuracion } from './api';
 import { obtenerConfiguracionCache } from './offline';
@@ -198,21 +199,21 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
             <div style={{ display: 'grid', gap: 8 }}>
               {!imagenBlob ? (
                 <button className="boton-primario" disabled={!!ocupado} onClick={generarImagen}>
-                  {ocupado === 'imagen' ? 'Generando...' : '🖼️ Generar imagen (WhatsApp)'}
+                  {ocupado === 'imagen' ? 'Generando...' : <><Icono nombre="imagen" size={16} /> Generar imagen (WhatsApp)</>}
                 </button>
               ) : (
                 <button className="boton-primario" onClick={compartirImagenLista}>
-                  📤 Compartir imagen
+                  <Icono nombre="compartir" size={16} /> Compartir imagen
                 </button>
               )}
 
               {!pdfBlob ? (
                 <button className="boton-secundario" disabled={!!ocupado} onClick={generarPdf} style={{ width: '100%', marginTop: 0 }}>
-                  {ocupado === 'pdf' ? 'Generando...' : '📄 Generar PDF'}
+                  {ocupado === 'pdf' ? 'Generando...' : <><Icono nombre="documento" size={16} /> Generar PDF</>}
                 </button>
               ) : (
                 <button className="boton-secundario" onClick={compartirPdfListo} style={{ width: '100%', marginTop: 0 }}>
-                  📤 Compartir PDF
+                  <Icono nombre="compartir" size={16} /> Compartir PDF
                 </button>
               )}
             </div>

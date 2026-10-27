@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
 import { obtenerCorteDelDia, guardarCorte, type ResumenCorteDia } from './api';
@@ -146,20 +147,20 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
               <>
                 {!imagenBlob ? (
                   <button onClick={generarImagen} disabled={!!exportando}>
-                    {exportando === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
+                    {exportando === 'imagen' ? 'Generando...' : <><Icono nombre="imagen" size={16} /> Imagen</>}
                   </button>
                 ) : (
                   <>
-                    <button onClick={compartirImagenLista}>📤 Compartir imagen</button>
-                    {puedeCopiarImagen() && <button onClick={copiarImagenLista}>📋 Copiar imagen</button>}
+                    <button onClick={compartirImagenLista}><Icono nombre="compartir" size={16} /> Compartir imagen</button>
+                    {puedeCopiarImagen() && <button onClick={copiarImagenLista}><Icono nombre="copiar" size={16} /> Copiar imagen</button>}
                   </>
                 )}
                 {!pdfBlob ? (
                   <button onClick={generarPdf} disabled={!!exportando}>
-                    {exportando === 'pdf' ? 'Generando...' : '📄 PDF'}
+                    {exportando === 'pdf' ? 'Generando...' : <><Icono nombre="documento" size={16} /> PDF</>}
                   </button>
                 ) : (
-                  <button onClick={compartirPdfListo}>📤 Compartir PDF</button>
+                  <button onClick={compartirPdfListo}><Icono nombre="compartir" size={16} /> Compartir PDF</button>
                 )}
               </>
             )}

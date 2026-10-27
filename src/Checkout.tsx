@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
 import { obtenerSaldoAFavor, type Cliente } from './api';
@@ -311,7 +312,7 @@ export function Checkout({
             ? '✅ Cotización enviada'
             : enviandoCotizacion
               ? 'Guardando...'
-              : '📤 Enviar cotización'}
+              : <><Icono nombre="compartir" size={16} /> Enviar cotización</>}
         </button>
 
         <button className="boton-primario" onClick={confirmar} disabled={!!guardandoVenta}>

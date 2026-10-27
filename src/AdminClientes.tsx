@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoDireccion, formatoFecha, formatoFechaHora, haceDias, telefonoValido, MENSAJE_TELEFONO_INVALIDO } from './formato';
 import {
@@ -469,7 +470,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>{cliente ? cliente.nombre : 'Clientes'}</h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            {!clienteId && <button onClick={exportar}>📊 Exportar Excel</button>}
+            {!clienteId && <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>}
             <button onClick={clienteId ? volverALista : onCerrar}>
               {clienteId ? '← Clientes' : 'Cerrar'}
             </button>
@@ -489,7 +490,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
               </select>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => setMostrarAlta(true)}>+ Nuevo cliente</button>
-                <button onClick={() => setMostrarImportar(true)}>📋 Importar lista</button>
+                <button onClick={() => setMostrarImportar(true)}><Icono nombre="pendientes" size={16} /> Importar lista</button>
               </div>
             </div>
 
@@ -835,7 +836,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                       style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6, opacity: m.cancelado ? 0.5 : 1 }}
                     >
                       <span>
-                        {m.tipo === 'venta' ? '🛒 Venta' : '💵 Abono'} #{m.folio}
+                        {m.tipo === 'venta' ? <><Icono nombre="ventas" size={16} /> Venta</> : <><Icono nombre="cobranza" size={16} /> Abono</>} #{m.folio}
                         {m.cancelado && <span style={{ color: 'var(--peligro)', fontWeight: 600 }}> (cancelado)</span>}
                         <br />
                         <small style={{ color: 'var(--ios-secondary-label)' }}>{formatoFechaHora(new Date(m.fecha))}</small>

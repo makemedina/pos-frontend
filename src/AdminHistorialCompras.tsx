@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useMemo, useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import {
@@ -165,7 +166,7 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>{proveedor ? `Compras — ${proveedor.nombre}` : 'Historial de compras'}</h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={exportar}>📊 Exportar Excel</button>
+            <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>
             <button onClick={onCerrar}>Cerrar</button>
           </div>
         </div>

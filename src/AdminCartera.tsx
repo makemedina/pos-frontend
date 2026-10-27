@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, etiquetaMetodoPago, formatoFecha, formatoFechaHora } from './formato';
 import { exportarAExcel } from './exportarExcel';
@@ -745,48 +746,48 @@ export function AdminCartera({ onCerrar }: Props) {
             {nivel === 'clientes' && clientesFiltrados.length > 0 && (
               <>
                 <button onClick={exportar} disabled={exportando}>
-                  {exportando ? 'Generando...' : '📊 Excel'}
+                  {exportando ? 'Generando...' : <><Icono nombre="tabla" size={16} /> Excel</>}
                 </button>
                 {!imagenCarteraBlob ? (
                   <button onClick={generarImagenCartera} disabled={!!exportandoFormato}>
-                    {exportandoFormato === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
+                    {exportandoFormato === 'imagen' ? 'Generando...' : <><Icono nombre="imagen" size={16} /> Imagen</>}
                   </button>
                 ) : (
                   <>
-                    <button onClick={compartirImagenCartera}>📤 Compartir imagen</button>
-                    {puedeCopiarImagen() && <button onClick={copiarImagenCartera}>📋 Copiar imagen</button>}
+                    <button onClick={compartirImagenCartera}><Icono nombre="compartir" size={16} /> Compartir imagen</button>
+                    {puedeCopiarImagen() && <button onClick={copiarImagenCartera}><Icono nombre="copiar" size={16} /> Copiar imagen</button>}
                   </>
                 )}
                 {!pdfCarteraBlob ? (
                   <button onClick={generarPdfCartera} disabled={!!exportandoFormato}>
-                    {exportandoFormato === 'pdf' ? 'Generando...' : '📄 PDF'}
+                    {exportandoFormato === 'pdf' ? 'Generando...' : <><Icono nombre="documento" size={16} /> PDF</>}
                   </button>
                 ) : (
-                  <button onClick={compartirPdfCartera}>📤 Compartir PDF</button>
+                  <button onClick={compartirPdfCartera}><Icono nombre="compartir" size={16} /> Compartir PDF</button>
                 )}
               </>
             )}
             {nivel === 'notas' && notas.length > 0 && (
               <>
                 <button onClick={exportarNotasCliente} disabled={exportando}>
-                  {exportando ? 'Generando...' : '📊 Excel'}
+                  {exportando ? 'Generando...' : <><Icono nombre="tabla" size={16} /> Excel</>}
                 </button>
                 {!imagenNotasBlob ? (
                   <button onClick={generarImagenNotas} disabled={!!exportandoFormatoNotas}>
-                    {exportandoFormatoNotas === 'imagen' ? 'Generando...' : '🖼️ Imagen'}
+                    {exportandoFormatoNotas === 'imagen' ? 'Generando...' : <><Icono nombre="imagen" size={16} /> Imagen</>}
                   </button>
                 ) : (
                   <>
-                    <button onClick={compartirImagenNotas}>📤 Compartir imagen</button>
-                    {puedeCopiarImagen() && <button onClick={copiarImagenNotas}>📋 Copiar imagen</button>}
+                    <button onClick={compartirImagenNotas}><Icono nombre="compartir" size={16} /> Compartir imagen</button>
+                    {puedeCopiarImagen() && <button onClick={copiarImagenNotas}><Icono nombre="copiar" size={16} /> Copiar imagen</button>}
                   </>
                 )}
                 {!pdfNotasBlob ? (
                   <button onClick={generarPdfNotas} disabled={!!exportandoFormatoNotas}>
-                    {exportandoFormatoNotas === 'pdf' ? 'Generando...' : '📄 PDF'}
+                    {exportandoFormatoNotas === 'pdf' ? 'Generando...' : <><Icono nombre="documento" size={16} /> PDF</>}
                   </button>
                 ) : (
-                  <button onClick={compartirPdfNotas}>📤 Compartir PDF</button>
+                  <button onClick={compartirPdfNotas}><Icono nombre="compartir" size={16} /> Compartir PDF</button>
                 )}
               </>
             )}
@@ -875,7 +876,7 @@ export function AdminCartera({ onCerrar }: Props) {
                 </button>
               )}
               <button onClick={abrirHistorialPagos} className="boton-secundario" style={{ justifySelf: 'start' }}>
-                📋 Ver todos los pagos
+                <Icono nombre="pendientes" size={16} /> Ver todos los pagos
               </button>
             </div>
 
@@ -929,7 +930,7 @@ export function AdminCartera({ onCerrar }: Props) {
                       onChange={(e) => setFotoComprobantePagoMultiple(e.target.files?.[0] ?? null)}
                     />
                     {fotoComprobantePagoMultiple && (
-                      <small style={{ color: 'var(--exito)' }}>📎 {fotoComprobantePagoMultiple.name}</small>
+                      <small style={{ color: 'var(--exito)' }}><Icono nombre="adjunto" size={16} /> {fotoComprobantePagoMultiple.name}</small>
                     )}
                   </label>
                 )}
@@ -1018,7 +1019,7 @@ export function AdminCartera({ onCerrar }: Props) {
               Ver tambien las notas ya pagadas
             </label>
             <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: '-0.5rem 0 0' }}>
-              "📊 Exportar Excel" (arriba) exporta lo que esté marcado aquí: solo pendientes, o pendientes y pagadas.
+              "Exportar Excel" (arriba) exporta lo que esté marcado aquí: solo pendientes, o pendientes y pagadas.
             </p>
 
             <div id={ELEMENT_ID_REPORTE_NOTAS_CLIENTE} style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
@@ -1103,7 +1104,7 @@ export function AdminCartera({ onCerrar }: Props) {
                         onClick={() => reimprimirComprobante(p)}
                         style={{ marginTop: 6, width: '100%' }}
                       >
-                        🧾 Reimprimir comprobante
+                        <Icono nombre="recibo" size={16} /> Reimprimir comprobante
                       </button>
                       {p.fotoComprobanteKey && (
                         <button
@@ -1112,7 +1113,7 @@ export function AdminCartera({ onCerrar }: Props) {
                           disabled={cargandoComprobanteFoto}
                           style={{ marginTop: 6, width: '100%' }}
                         >
-                          📷 Ver foto de la transferencia
+                          <Icono nombre="camara" size={16} /> Ver foto de la transferencia
                         </button>
                       )}
                     </>
@@ -1154,7 +1155,7 @@ export function AdminCartera({ onCerrar }: Props) {
                         onClick={() => pedirCancelarPago(p.id)}
                         style={{ marginTop: 6, width: '100%', background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                       >
-                        🗑️ Cancelar pago
+                        <Icono nombre="papelera" size={16} /> Cancelar pago
                       </button>
                     ))}
                 </div>
@@ -1198,7 +1199,7 @@ export function AdminCartera({ onCerrar }: Props) {
                       onChange={(e) => setFotoComprobantePago(e.target.files?.[0] ?? null)}
                     />
                     {fotoComprobantePago && (
-                      <small style={{ color: 'var(--exito)' }}>📎 {fotoComprobantePago.name}</small>
+                      <small style={{ color: 'var(--exito)' }}><Icono nombre="adjunto" size={16} /> {fotoComprobantePago.name}</small>
                     )}
                   </label>
                 )}
@@ -1306,7 +1307,7 @@ export function AdminCartera({ onCerrar }: Props) {
                         onClick={() => pedirCancelarGrupo(g.grupoKey)}
                         style={{ marginTop: 6, width: '100%', background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                       >
-                        🗑️ Cancelar este pago
+                        <Icono nombre="papelera" size={16} /> Cancelar este pago
                       </button>
                     ))}
                 </div>

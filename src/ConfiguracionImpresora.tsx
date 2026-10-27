@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { obtenerConfiguracion, guardarConfiguracion, type Configuracion } from './api';
 import {
@@ -153,7 +154,7 @@ export function ConfiguracionImpresora({ onCerrar }: Props) {
             </button>
 
             <button type="button" onClick={probar} disabled={probando} style={{ marginTop: 8 }}>
-              {probando ? 'Imprimiendo...' : '🖨️ Imprimir prueba'}
+              {probando ? 'Imprimiendo...' : <><Icono nombre="impresora" size={16} /> Imprimir prueba</>}
             </button>
 
             <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: 0 }}>

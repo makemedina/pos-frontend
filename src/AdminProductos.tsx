@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoKg, formatoFecha, formatoFechaHora } from './formato';
 import {
@@ -260,7 +261,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
                     <strong>{productoElegido.producto}</strong>
                     <button onClick={empezarEdicionNombre} style={{ padding: '2px 10px', fontSize: 12 }}>
-                      ✏️ Editar nombre
+                      <Icono nombre="editar" size={16} /> Editar nombre
                     </button>
                   </div>
                 )}
@@ -283,7 +284,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
                     <span>Marca: {productoElegido.marca}</span>
                     <button onClick={empezarEdicionMarca} style={{ padding: '2px 10px', fontSize: 12 }}>
-                      ✏️ Editar marca
+                      <Icono nombre="editar" size={16} /> Editar marca
                     </button>
                   </div>
                 )}

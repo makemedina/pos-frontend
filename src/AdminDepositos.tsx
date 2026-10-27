@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import { headerAuth, API_URL } from './api';
@@ -175,7 +176,7 @@ export function AdminDepositos({ onCerrar }: Props) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2>Depósitos a banco</h2>
           <div style={{ display: 'flex', gap: 8 }}>
-            {pestana === 'historico' && <button onClick={exportar}>📊 Exportar Excel</button>}
+            {pestana === 'historico' && <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>}
             <button onClick={onCerrar}>Cerrar</button>
           </div>
         </div>
@@ -230,7 +231,7 @@ export function AdminDepositos({ onCerrar }: Props) {
                 textAlign: 'center',
               }}
             >
-              {fotoComprobante ? `📎 ${fotoComprobante.name} (toca para cambiarla)` : '📷 Toca para elegir o tomar la foto'}
+              {fotoComprobante ? <><Icono nombre="adjunto" size={16} /> {fotoComprobante.name} (toca para cambiarla)</> : <><Icono nombre="camara" size={16} /> Toca para elegir o tomar la foto</>}
             </label>
             <input
               id="foto-comprobante-deposito"
@@ -283,7 +284,7 @@ export function AdminDepositos({ onCerrar }: Props) {
                       disabled={cargandoComprobante}
                       style={{ width: '100%', marginTop: 8 }}
                     >
-                      🧾 Ver comprobante
+                      <Icono nombre="recibo" size={16} /> Ver comprobante
                     </button>
                   )}
 
@@ -326,7 +327,7 @@ export function AdminDepositos({ onCerrar }: Props) {
                       onClick={() => setConfirmandoId(deposito.id)}
                       style={{ width: '100%', marginTop: 8, background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                     >
-                      🗑️ Cancelar depósito
+                      <Icono nombre="papelera" size={16} /> Cancelar depósito
                     </button>
                   )}
                 </div>

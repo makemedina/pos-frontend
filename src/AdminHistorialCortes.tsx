@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoFecha } from './formato';
 import { obtenerHistorialCortes, actualizarCorte, eliminarCorte, type CorteHistorico } from './api';
@@ -112,12 +113,12 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                     )}
                     {c.observacion && (
                       <div style={{ fontSize: 13, marginTop: 4, whiteSpace: 'pre-wrap' }}>
-                        📝 {c.observacion}
+                        <Icono nombre="documento" size={16} /> {c.observacion}
                       </div>
                     )}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <button onClick={() => setFechaAImprimir(c.fecha.slice(0, 10))}>🖨️ Imprimir</button>
+                    <button onClick={() => setFechaAImprimir(c.fecha.slice(0, 10))}><Icono nombre="impresora" size={16} /> Imprimir</button>
                     <button onClick={() => empezarEdicion(c)}>Editar</button>
                     <button
                       onClick={() => setConfirmandoEliminarId(c.id)}

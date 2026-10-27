@@ -1,3 +1,4 @@
+import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda } from './formato';
 import {
@@ -292,7 +293,7 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
             textAlign: 'center',
           }}
         >
-          {fotoFactura ? `📎 ${fotoFactura.name} (toca para cambiarla)` : '📷 Toca para elegir o tomar la foto'}
+          {fotoFactura ? <><Icono nombre="adjunto" size={16} /> {fotoFactura.name} (toca para cambiarla)</> : <><Icono nombre="camara" size={16} /> Toca para elegir o tomar la foto</>}
         </label>
         <input
           id="foto-factura-compra"
