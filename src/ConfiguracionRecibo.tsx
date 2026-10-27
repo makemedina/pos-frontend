@@ -94,7 +94,7 @@ export function ConfiguracionRecibo({ onCerrar, onIrAImpresora }: Props) {
             </div>
 
             <div
-              style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, cursor: 'pointer' }}
+              style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, cursor: 'pointer' }}
               onClick={onIrAImpresora}
             >
               <strong>Configuración de la impresora →</strong>

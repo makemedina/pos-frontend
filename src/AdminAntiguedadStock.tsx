@@ -50,10 +50,10 @@ export function AdminAntiguedadStock({ onCerrar }: Props) {
             </p>
 
             <div className="fila-gap-075-wrap">
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
+              <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
                 <strong style={{ color: criticos.length > 0 ? 'var(--peligro)' : undefined }}>{criticos.length}</strong> lote{criticos.length !== 1 ? 's' : ''} crítico{criticos.length !== 1 ? 's' : ''}
               </div>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
+              <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
                 Valor en crítico: <strong>{formatoMoneda(valorCritico)}</strong>
               </div>
             </div>
@@ -76,7 +76,7 @@ export function AdminAntiguedadStock({ onCerrar }: Props) {
                 key={l.id}
                 style={{
                   border: 'none',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
+                  boxShadow: 'var(--sombra-tarjeta)',
                   padding: '0.75rem',
                   borderRadius: 14,
                   background: l.critico ? 'var(--peligro-fondo)' : undefined,

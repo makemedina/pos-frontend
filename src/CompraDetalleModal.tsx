@@ -231,7 +231,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
         {cargando && <p className="t-centro-tenue">Cargando...</p>}
 
         {compra && (
-          <div id={ELEMENT_ID} className="fuerza-claro">
+          <div id={ELEMENT_ID}>
             <div className="resumen-nota">
               <div className="linea-resumen">
                 <span>Fecha</span>

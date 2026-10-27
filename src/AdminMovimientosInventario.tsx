@@ -141,7 +141,7 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, display: 'grid', gap: '0.75rem' }}>
+        <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, display: 'grid', gap: '0.75rem' }}>
           <div className="fila-gap-075-wrap">
             <label className="grid-gap-025">
               <span>Periodo</span>
@@ -236,7 +236,7 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
                   <div
                     key={`${m.tipo}-${m.id}`}
                     onClick={() => setMovimientoAbierto({ tipo: m.tipo, id: m.idReferencia })}
-                    style={{ display: 'flex', justifyContent: 'space-between', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.6rem 0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                    style={{ display: 'flex', justifyContent: 'space-between', border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.6rem 0.75rem', borderRadius: 14, cursor: 'pointer' }}
                   >
                     <div>
                       <div>

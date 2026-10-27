@@ -159,7 +159,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
               </button>
             </div>
 
-            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+            <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
               <h3>🏦 Saldo en bancos</h3>
               <p className="t-tenue-13">
                 Este número sube solo con cada venta/abono por transferencia, y baja solo con
@@ -180,7 +180,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
               </button>
             </div>
 
-            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+            <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
               <h3><Icono nombre="cobranza" size={16} /> Saldo en efectivo</h3>
               <p className="t-tenue-13">
                 Sube solo con cada venta/abono en efectivo, y baja solo con cada gasto, compra o
@@ -201,7 +201,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
             </div>
 
             <div
-              style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, cursor: 'pointer' }}
+              style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, cursor: 'pointer' }}
               onClick={onIrARecibo}
             >
               <strong>Configuración del recibo →</strong>

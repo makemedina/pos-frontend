@@ -591,7 +591,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 {clientesFiltrados.map((c) => (
                   <div
                     key={c.id}
-                    style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+                    style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
                     onClick={() => abrirCliente(c.id)}
                   >
                     <div>

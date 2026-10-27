@@ -816,7 +816,7 @@ export function AdminCartera({ onCerrar }: Props) {
               />
               Ocultar clientes sin saldo en cartera
             </label>
-            <div id={ELEMENT_ID_REPORTE_CARTERA} className="fuerza-claro" style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
+            <div id={ELEMENT_ID_REPORTE_CARTERA} style={{ display: 'grid', gap: '0.75rem' }}>
               <div className="lista-tarjetas grid-gap-075">
                 {clientesFiltrados.length === 0 && <p className="t-tenue">No hay clientes que coincidan.</p>}
                 {clientesFiltrados.map((c) => (
@@ -1022,7 +1022,7 @@ export function AdminCartera({ onCerrar }: Props) {
               "Exportar Excel" (arriba) exporta lo que esté marcado aquí: solo pendientes, o pendientes y pagadas.
             </p>
 
-            <div id={ELEMENT_ID_REPORTE_NOTAS_CLIENTE} className="fuerza-claro" style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
+            <div id={ELEMENT_ID_REPORTE_NOTAS_CLIENTE} style={{ display: 'grid', gap: '0.75rem' }}>
               <div className="tarjeta-sombra">
                 <strong>{clienteElegido?.nombre}</strong>
                 <div className="t-tenue-13">{clienteElegido?.telefono}</div>
@@ -1243,7 +1243,7 @@ export function AdminCartera({ onCerrar }: Props) {
             <div className="grid-gap-05">
               {gruposPago.length === 0 && <p className="t-tenue">Este cliente aún no ha hecho ningún pago.</p>}
               {gruposPago.map((g) => (
-                <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14 }}>
                   <div className="fila-entre">
                     <span>
                       {formatoFechaHora(new Date(g.fecha))} · {g.metodosPago.map(etiquetaMetodoPago).join(' + ') || '—'}

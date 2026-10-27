@@ -318,7 +318,7 @@ export function AdminDashboard({ onCerrar }: Props) {
           </div>
         </div>
 
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, display: 'grid', gap: '0.75rem' }}>
+        <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, display: 'grid', gap: '0.75rem' }}>
           <div className="fila-gap-075-wrap">
             <label className="grid-gap-025">
               <span>Periodo</span>
@@ -355,7 +355,7 @@ export function AdminDashboard({ onCerrar }: Props) {
         {mensaje && <div className="banner-mensaje">{mensaje}</div>}
 
         {pendientesHoy.length > 0 && (
-          <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+          <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
             <h3 className="m-0"><Icono nombre="tarea" size={16} /> Pendientes de hoy</h3>
             {pendientesHoy.map((p) => (
               <label
@@ -459,7 +459,7 @@ export function AdminDashboard({ onCerrar }: Props) {
             </div>
 
             <div className="secciones-dashboard" style={{ display: 'grid', gap: '1rem' }}>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14 }}>
                 <div
                   onClick={() => setMetricaExpandida('gastos')}
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', cursor: 'pointer', marginBottom: 8 }}
@@ -501,7 +501,7 @@ export function AdminDashboard({ onCerrar }: Props) {
                 )}
               </div>
 
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Productos más vendidos por volumen</h3>
                 <div className="grid-gap-05">
                   {data.productosMasVendidos.length === 0 && <p className="t-tenue">Sin datos en este periodo.</p>}
@@ -523,7 +523,7 @@ export function AdminDashboard({ onCerrar }: Props) {
                 )}
               </div>
 
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Productos más vendidos por valor</h3>
                 <div className="grid-gap-05">
                   {data.productosMasVendidosPorValor.length === 0 && <p className="t-tenue">Sin datos en este periodo.</p>}
@@ -549,7 +549,7 @@ export function AdminDashboard({ onCerrar }: Props) {
                 )}
               </div>
 
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Mejores clientes por valor</h3>
                 <div className="grid-gap-05">
                   {data.mejoresClientesPorValor.length === 0 && <p className="t-tenue">Sin datos en este periodo.</p>}
@@ -579,7 +579,7 @@ export function AdminDashboard({ onCerrar }: Props) {
               </div>
 
               {data.ventasPorOrigen && (
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14 }}>
                 <h3 style={{ marginBottom: 4 }}>Ventas por origen del cliente</h3>
                 <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: '0 0 8px' }}>
                   Cómo llegaron los clientes que compraron. "Nuevos" son los dados de alta en este periodo.
@@ -613,7 +613,7 @@ export function AdminDashboard({ onCerrar }: Props) {
               </div>
               )}
 
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Ventas por vendedor</h3>
                 <div className="grid-gap-05">
                   {data.ventasPorVendedor.length === 0 && <p className="t-tenue">Sin datos en este periodo.</p>}

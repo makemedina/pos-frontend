@@ -321,7 +321,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: 'var(--ios-gray-fill)' }}>
+        <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, background: 'var(--ios-gray-fill)' }}>
           <label style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>
             📅 Fecha para las cargas iniciales (clientes, proveedores, inventario)
           </label>
@@ -333,7 +333,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         </div>
 
         {/* ---------- Importar lista de proveedores ---------- */}
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+        <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>🚚 Importar lista de proveedores</h3>
           <p className="t-tenue-13">
             Pega los nombres, uno por línea. Se crean sin teléfono — lo puedes agregar después
@@ -352,7 +352,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         </div>
 
         {/* ---------- Cargar facturas iniciales de proveedores ---------- */}
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+        <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3><Icono nombre="recibo" size={16} /> Cargar facturas iniciales de proveedores</h3>
           <p className="t-tenue-13">
             Pega Proveedor, Teléfono, Factura e Importe (desde Excel o con comas). Si el
@@ -372,7 +372,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         </div>
 
         {/* ---------- Cargar inventario inicial ---------- */}
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+        <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>📦 Cargar inventario inicial</h3>
           <p className="t-tenue-13">
             Pega las filas de tu tabla (Producto, Marca, Costo, Precio, Stock) — puedes pegar
@@ -392,7 +392,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         </div>
 
         {/* ---------- Cargar saldos iniciales de cartera ---------- */}
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+        <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>💰 Cargar saldos iniciales de cartera</h3>
           <p className="t-tenue-13">
             Pega Nombre y Saldo (uno por línea, desde Excel o separado por coma). Busca al
@@ -424,7 +424,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         </div>
 
         {/* ---------- Corregir estados de pago desincronizados ---------- */}
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
+        <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>🩹 Corregir notas/facturas con "Saldo $0.00" que no dicen "Pagada"</h3>
           <p className="t-tenue-13">
             Un residuo diminuto de punto flotante en abonos parciales encadenados podía dejar
@@ -439,7 +439,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         </div>
 
         {/* ---------- Reset / borrado de datos (zona de peligro) ---------- */}
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem', background: 'var(--peligro-fondo)' }}>
+        <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem', background: 'var(--peligro-fondo)' }}>
           <h3 style={{ color: 'var(--peligro)' }}>⚠️ Borrar datos del sistema</h3>
 
           {pasoReset === 'inicial' && (

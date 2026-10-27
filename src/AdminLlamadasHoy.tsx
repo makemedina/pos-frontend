@@ -90,7 +90,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
           display: 'grid',
           gap: 8,
           border: 'none',
-          boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
+          boxShadow: 'var(--sombra-tarjeta)',
           padding: '0.75rem',
           borderRadius: 14,
           opacity: c.hecha ? 0.75 : 1,
@@ -175,7 +175,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
                 key={p.id}
                 style={{
                   border: 'none',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
+                  boxShadow: 'var(--sombra-tarjeta)',
                   padding: '0.75rem',
                   borderRadius: 14,
                   opacity: p.hecho ? 0.6 : 1,

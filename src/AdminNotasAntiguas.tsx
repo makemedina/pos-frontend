@@ -47,10 +47,10 @@ export function AdminNotasAntiguas({ onCerrar }: Props) {
             </p>
 
             <div className="fila-gap-075-wrap">
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
+              <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
                 <strong style={{ color: notas.length > 0 ? 'var(--peligro)' : undefined }}>{notas.length}</strong> nota{notas.length !== 1 ? 's' : ''} antigua{notas.length !== 1 ? 's' : ''}
               </div>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
+              <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
                 Saldo pendiente: <strong>{formatoMoneda(totalPendiente)}</strong>
               </div>
             </div>
@@ -68,7 +68,7 @@ export function AdminNotasAntiguas({ onCerrar }: Props) {
                 key={n.id}
                 style={{
                   border: 'none',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
+                  boxShadow: 'var(--sombra-tarjeta)',
                   padding: '0.75rem',
                   borderRadius: 14,
                   background: 'var(--peligro-fondo)',

@@ -66,7 +66,7 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
             {clientes.map((c) => (
               <div
                 key={c.id}
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, background: 'var(--peligro-fondo)' }}
+                style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, background: 'var(--peligro-fondo)' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>

@@ -3,12 +3,19 @@
 // Se importan de forma dinamica para no obligar a cargarlas si nunca
 // se usa esta pantalla.
 
+// Lo que se exporta (imagen/PDF) siempre sale en claro, aunque la pantalla este
+// en modo oscuro: html2canvas renderiza una copia y a esa copia se le pone
+// .fuerza-claro, asi lo que se ve en pantalla no se toca.
+function aClaro(_doc: Document, copia: HTMLElement) {
+  copia.classList.add('fuerza-claro');
+}
+
 export async function generarImagenRecibo(elementId: string): Promise<Blob> {
   const { default: html2canvas } = await import('html2canvas');
   const el = document.getElementById(elementId);
   if (!el) throw new Error('No se encontro el recibo para generar la imagen');
 
-  const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff' });
+  const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', onclone: aClaro });
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (blob) resolve(blob);
@@ -23,7 +30,7 @@ export async function generarPdfRecibo(elementId: string): Promise<Blob> {
   const el = document.getElementById(elementId);
   if (!el) throw new Error('No se encontro el recibo para generar el PDF');
 
-  const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff' });
+  const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', onclone: aClaro });
   const imgData = canvas.toDataURL('image/png');
   const anchoPdf = canvas.width / 2;
   const altoPdf = canvas.height / 2;

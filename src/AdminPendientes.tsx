@@ -15,7 +15,7 @@ interface Props {
   onCerrar: () => void;
 }
 
-const CARD = { border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 };
+const CARD = { border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14 };
 
 function formatDateInput(date: Date) {
   const year = date.getFullYear();

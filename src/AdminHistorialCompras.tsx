@@ -50,7 +50,7 @@ const ORDENADORES: Record<Orden, (a: CompraHistorial, b: CompraHistorial) => num
   saldo_desc: (a, b) => b.saldoPendiente - a.saldoPendiente,
 };
 
-const CARD = { border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 };
+const CARD = { border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14 };
 
 export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
   const [periodo, setPeriodo] = useState<Periodo>(proveedor ? 'todos' : 'mes');

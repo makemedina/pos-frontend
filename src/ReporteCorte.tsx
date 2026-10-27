@@ -247,7 +247,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
   const veredictoBalanza = tieneUtilidad && resumen.balanzaAyer != null ? describirDiferencia(diferenciaBalanza) : null;
 
   return (
-    <div id={elementId} className="fuerza-claro" style={{ display: 'grid', gap: '1rem', background: 'white' }}>
+    <div id={elementId} style={{ display: 'grid', gap: '1rem' }}>
       {abarcaVariosDias && (
         <div className="aviso-alerta fw-600">
           ⚠ No se capturó el corte de uno o más días — este corte abarca desde el{' '}
@@ -258,7 +258,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
 
       {/* Veredicto arriba de todo: para saber si cuadra sin tener que
           desplazarse por todo el detalle de abajo. */}
-      <div style={{ display: 'grid', gap: 6, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: 'var(--fondo-suave)' }}>
+      <div style={{ display: 'grid', gap: 6, border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, background: 'var(--fondo-suave)' }}>
         <h3 className="m-0">¿Cuadra el corte?</h3>
         <div className="fila-entre-centro">
           <span>Efectivo</span>
@@ -283,11 +283,11 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
       </div>
 
       <div className="fila-gap-075-wrap">
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
+        <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
           Efectivo{!yaGuardado && ' (lo que vas escribiendo)'}
           <div style={{ fontWeight: 700, fontSize: 18 }}>{formatoMoneda(efectivoUsado)}</div>
         </div>
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
+        <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
           Banco{!yaGuardado && ' (lo que vas escribiendo)'}
           <div style={{ fontWeight: 700, fontSize: 18 }}>{formatoMoneda(bancoUsado)}</div>
         </div>
@@ -564,7 +564,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
       )}
 
       {resumen && (resumen.canceladas.ventas.length > 0 || resumen.canceladas.compras.length > 0) && (
-        <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: 'var(--peligro-fondo)' }}>
+        <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, background: 'var(--peligro-fondo)' }}>
           <h3 style={{ color: 'var(--peligro)' }}>❌ {tituloPeriodo('Cancelado hoy', 'Cancelado en el período')}</h3>
           {resumen.canceladas.ventas.map((v) => (
             <div
@@ -681,7 +681,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
       )}
 
       {tieneUtilidad && (
-        <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: 'var(--advertencia-fondo-suave)' }}>
+        <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '1rem', borderRadius: 14, background: 'var(--advertencia-fondo-suave)' }}>
           <h3>Qué tan bien le fue al negocio (solo administración)</h3>
           <div>{tituloPeriodo('Utilidad del día', 'Utilidad del período')}: <strong>{formatoMoneda(yaGuardado ? yaGuardado.utilidadDia : resumen.utilidadDia!)}</strong></div>
           <div className="t-tenue-13">

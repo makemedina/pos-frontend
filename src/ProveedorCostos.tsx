@@ -159,7 +159,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
           ) : (
             <div>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <div style={{ flex: 1, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.5rem 0.75rem', borderRadius: 10 }}>
+                <div style={{ flex: 1, border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.5rem 0.75rem', borderRadius: 10 }}>
                   <strong>{varianteElegida.producto.nombre}</strong> · {varianteElegida.marca}
                 </div>
                 <input

@@ -834,7 +834,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
             <div className="grid-gap-05">
               {gruposPago.length === 0 && <p className="t-tenue">Aún no se le ha hecho ningún pago a este proveedor.</p>}
               {gruposPago.map((g) => (
-                <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14 }}>
                   <div className="fila-entre">
                     <span>
                       {formatoFechaHora(new Date(g.fecha))} · {g.metodosPago.join(' + ') || '—'}

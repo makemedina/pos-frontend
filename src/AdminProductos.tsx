@@ -212,7 +212,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
-                      border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
+                      border: 'none', boxShadow: 'var(--sombra-tarjeta)',
                       padding: '0.6rem 0.75rem',
                       borderRadius: 14,
                       cursor: 'pointer',
@@ -240,7 +240,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
         {/* ---------- DETALLE + HISTORIAL DE UN PRODUCTO ---------- */}
         {productoElegido && (
           <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14 }}>
               <div>
                 {editandoNombre ? (
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 8 }}>
@@ -326,7 +326,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
+                        border: 'none', boxShadow: 'var(--sombra-tarjeta)',
                         padding: '0.6rem 0.75rem',
                         borderRadius: 14,
                         cursor: clickeable ? 'pointer' : 'default',
