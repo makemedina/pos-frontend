@@ -115,7 +115,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
         <div className="fila-gap-8">
           <a
             href={`tel:${c.telefono}`}
-            style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 10, background: 'var(--fondo-gris)', color: '#111', textDecoration: 'none', fontSize: 14 }}
+            style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 10, background: 'var(--fondo-gris)', color: 'var(--ios-label)', textDecoration: 'none', fontSize: 14 }}
           >
             <Icono nombre="telefono" size={16} /> Llamar
           </a>

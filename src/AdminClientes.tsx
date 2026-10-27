@@ -503,7 +503,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                     style={{
                       padding: '7px 14px',
                       borderRadius: 8,
-                      background: verActivos === activos ? '#fff' : 'transparent',
+                      background: verActivos === activos ? 'var(--superficie)' : 'transparent',
                       color: verActivos === activos ? 'var(--ios-label)' : 'var(--ios-secondary-label)',
                       fontWeight: verActivos === activos ? 600 : 500,
                       boxShadow: verActivos === activos ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
@@ -745,8 +745,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                           width: 'auto',
                           padding: '6px 10px',
                           borderRadius: 20,
-                          background: editDiasLlamada.includes(dia.valor) ? '#1f1f1f' : 'var(--fondo-gris)',
-                          color: editDiasLlamada.includes(dia.valor) ? '#fff' : '#111',
+                          background: editDiasLlamada.includes(dia.valor) ? 'var(--ios-label)' : 'var(--fondo-gris)',
+                          color: editDiasLlamada.includes(dia.valor) ? 'var(--superficie)' : 'var(--ios-label)',
                         }}
                       >
                         {dia.etiqueta}

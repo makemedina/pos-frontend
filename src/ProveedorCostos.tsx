@@ -193,7 +193,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
           )}
 
           {resultados.length > 0 && (
-            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5, background: '#fff', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5, background: 'var(--superficie)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
               {resultados.map((v) => (
                 <div
                   key={v.id}

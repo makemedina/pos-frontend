@@ -448,7 +448,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 Borra datos reales del sistema — esto <strong>no se puede deshacer</strong>. Se
                 guarda un respaldo automático justo antes, por si hace falta recuperar algo.
               </p>
-              <button onClick={() => setPasoReset('elegir')} style={{ background: 'var(--peligro)', color: 'white' }}>
+              <button onClick={() => setPasoReset('elegir')} style={{ background: 'var(--peligro-solido)', color: 'white' }}>
                 Quiero borrar datos
               </button>
             </>
@@ -460,7 +460,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
 
               <button
                 onClick={() => { setOpcionesReset(OPCIONES_TODO_TODO); setPasoReset('confirmar'); }}
-                style={{ textAlign: 'left', padding: '0.75rem', background: 'white' }}
+                style={{ textAlign: 'left', padding: '0.75rem', background: 'var(--superficie)' }}
               >
                 <strong>Todo todo</strong>
                 <div className="t-tenue-12">
@@ -472,7 +472,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
 
               <button
                 onClick={() => { setOpcionesReset(OPCIONES_VACIAS); setPasoReset('selectivo'); }}
-                style={{ textAlign: 'left', padding: '0.75rem', background: 'white' }}
+                style={{ textAlign: 'left', padding: '0.75rem', background: 'var(--superficie)' }}
               >
                 <strong>Elegir qué borrar</strong>
                 <div className="t-tenue-12">
@@ -543,7 +543,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 </p>
               )}
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginTop: 8, paddingTop: 8, borderTop: '1px solid #f3d4d1' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--peligro-borde)' }}>
                 <input
                   type="checkbox"
                   checked={opcionesReset.reiniciarNumeracion}
@@ -556,7 +556,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 <button
                   onClick={() => setPasoReset('confirmar')}
                   disabled={!algunaOpcionElegida}
-                  style={{ flex: 1, background: 'var(--peligro)', color: 'white' }}
+                  style={{ flex: 1, background: 'var(--peligro-solido)', color: 'white' }}
                 >
                   Continuar
                 </button>
@@ -598,7 +598,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 <button
                   onClick={confirmarReset}
                   disabled={confirmacionReset !== 'BORRAR TODO' || reseteando}
-                  style={{ flex: 1, background: 'var(--peligro)', color: 'white' }}
+                  style={{ flex: 1, background: 'var(--peligro-solido)', color: 'white' }}
                 >
                   {reseteando ? 'Borrando...' : 'Confirmar y borrar'}
                 </button>

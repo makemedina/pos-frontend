@@ -269,7 +269,7 @@ export function AdminPendientes({ onCerrar }: Props) {
             style={{
               justifySelf: 'start',
               background: notifActivas ? 'var(--exito-fondo)' : 'var(--fondo-gris)',
-              color: notifActivas ? 'var(--exito-oscuro)' : '#111',
+              color: notifActivas ? 'var(--exito-oscuro)' : 'var(--ios-label)',
               fontSize: 13,
               padding: '6px 12px',
             }}
@@ -323,7 +323,7 @@ export function AdminPendientes({ onCerrar }: Props) {
                         zIndex: 10,
                         maxHeight: 220,
                         overflowY: 'auto',
-                        background: '#fff',
+                        background: 'var(--superficie)',
                         borderRadius: 10,
                         boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
                       }}

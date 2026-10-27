@@ -174,8 +174,8 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
         {cargando ? (
           <p>Cargando...</p>
         ) : (
-          <div id="corte-reporte" style={{ display: 'grid', gap: '1rem', background: 'white' }}>            {resumen?.yaExisteCorteHoy ? (
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#f0fdf4' }}>
+          <div id="corte-reporte" className="fuerza-claro" style={{ display: 'grid', gap: '1rem', background: 'white' }}>            {resumen?.yaExisteCorteHoy ? (
+              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: 'var(--exito-fondo-suave)' }}>
                 <strong>El corte de hoy ya se realizó.</strong>
                 <div className="mt-6">
                   Efectivo contado: {formatoMoneda(resumen.corteExistente?.efectivoContado)}

@@ -5,10 +5,33 @@
    verdes iOS, hojas modales con manija arriba.
    =========================================================== */
 
-:root {
+:root,
+.fuerza-claro {
+  color-scheme: light;
   --acento: #2f4a3a;
   --acento-rgb: 47, 74, 58;
   --acento-fondo: rgba(47, 74, 58, 0.08);
+  --acento-solido: #2f4a3a;
+  --sobre-acento: #ffffff;
+
+  /* Superficies y lineas (cambian en modo oscuro) */
+  --superficie: #ffffff;
+  --vidrio: rgba(255, 255, 255, 0.82);
+  --vidrio-opaco: rgba(255, 255, 255, 0.98);
+  --vidrio-barra: rgba(255, 255, 255, 0.9);
+  --hover: rgba(0, 0, 0, 0.04);
+  --linea-barra: rgba(0, 0, 0, 0.06);
+  --texto-placeholder: #9ca0aa;
+  --texto-apagado: #b0b4bb;
+  --borde-medio: #d1d5db;
+  --switch-apagado: #e5e5ea;
+  --aviso-fondo: #fff8e1;
+  --aviso-texto: #7a5200;
+  --autorizacion-fondo: #fff8f1;
+  --peligro-borde: #fecaca;
+  --exito-fondo-suave: #f0fdf4;
+  --advertencia-fondo-suave: #fefce8;
+  --ambar: #b45309;
   --ios-green: #34c759;
   --ios-red: #ff3b30;
   --ios-orange: #ff9500;
@@ -27,6 +50,7 @@
   --fondo-gris: #f3f4f6;
   --peligro: #b91c1c;
   --peligro-oscuro: #7f1d1d;
+  --peligro-solido: #b91c1c;
   --peligro-fondo: #fff2f1;
   --advertencia: #92400e;
   --advertencia-fondo: #fff7e6;
@@ -36,6 +60,68 @@
 
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ===========================================================
+   Modo oscuro. Se activa con data-tema="oscuro" en <html> (lo pone
+   src/tema.ts segun la preferencia guardada). Todo lo que usa las
+   variables de arriba cambia solo; .fuerza-claro (recibos, cortes y
+   cotizaciones que se exportan a imagen/PDF) las vuelve a poner en claro.
+   =========================================================== */
+:root[data-tema='oscuro'] {
+  color-scheme: dark;
+  --ios-gray-bg: #0f1311;
+  --ios-gray-fill: #252b27;
+  --ios-label: #eef1ef;
+  --ios-secondary-label: #9aa5a0;
+  --ios-separator: #2f3632;
+  --ios-gray-3: #4a524d;
+  --acento: #8fc7a1;
+  --acento-rgb: 143, 199, 161;
+  --acento-fondo: rgba(143, 199, 161, 0.12);
+  --acento-solido: #3f6b52;
+  --superficie: #1a1f1c;
+  --vidrio: rgba(26, 31, 28, 0.82);
+  --vidrio-opaco: rgba(26, 31, 28, 0.98);
+  --vidrio-barra: rgba(26, 31, 28, 0.9);
+  --hover: rgba(255, 255, 255, 0.06);
+  --linea-barra: rgba(255, 255, 255, 0.08);
+  --texto-fuerte: #cbd2ce;
+  --texto-tenue: #7d8883;
+  --texto-placeholder: #6f7a75;
+  --texto-apagado: #5d6863;
+  --borde-suave: #2f3632;
+  --borde-medio: #3a423d;
+  --fondo-suave: #1f2521;
+  --fondo-gris: #252b27;
+  --switch-apagado: #3a423d;
+  --peligro: #f87171;
+  --peligro-oscuro: #fca5a5;
+  --peligro-solido: #c53030;
+  --peligro-fondo: #3b1f1f;
+  --peligro-borde: #5c2b2b;
+  --exito: #4ade80;
+  --exito-oscuro: #86efac;
+  --exito-fondo: #173322;
+  --exito-fondo-suave: #14281c;
+  --advertencia: #fbbf24;
+  --advertencia-fondo: #3a2e12;
+  --advertencia-fondo-suave: #2e2710;
+  --ambar: #fbbf24;
+  --aviso-fondo: #3a2e12;
+  --aviso-texto: #f5d98a;
+  --autorizacion-fondo: #33281a;
+}
+
+/* El logo trae fondo blanco: en oscuro se ve como una placa redondeada */
+:root[data-tema='oscuro'] img[alt='Mr Carnes'] {
+  border-radius: 8px;
+}
+
+/* Hoja de papel: siempre clara, igual que lo que sale en la imagen o el PDF */
+.fuerza-claro {
+  background: var(--superficie);
+  color: var(--ios-label);
 }
 
 * {
@@ -160,7 +246,7 @@ textarea:focus {
     flex-shrink: 0;
     position: sticky;
     top: 24px;
-    background: rgba(255, 255, 255, 0.82);
+    background: var(--vidrio);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     border-radius: 20px;
@@ -197,7 +283,7 @@ textarea:focus {
   }
 
   .sidebar-desktop-item:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: var(--hover);
   }
 
   .sidebar-desktop-item.activo {
@@ -237,7 +323,7 @@ textarea:focus {
   margin-bottom: 14px;
   padding: 12px 16px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--vidrio);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
@@ -255,11 +341,11 @@ textarea:focus {
 }
 
 .buscador::placeholder {
-  color: #9ca0aa;
+  color: var(--texto-placeholder);
 }
 
 .banner-mensaje {
-  background: #fff8e1;
+  background: var(--aviso-fondo);
   border: none;
   border-left: 3px solid var(--ios-orange);
   border-radius: 12px;
@@ -267,7 +353,7 @@ textarea:focus {
   font-size: 13px;
   margin-bottom: 12px;
   cursor: pointer;
-  color: #7a5200;
+  color: var(--aviso-texto);
 }
 
 .avisos {
@@ -299,7 +385,7 @@ textarea:focus {
 }
 
 .tarjeta-producto {
-  background: #ffffff;
+  background: var(--superficie);
   border: none;
   border-radius: 18px;
   padding: 12px;
@@ -313,7 +399,7 @@ textarea:focus {
 }
 
 .tarjeta-producto.poco-stock {
-  background: #fff2f1;
+  background: var(--peligro-fondo);
 }
 
 .tarjeta-producto .nombre {
@@ -335,7 +421,7 @@ textarea:focus {
   justify-content: space-between;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--texto-fuerte);
 }
 
 .stock {
@@ -354,7 +440,7 @@ textarea:focus {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
+  background: var(--superficie);
   border: none;
   border-radius: 14px;
   padding: 12px 14px;
@@ -368,7 +454,7 @@ textarea:focus {
 }
 
 .fila-producto.poco-stock {
-  background: #fff2f1;
+  background: var(--peligro-fondo);
 }
 
 .fila-producto .nombre {
@@ -391,7 +477,7 @@ textarea:focus {
   gap: 2px;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--texto-fuerte);
 }
 
 .pantalla-centrada {
@@ -408,7 +494,7 @@ textarea:focus {
   width: 100%;
   max-width: 480px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--vidrio-opaco);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 8px 30px rgba(0, 0, 0, 0.06);
   padding: 18px;
 }
@@ -426,7 +512,7 @@ textarea:focus {
 }
 
 .modal-contenido {
-  background: #ffffff;
+  background: var(--superficie);
   border-radius: 20px 20px 0 0;
   padding: 22px 18px 28px;
   width: 100%;
@@ -445,7 +531,7 @@ textarea:focus {
   width: 36px;
   height: 5px;
   border-radius: 999px;
-  background: #d1d5db;
+  background: var(--borde-medio);
 }
 
 @keyframes ios-fade-in {
@@ -538,7 +624,7 @@ textarea:focus {
 }
 
 .campo-precio.alerta {
-  background: #fff2f1;
+  background: var(--peligro-fondo);
   box-shadow: 0 0 0 1px rgba(255, 59, 48, 0.25) inset;
 }
 
@@ -551,7 +637,7 @@ textarea:focus {
 }
 
 .aviso-alerta {
-  background: #fff2f1;
+  background: var(--peligro-fondo);
   color: var(--ios-red);
   border-radius: 12px;
   padding: 10px 12px;
@@ -573,7 +659,7 @@ textarea:focus {
 /* Botones estilo iOS: "Filled" (primario) y "Tinted" (secundario) */
 .boton-primario {
   width: 100%;
-  background: var(--acento);
+  background: var(--acento-solido);
   color: white;
   border: none;
   padding: 13px;
@@ -585,10 +671,10 @@ textarea:focus {
 }
 
 .boton-primario:disabled {
-  background: #d1d5db;
+  background: var(--borde-medio);
   cursor: not-allowed;
   box-shadow: none;
-  color: #9ca3af;
+  color: var(--texto-tenue);
 }
 
 .barra-carrito {
@@ -596,10 +682,10 @@ textarea:focus {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--vidrio-barra);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-top: 1px solid var(--linea-barra);
   padding: 12px 16px 16px;
   max-width: 480px;
   margin: 0 auto;
@@ -638,7 +724,7 @@ textarea:focus {
   background: none;
   border: none;
   font-size: 15px;
-  color: #b0b4bb;
+  color: var(--texto-apagado);
   cursor: pointer;
 }
 
@@ -650,7 +736,7 @@ textarea:focus {
 }
 
 .bloque-autorizacion {
-  background: #fff8f1;
+  background: var(--autorizacion-fondo);
   border: none;
   border-radius: 14px;
   padding: 12px;
@@ -665,7 +751,7 @@ textarea:focus {
   padding: 0 12px;
   font-size: 14px;
   margin-top: 8px;
-  background: white;
+  background: var(--superficie);
 }
 
 .resumen-nota {
@@ -680,7 +766,7 @@ textarea:focus {
   justify-content: space-between;
   font-size: 13px;
   padding: 4px 0;
-  color: #374151;
+  color: var(--texto-fuerte);
 }
 
 .linea-resumen.total {
@@ -768,12 +854,12 @@ textarea:focus {
   background: transparent;
   font-size: 13px;
   cursor: pointer;
-  color: #374151;
+  color: var(--texto-fuerte);
   font-weight: 500;
 }
 
 .opciones-metodo button.activo {
-  background: white;
+  background: var(--superficie);
   color: var(--ios-label);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
   font-weight: 600;
@@ -799,7 +885,7 @@ textarea:focus {
   width: 51px;
   height: 31px;
   border-radius: 999px;
-  background: #e5e5ea;
+  background: var(--switch-apagado);
   border: none;
   position: relative;
   cursor: pointer;
@@ -883,13 +969,13 @@ textarea:focus {
   gap: 10px;
   font-size: 13px;
   font-weight: 600;
-  color: #374151;
+  color: var(--texto-fuerte);
 }
 
 .item-derecha button {
   background: none;
   border: none;
-  color: #b0b4bb;
+  color: var(--texto-apagado);
   cursor: pointer;
   font-size: 13px;
 }
@@ -898,7 +984,7 @@ textarea:focus {
   position: fixed;
   bottom: 90px;
   right: 16px;
-  background: var(--acento);
+  background: var(--acento-solido);
   color: white;
   border: none;
   width: 54px;
@@ -930,7 +1016,7 @@ textarea:focus {
 }
 
 .icono-menu.boton-flotante-dashboard {
-  background: var(--acento);
+  background: var(--acento-solido);
 }
 
 .icono-menu.boton-flotante-ajuste {
@@ -938,7 +1024,7 @@ textarea:focus {
 }
 
 .icono-menu.boton-flotante-ventas {
-  background: var(--acento);
+  background: var(--acento-solido);
 }
 
 .icono-menu.boton-flotante-historial {
@@ -959,7 +1045,7 @@ textarea:focus {
 }
 
 .tarjeta-menu {
-  background: #ffffff;
+  background: var(--superficie);
   border: none;
   border-radius: 16px;
   padding: 14px 16px;
@@ -1016,7 +1102,7 @@ textarea:focus {
   font-size: 13px;
   cursor: pointer;
   background: var(--ios-gray-fill);
-  color: #374151;
+  color: var(--texto-fuerte);
   font-weight: 500;
 }
 
@@ -1039,7 +1125,7 @@ textarea:focus {
 }
 
 .deslizador-tabla::-webkit-scrollbar-thumb {
-  background: #9ca0aa;
+  background: var(--texto-placeholder);
   border-radius: 7px;
   border: 3px solid var(--ios-gray-fill);
 }

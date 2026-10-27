@@ -22,7 +22,7 @@ function describirDiferencia(diferencia: number | null): { texto: string; color:
   if (diferencia === null) return { texto: '—', color: 'var(--ios-secondary-label)' };
   if (Math.abs(diferencia) < 0.01) return { texto: '✓ Cuadra exacto', color: 'var(--exito)' };
   if (diferencia < 0) return { texto: `⚠ Falta ${formatoMoneda(Math.abs(diferencia))}`, color: 'var(--peligro)' };
-  return { texto: `⚠ Sobra ${formatoMoneda(diferencia)}`, color: '#b45309' };
+  return { texto: `⚠ Sobra ${formatoMoneda(diferencia)}`, color: 'var(--ambar)' };
 }
 
 // Orden fijo al desglosar nota por nota dentro de un cliente/proveedor:
@@ -247,7 +247,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
   const veredictoBalanza = tieneUtilidad && resumen.balanzaAyer != null ? describirDiferencia(diferenciaBalanza) : null;
 
   return (
-    <div id={elementId} style={{ display: 'grid', gap: '1rem', background: 'white' }}>
+    <div id={elementId} className="fuerza-claro" style={{ display: 'grid', gap: '1rem', background: 'white' }}>
       {abarcaVariosDias && (
         <div className="aviso-alerta fw-600">
           ⚠ No se capturó el corte de uno o más días — este corte abarca desde el{' '}
@@ -570,7 +570,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             <div
               key={v.id}
               onClick={() => setVentaAbierta(v.id)}
-              style={{ fontSize: 13, borderBottom: '1px solid #fecaca', paddingBottom: 4, cursor: 'pointer' }}
+              style={{ fontSize: 13, borderBottom: '1px solid var(--peligro-borde)', paddingBottom: 4, cursor: 'pointer' }}
             >
               <div className="fila-entre">
                 <span>Venta #{v.folio} · {v.cliente}</span>
@@ -585,7 +585,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
             <div
               key={c.id}
               onClick={() => setCompraAbierta(c.id)}
-              style={{ fontSize: 13, borderBottom: '1px solid #fecaca', paddingBottom: 4, cursor: 'pointer' }}
+              style={{ fontSize: 13, borderBottom: '1px solid var(--peligro-borde)', paddingBottom: 4, cursor: 'pointer' }}
             >
               <div className="fila-entre">
                 <span>Compra {c.numeroFactura || 'sin factura'} · {c.proveedor}</span>
@@ -681,7 +681,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
       )}
 
       {tieneUtilidad && (
-        <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#fefce8' }}>
+        <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: 'var(--advertencia-fondo-suave)' }}>
           <h3>Qué tan bien le fue al negocio (solo administración)</h3>
           <div>{tituloPeriodo('Utilidad del día', 'Utilidad del período')}: <strong>{formatoMoneda(yaGuardado ? yaGuardado.utilidadDia : resumen.utilidadDia!)}</strong></div>
           <div className="t-tenue-13">

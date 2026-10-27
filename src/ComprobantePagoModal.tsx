@@ -119,6 +119,7 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
           <>
             <div
               id={ELEMENT_ID}
+              className="fuerza-claro"
               style={{
                 width: 320,
                 background: 'white',

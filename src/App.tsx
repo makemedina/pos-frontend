@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Icono, type NombreIcono } from './iconos';
+import SelectorTema from './SelectorTema';
 import {
   obtenerCatalogo,
   registrarVenta,
@@ -1091,6 +1092,7 @@ export default function App() {
             <strong>{usuario.nombre}</strong>
             <small>{usuario.rolBase}</small>
           </div>
+          <SelectorTema />
           <button className="boton-secundario" onClick={handleLogout} style={{ width: '100%' }}>
             Salir
           </button>
@@ -1105,7 +1107,7 @@ export default function App() {
           justifyContent: 'flex-end',
           alignItems: 'center',
           padding: '6px 12px',
-          background: '#fff',
+          background: 'var(--superficie)',
           borderBottom: '1px solid var(--borde-suave)',
         }}
       >
@@ -1190,7 +1192,7 @@ export default function App() {
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              background: 'white',
+              background: 'var(--superficie)',
               width: 280,
               maxWidth: '80vw',
               height: '100%',
@@ -1231,6 +1233,9 @@ export default function App() {
             ))}
 
             <div className="flex-1" />
+            <div style={{ marginBottom: 8 }}>
+              <SelectorTema />
+            </div>
             <button
               className="boton-secundario"
               onClick={() => {

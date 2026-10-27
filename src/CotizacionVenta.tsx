@@ -40,6 +40,7 @@ export function CotizacionVenta({ config, datos, elementId }: Props) {
   return (
     <div
       id={elementId}
+      className="fuerza-claro"
       style={{
         width: 320,
         background: 'white',

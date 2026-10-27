@@ -86,7 +86,7 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', marginTop: 8, fontSize: 12, color: 'var(--ios-secondary-label)', borderTop: '1px solid #fecaca', paddingTop: 6 }}>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: 8, fontSize: 12, color: 'var(--ios-secondary-label)', borderTop: '1px solid var(--peligro-borde)', paddingTop: 6 }}>
                   <span>Ritmo actual: <strong>{c.ritmoPct}%</strong> de lo normal</span>
                   {c.gastoRecientePct !== null && (
                     <span>Gasto últimos 30 días: <strong>{c.gastoRecientePct}%</strong> de lo normal</span>

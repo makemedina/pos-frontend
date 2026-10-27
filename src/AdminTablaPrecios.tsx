@@ -16,7 +16,7 @@ interface Props {
   onCerrar: () => void;
 }
 
-const BORDE = '1px solid #d1d5db';
+const BORDE = '1px solid var(--borde-medio)';
 // Bordes solo a la derecha y abajo (mas arriba en el encabezado y a la
 // izquierda en la primera columna): con encabezado/columna fijos la tabla
 // no puede usar border-collapse, y con borde completo se verian dobles.
@@ -70,7 +70,7 @@ function CampoConLista({
         <div
           // Evita que el campo pierda el foco (y la lista se cierre) antes de registrar el click.
           onMouseDown={(e) => e.preventDefault()}
-          style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5, background: '#fff', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', borderRadius: 10, marginTop: 4, maxHeight: 260, overflowY: 'auto' }}
+          style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 5, background: 'var(--superficie)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', borderRadius: 10, marginTop: 4, maxHeight: 260, overflowY: 'auto' }}
         >
           {visibles.map((o) => (
             <div
@@ -445,8 +445,8 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
                   const mejor = costos.length > 0 ? Math.min(...costos) : null;
                   return (
                     <tr key={f.varianteId}>
-                      <td style={{ ...celdaBase, borderLeft: BORDE, position: 'sticky', left: 0, zIndex: 1, background: '#fff', fontWeight: 500 }}>{f.producto}</td>
-                      <td style={{ ...celdaBase, position: 'sticky', left: medidas.anchoProducto, zIndex: 1, background: '#fff' }}>{f.marca}</td>
+                      <td style={{ ...celdaBase, borderLeft: BORDE, position: 'sticky', left: 0, zIndex: 1, background: 'var(--superficie)', fontWeight: 500 }}>{f.producto}</td>
+                      <td style={{ ...celdaBase, position: 'sticky', left: medidas.anchoProducto, zIndex: 1, background: 'var(--superficie)' }}>{f.marca}</td>
                       {columnas.map((p) => {
                         const precio = f.precios[p.id];
                         const enEdicion = editando?.varianteId === f.varianteId && editando.proveedorId === p.id;

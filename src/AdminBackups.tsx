@@ -22,7 +22,7 @@ function formatoTamano(bytes: number): string {
 
 function etiquetaTipo(tipo: BackupInfo['tipo']): { texto: string; color: string } {
   if (tipo === 'automatico') return { texto: 'Automático (medianoche)', color: 'var(--acento)' };
-  if (tipo === 'pre-restauracion') return { texto: 'Antes de una restauración', color: '#b45309' };
+  if (tipo === 'pre-restauracion') return { texto: 'Antes de una restauración', color: 'var(--ambar)' };
   return { texto: 'Manual', color: 'var(--exito)' };
 }
 
@@ -224,7 +224,7 @@ export function AdminBackups({ onCerrar }: Props) {
                         <button
                           onClick={confirmarRestaurar}
                           disabled={textoConfirmacion !== 'RESTAURAR' || restaurando}
-                          style={{ flex: 1, background: 'var(--peligro)', color: 'white' }}
+                          style={{ flex: 1, background: 'var(--peligro-solido)', color: 'white' }}
                         >
                           {restaurando ? 'Restaurando...' : 'Confirmar y restaurar'}
                         </button>

@@ -310,7 +310,7 @@ export function AdminDashboard({ onCerrar }: Props) {
         <div className="fila-entre-centro">
           <div>
             <h2 className="m-0">Dashboard</h2>
-            <small style={{ color: '#666' }}>{filtroLabel}</small>
+            <small style={{ color: 'var(--ios-secondary-label)' }}>{filtroLabel}</small>
           </div>
           <div className="fila-gap-8">
             <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>

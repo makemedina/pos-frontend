@@ -6,6 +6,16 @@
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Sistema de Ventas</title>
+    <script>
+      // Pone el tema guardado antes de pintar, para que no parpadee en claro.
+      (function () {
+        try {
+          var p = localStorage.getItem('pos_tema');
+          var oscuro = p === 'oscuro' || (p === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.tema = oscuro ? 'oscuro' : 'claro';
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

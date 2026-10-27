@@ -816,7 +816,7 @@ export function AdminCartera({ onCerrar }: Props) {
               />
               Ocultar clientes sin saldo en cartera
             </label>
-            <div id={ELEMENT_ID_REPORTE_CARTERA} style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
+            <div id={ELEMENT_ID_REPORTE_CARTERA} className="fuerza-claro" style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
               <div className="lista-tarjetas grid-gap-075">
                 {clientesFiltrados.length === 0 && <p className="t-tenue">No hay clientes que coincidan.</p>}
                 {clientesFiltrados.map((c) => (
@@ -1022,7 +1022,7 @@ export function AdminCartera({ onCerrar }: Props) {
               "Exportar Excel" (arriba) exporta lo que esté marcado aquí: solo pendientes, o pendientes y pagadas.
             </p>
 
-            <div id={ELEMENT_ID_REPORTE_NOTAS_CLIENTE} style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
+            <div id={ELEMENT_ID_REPORTE_NOTAS_CLIENTE} className="fuerza-claro" style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
               <div className="tarjeta-sombra">
                 <strong>{clienteElegido?.nombre}</strong>
                 <div className="t-tenue-13">{clienteElegido?.telefono}</div>

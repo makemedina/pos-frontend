@@ -150,7 +150,7 @@ export function AdminTransacciones({ onCerrar }: Props) {
         ) : (
           <div className="lista-tarjetas grid-gap-075">
             {transaccionesFiltradas.map((transaccion) => (
-              <div key={`${transaccion.tipo}-${transaccion.id}`} style={{ border: '1px solid #ddd', padding: '0.75rem', borderRadius: 8, background: 'white' }}>
+              <div key={`${transaccion.tipo}-${transaccion.id}`} style={{ border: '1px solid var(--borde-suave)', padding: '0.75rem', borderRadius: 8, background: 'var(--superficie)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
                   <div>
                     <strong>{transaccion.tipo}</strong>

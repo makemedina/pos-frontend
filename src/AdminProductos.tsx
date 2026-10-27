@@ -216,7 +216,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                       padding: '0.6rem 0.75rem',
                       borderRadius: 14,
                       cursor: 'pointer',
-                      background: p.stockDisponible === 0 ? '#fff4f4' : undefined,
+                      background: p.stockDisponible === 0 ? 'var(--peligro-fondo)' : undefined,
                     }}
                     onClick={() => abrirProducto(p)}
                   >
