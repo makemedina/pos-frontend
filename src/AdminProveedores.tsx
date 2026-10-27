@@ -150,9 +150,9 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
         )}
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
         ) : proveedoresFiltrados.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>No hay proveedores que coincidan.</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>No hay proveedores que coincidan.</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
             {proveedoresFiltrados.map((p) => (
@@ -173,9 +173,9 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
                       style={{ cursor: puedeVerCostos ? 'pointer' : undefined, flex: 1 }}
                     >
                       <strong>{p.nombre}</strong>
-                      <div style={{ fontSize: 13, color: '#6b7280' }}>
+                      <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                         {p.telefono || 'Sin teléfono'}
-                        {puedeVerCostos && <span style={{ color: '#007aff' }}> · Ver compras ›</span>}
+                        {puedeVerCostos && <span style={{ color: 'var(--ios-blue)' }}> · Ver compras ›</span>}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
@@ -186,7 +186,7 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
                       {esAdmin && (
                         <button
                           onClick={() => setConfirmandoEliminarId(p.id)}
-                          style={{ background: '#fff2f1', color: '#b91c1c' }}
+                          style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                         >
                           Eliminar
                         </button>

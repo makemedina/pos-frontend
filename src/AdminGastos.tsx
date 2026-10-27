@@ -412,7 +412,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
-        <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #e5e5ea' }}>
+        <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--ios-separator)' }}>
           {(['registrar', 'historico'] as const).map((p) => (
             <button
               key={p}
@@ -421,9 +421,9 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                 background: 'none',
                 border: 'none',
                 padding: '8px 4px',
-                borderBottom: pestana === p ? '2px solid #007aff' : '2px solid transparent',
+                borderBottom: pestana === p ? '2px solid var(--ios-blue)' : '2px solid transparent',
                 fontWeight: pestana === p ? 700 : 400,
-                color: pestana === p ? '#007aff' : '#374151',
+                color: pestana === p ? 'var(--ios-blue)' : 'var(--texto-fuerte)',
               }}
             >
               {p === 'registrar' ? 'Registrar' : 'Histórico'}
@@ -525,11 +525,11 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                border: '2px dashed #c7c7cc',
+                border: '2px dashed var(--ios-gray-3)',
                 borderRadius: 12,
                 padding: '1.25rem',
                 cursor: 'pointer',
-                color: '#007aff',
+                color: 'var(--ios-blue)',
                 fontWeight: 600,
                 textAlign: 'center',
               }}
@@ -674,7 +674,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
             <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
               {cargandoHistorial && <p>Cargando...</p>}
               {!cargandoHistorial && gastosFiltrados.length === 0 && (
-                <p style={{ color: '#6b7280' }}>No hay gastos que coincidan.</p>
+                <p style={{ color: 'var(--ios-secondary-label)' }}>No hay gastos que coincidan.</p>
               )}
               {!cargandoHistorial && gastosFiltrados.map((gasto) => (
                 <div key={gasto.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
@@ -716,8 +716,8 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                         <div>
                           <strong>{gasto.concepto}</strong>
                           <div>{gasto.categoria.nombre}</div>
-                          {gasto.proveedor && <div style={{ fontSize: 12, color: '#6b7280' }}>Proveedor: {gasto.proveedor.nombre}</div>}
-                          <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoFecha(new Date(gasto.fecha))}</div>
+                          {gasto.proveedor && <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>Proveedor: {gasto.proveedor.nombre}</div>}
+                          <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoFecha(new Date(gasto.fecha))}</div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
                           <div>{formatoMoneda(Number(gasto.monto))}</div>
@@ -785,7 +785,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                     <button
                       className="boton-secundario"
                       onClick={() => setConfirmandoId(gasto.id)}
-                      style={{ width: '100%', marginTop: 8, background: '#fff2f1', color: '#b91c1c' }}
+                      style={{ width: '100%', marginTop: 8, background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                     >
                       🗑️ Cancelar gasto
                     </button>

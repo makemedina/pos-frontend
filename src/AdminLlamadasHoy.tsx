@@ -106,7 +106,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
             />
             <span>
               <strong style={{ textDecoration: c.hecha ? 'line-through' : 'none' }}>{c.nombre}</strong>
-              {c.notasCliente && <div style={{ fontSize: 12, color: '#6b7280' }}>{c.notasCliente}</div>}
+              {c.notasCliente && <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{c.notasCliente}</div>}
             </span>
           </label>
         </div>
@@ -114,7 +114,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
         <div style={{ display: 'flex', gap: 8 }}>
           <a
             href={`tel:${c.telefono}`}
-            style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 10, background: '#f3f4f6', color: '#111', textDecoration: 'none', fontSize: 14 }}
+            style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 10, background: 'var(--fondo-gris)', color: '#111', textDecoration: 'none', fontSize: 14 }}
           >
             📞 Llamar
           </a>
@@ -122,7 +122,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
             href={linkWhatsapp(c.telefono, `Hola ${c.nombre}, te habla Mr Carnes para ofrecerte producto.`)}
             target="_blank"
             rel="noreferrer"
-            style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 10, background: '#dcfce7', color: '#166534', textDecoration: 'none', fontSize: 14 }}
+            style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 10, background: 'var(--exito-fondo)', color: 'var(--exito-oscuro)', textDecoration: 'none', fontSize: 14 }}
           >
             💬 WhatsApp
           </a>
@@ -159,7 +159,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
           <button onClick={onCerrar}>Cerrar</button>
         </div>
 
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
           Clientes y prospectos configurados para que se les hable hoy. Márcalos conforme les hables — el
           checklist se reinicia solo cada día.
         </p>
@@ -168,7 +168,7 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
 
         {!cargando && pendientesHoy.length > 0 && (
           <div style={{ display: 'grid', gap: '0.5rem' }}>
-            <strong style={{ fontSize: 13, color: '#6b7280' }}>Pendientes de hoy ({pendientesHoy.length})</strong>
+            <strong style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Pendientes de hoy ({pendientesHoy.length})</strong>
             {pendientesHoy.map((p) => (
               <div
                 key={p.id}
@@ -190,8 +190,8 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
                   />
                   <span>
                     <strong style={{ textDecoration: p.hecho ? 'line-through' : 'none' }}>{p.concepto}</strong>
-                    {p.cliente && <div style={{ fontSize: 13, color: '#374151' }}>🧑‍🤝‍🧑 {p.cliente.nombre}</div>}
-                    {p.notas && <div style={{ fontSize: 13, color: '#374151' }}>{p.notas}</div>}
+                    {p.cliente && <div style={{ fontSize: 13, color: 'var(--texto-fuerte)' }}>🧑‍🤝‍🧑 {p.cliente.nombre}</div>}
+                    {p.notas && <div style={{ fontSize: 13, color: 'var(--texto-fuerte)' }}>{p.notas}</div>}
                   </span>
                 </label>
               </div>
@@ -200,9 +200,9 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
         )}
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
         ) : llamadas.length === 0 && pendientesHoy.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>
             Nadie tiene hoy configurado como día de llamada. Puedes elegir los días de cada cliente en su
             ficha, dentro de Clientes.
           </p>
@@ -210,14 +210,14 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
           <>
             {pendientes.length > 0 && (
               <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                <strong style={{ fontSize: 13, color: '#6b7280' }}>Por llamar ({pendientes.length})</strong>
+                <strong style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Por llamar ({pendientes.length})</strong>
                 {pendientes.map(tarjeta)}
               </div>
             )}
 
             {hechas.length > 0 && (
               <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                <strong style={{ fontSize: 13, color: '#6b7280' }}>Ya llamados ({hechas.length})</strong>
+                <strong style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Ya llamados ({hechas.length})</strong>
                 {hechas.map(tarjeta)}
               </div>
             )}

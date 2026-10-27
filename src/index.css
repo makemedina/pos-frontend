@@ -15,6 +15,21 @@
   --ios-label: #1c1c1e;
   --ios-secondary-label: #6b7280;
   --ios-separator: #e5e5ea;
+  --ios-gray-3: #c7c7cc;
+
+  /* Colores de las pantallas (antes escritos a mano en cada TSX) */
+  --texto-fuerte: #374151;
+  --texto-tenue: #9ca3af;
+  --borde-suave: #e5e7eb;
+  --fondo-suave: #f8fafc;
+  --fondo-gris: #f3f4f6;
+  --peligro: #b91c1c;
+  --peligro-oscuro: #7f1d1d;
+  --peligro-fondo: #fff2f1;
+  --exito: #16a34a;
+  --exito-oscuro: #166534;
+  --exito-fondo: #dcfce7;
+
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
 }

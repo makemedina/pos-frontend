@@ -494,7 +494,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ display: 'inline-flex', background: '#eef0f4', borderRadius: 10, padding: 3 }}>
+              <div style={{ display: 'inline-flex', background: 'var(--ios-gray-fill)', borderRadius: 10, padding: 3 }}>
                 {[true, false].map((activos) => (
                   <button
                     key={String(activos)}
@@ -503,7 +503,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                       padding: '7px 14px',
                       borderRadius: 8,
                       background: verActivos === activos ? '#fff' : 'transparent',
-                      color: verActivos === activos ? '#1c1c1e' : '#6b7280',
+                      color: verActivos === activos ? 'var(--ios-label)' : 'var(--ios-secondary-label)',
                       fontWeight: verActivos === activos ? 600 : 500,
                       boxShadow: verActivos === activos ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
                     }}
@@ -521,7 +521,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 </select>
               </label>
             </div>
-            <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+            <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: 0 }}>
               {verActivos ? 'Activos: compraron en el último mes.' : 'Inactivos: no han comprado en el último mes.'}
             </p>
 
@@ -555,7 +555,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
 
             {mostrarImportar && (
               <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-                <p style={{ fontSize: 13, color: '#6b7280' }}>
+                <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                   Pega la lista de nombres, uno por línea. Se crean sin teléfono — lo puedes
                   agregar después desde el detalle de cada cliente.
                 </p>
@@ -586,7 +586,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
               <p>Cargando...</p>
             ) : (
               <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                {clientesFiltrados.length === 0 && <p style={{ color: '#6b7280' }}>No hay clientes que coincidan.</p>}
+                {clientesFiltrados.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay clientes que coincidan.</p>}
                 {clientesFiltrados.map((c) => (
                   <div
                     key={c.id}
@@ -595,14 +595,14 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                   >
                     <div>
                       <strong>{c.nombre}</strong>
-                      <div style={{ fontSize: 13, color: '#6b7280' }}>{c.telefono}</div>
-                      <div style={{ fontSize: 12, color: '#9ca3af' }}>
+                      <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{c.telefono}</div>
+                      <div style={{ fontSize: 12, color: 'var(--texto-tenue)' }}>
                         {c.ultimaCompra
                           ? `Última compra: ${formatoFecha(c.ultimaCompra)} (${haceDias(c.ultimaCompra)})`
                           : 'Sin compras'}
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right', fontWeight: 700, color: c.saldoTotal > 0 ? '#b91c1c' : '#16a34a' }}>
+                    <div style={{ textAlign: 'right', fontWeight: 700, color: c.saldoTotal > 0 ? 'var(--peligro)' : 'var(--exito)' }}>
                       {formatoMoneda(c.saldoTotal)}
                     </div>
                   </div>
@@ -616,13 +616,13 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         {clienteId && cliente && (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 14, color: '#6b7280' }}>Saldo</span>
-              <strong style={{ fontSize: 18, color: cliente.saldoTotal > 0 ? '#b91c1c' : '#16a34a' }}>
+              <span style={{ fontSize: 14, color: 'var(--ios-secondary-label)' }}>Saldo</span>
+              <strong style={{ fontSize: 18, color: cliente.saldoTotal > 0 ? 'var(--peligro)' : 'var(--exito)' }}>
                 {formatoMoneda(cliente.saldoTotal)}
               </strong>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #e5e7eb' }}>
+            <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--borde-suave)' }}>
               {(['datos', 'transacciones', 'movimientos'] as Pestana[]).map((p) => (
                 <button
                   key={p}
@@ -631,9 +631,9 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                     background: 'none',
                     border: 'none',
                     padding: '8px 4px',
-                    borderBottom: pestana === p ? '2px solid #007aff' : '2px solid transparent',
+                    borderBottom: pestana === p ? '2px solid var(--ios-blue)' : '2px solid transparent',
                     fontWeight: pestana === p ? 700 : 400,
-                    color: pestana === p ? '#007aff' : '#374151',
+                    color: pestana === p ? 'var(--ios-blue)' : 'var(--texto-fuerte)',
                   }}
                 >
                   {p === 'datos' ? 'Datos generales' : p === 'transacciones' ? 'Transacciones' : 'Movimientos'}
@@ -731,7 +731,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
 
                 <div>
                   <label className="etiqueta">Días para llamarle (ofrecer producto)</label>
-                  <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 4px' }}>
+                  <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: '2px 0 4px' }}>
                     Si no eliges ninguno, el sistema los sugiere solo cuando detecta que este cliente compra seguido el mismo día de la semana.
                   </p>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
@@ -744,7 +744,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                           width: 'auto',
                           padding: '6px 10px',
                           borderRadius: 20,
-                          background: editDiasLlamada.includes(dia.valor) ? '#1f1f1f' : '#f3f4f6',
+                          background: editDiasLlamada.includes(dia.valor) ? '#1f1f1f' : 'var(--fondo-gris)',
                           color: editDiasLlamada.includes(dia.valor) ? '#fff' : '#111',
                         }}
                       >
@@ -761,7 +761,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 {esAdmin && !confirmandoEliminar && (
                   <button
                     onClick={() => setConfirmandoEliminar(true)}
-                    style={{ background: '#fff2f1', color: '#b91c1c' }}
+                    style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                   >
                     Eliminar cliente
                   </button>
@@ -796,7 +796,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 {cargandoVentas ? (
                   <p>Cargando...</p>
                 ) : ventasFiltradas.length === 0 ? (
-                  <p style={{ color: '#6b7280' }}>No hay transacciones que coincidan.</p>
+                  <p style={{ color: 'var(--ios-secondary-label)' }}>No hay transacciones que coincidan.</p>
                 ) : (
                   ventasFiltradas.map((v) => (
                     <div
@@ -807,11 +807,11 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <div>
                           <strong>Venta #{v.folio}</strong>
-                          <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoFecha(new Date(v.fecha))}</div>
+                          <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoFecha(new Date(v.fecha))}</div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
                           <div>{formatoMoneda(v.total)}</div>
-                          <div style={{ fontSize: 12, color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                          <div style={{ fontSize: 12, color: v.estadoPago === 'pagada' ? 'var(--exito)' : 'var(--peligro)' }}>
                             {v.estadoPago === 'pagada' ? 'Pagada' : `Saldo: ${formatoMoneda(v.saldoPendiente)}`}
                           </div>
                         </div>
@@ -827,20 +827,20 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 {cargandoMovimientos ? (
                   <p>Cargando...</p>
                 ) : movimientos.length === 0 ? (
-                  <p style={{ color: '#6b7280' }}>Sin movimientos.</p>
+                  <p style={{ color: 'var(--ios-secondary-label)' }}>Sin movimientos.</p>
                 ) : (
                   movimientos.map((m) => (
                     <div
                       key={`${m.tipo}-${m.id}`}
-                      style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6, opacity: m.cancelado ? 0.5 : 1 }}
+                      style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6, opacity: m.cancelado ? 0.5 : 1 }}
                     >
                       <span>
                         {m.tipo === 'venta' ? '🛒 Venta' : '💵 Abono'} #{m.folio}
-                        {m.cancelado && <span style={{ color: '#b91c1c', fontWeight: 600 }}> (cancelado)</span>}
+                        {m.cancelado && <span style={{ color: 'var(--peligro)', fontWeight: 600 }}> (cancelado)</span>}
                         <br />
-                        <small style={{ color: '#6b7280' }}>{formatoFechaHora(new Date(m.fecha))}</small>
+                        <small style={{ color: 'var(--ios-secondary-label)' }}>{formatoFechaHora(new Date(m.fecha))}</small>
                       </span>
-                      <strong style={{ color: m.tipo === 'venta' ? '#b91c1c' : '#16a34a', textDecoration: m.cancelado ? 'line-through' : 'none' }}>
+                      <strong style={{ color: m.tipo === 'venta' ? 'var(--peligro)' : 'var(--exito)', textDecoration: m.cancelado ? 'line-through' : 'none' }}>
                         {m.tipo === 'venta' ? '+' : '-'}{formatoMoneda(m.monto)}
                       </strong>
                     </div>

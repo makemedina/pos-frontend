@@ -141,7 +141,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
           <button onClick={onCerrar}>Cerrar</button>
         </div>
 
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
           Precios de referencia que este proveedor ofrece por producto — es solo informativo, para comparar
           entre proveedores. No afecta el costo real que se registra al hacer una compra.
         </p>
@@ -182,7 +182,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
                   Cancelar
                 </button>
               </div>
-              <p style={{ fontSize: 12, color: '#6b7280', margin: '4px 0 0' }}>
+              <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: '4px 0 0' }}>
                 {cargandoUltimaCompra
                   ? 'Buscando el último costo de compra...'
                   : ultimaCompra
@@ -198,7 +198,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
                 <div
                   key={v.id}
                   onClick={() => elegirVariante(v)}
-                  style={{ padding: '0.6rem 0.85rem', cursor: 'pointer', borderBottom: '1px solid #f3f4f6' }}
+                  style={{ padding: '0.6rem 0.85rem', cursor: 'pointer', borderBottom: '1px solid var(--fondo-gris)' }}
                 >
                   <strong>{v.producto.nombre}</strong> · {v.marca}
                 </div>
@@ -208,9 +208,9 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
         </div>
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
         ) : costos.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>Este proveedor no tiene costos registrados todavía.</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Este proveedor no tiene costos registrados todavía.</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
             {costos.map((c) => (
@@ -218,8 +218,8 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <strong>{c.producto}</strong>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>{c.marca}</div>
-                    <div style={{ fontSize: 12, color: '#9ca3af' }}>
+                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{c.marca}</div>
+                    <div style={{ fontSize: 12, color: 'var(--texto-tenue)' }}>
                       Guardado el {formatoFecha(new Date(c.actualizadoEn))} ({haceDias(c.actualizadoEn)})
                     </div>
                   </div>
@@ -240,7 +240,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
                       <button onClick={() => empezarEdicion(c)} style={{ width: 'auto', padding: '0 12px' }}>Editar</button>
                       <button
                         onClick={() => eliminar(c.varianteId)}
-                        style={{ width: 'auto', padding: '0 12px', background: '#fff2f1', color: '#b91c1c' }}
+                        style={{ width: 'auto', padding: '0 12px', background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                       >
                         Quitar
                       </button>
@@ -248,7 +248,7 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
                   )}
                 </div>
                 {editandoId === c.varianteId && ultimaCompraEdicion && (
-                  <p style={{ fontSize: 12, color: '#6b7280', margin: '6px 0 0' }}>
+                  <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: '6px 0 0' }}>
                     Último costo de compra: {formatoMoneda(ultimaCompraEdicion.costo)} (
                     {formatoFecha(new Date(ultimaCompraEdicion.fecha))}){' '}
                     {ultimaCompraEdicion.costo !== Number(costoEdicion) && (

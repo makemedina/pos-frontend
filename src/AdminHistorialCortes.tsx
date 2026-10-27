@@ -83,7 +83,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
         {cargando ? (
           <p>Cargando...</p>
         ) : cortes.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>Aún no hay cortes registrados.</p>
+          <p style={{ color: 'var(--ios-secondary-label)' }}>Aún no hay cortes registrados.</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {cortes.map((c) => (
@@ -91,7 +91,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <strong>{formatoFecha(new Date(c.fecha))}</strong>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>Registró: {c.registradoPor}</div>
+                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Registró: {c.registradoPor}</div>
                     <div>Efectivo: {formatoMoneda(c.efectivoContado)}</div>
                     <div>Banco: {formatoMoneda(c.saldoBancoContado)}</div>
                     {c.utilidadDia !== undefined && (
@@ -101,7 +101,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                         <div>Balanza total: <strong>{formatoMoneda(c.balanzaTotal!)}</strong></div>
                         {c.diferenciaCuadre != null && (
                           Math.abs(c.diferenciaCuadre) < 0.01 ? (
-                            <div style={{ color: '#16a34a', fontSize: 12 }}>✓ Cuadra con el día anterior</div>
+                            <div style={{ color: 'var(--exito)', fontSize: 12 }}>✓ Cuadra con el día anterior</div>
                           ) : (
                             <div className="texto-alerta" style={{ fontSize: 12 }}>
                               ⚠ No cuadra: diferencia de {formatoMoneda(c.diferenciaCuadre)}
@@ -121,7 +121,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                     <button onClick={() => empezarEdicion(c)}>Editar</button>
                     <button
                       onClick={() => setConfirmandoEliminarId(c.id)}
-                      style={{ background: '#fff2f1', color: '#b91c1c' }}
+                      style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                     >
                       Eliminar
                     </button>
@@ -153,7 +153,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
         {editando && (
           <form onSubmit={guardarEdicion} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
             <h3>Corregir corte del {formatoFecha(new Date(editando.fecha))}</h3>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+            <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
               Solo se pueden corregir los montos contados. La utilidad y la balanza de ese día no se recalculan.
             </p>
             <label>

@@ -172,7 +172,7 @@ export function AdminAjusteInventario({ onCerrar, varianteInicial }: Props) {
         {varianteElegida && (
           <>
             <label className="etiqueta">Lote</label>
-            {lotes.length === 0 && <p style={{ fontSize: 13, color: '#6b7280' }}>Este producto no tiene lotes registrados.</p>}
+            {lotes.length === 0 && <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Este producto no tiene lotes registrados.</p>}
             <div className="lista-items-compra">
               {lotes.map((l) => (
                 <div

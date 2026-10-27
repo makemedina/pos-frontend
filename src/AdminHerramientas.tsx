@@ -320,12 +320,12 @@ export function AdminHerramientas({ onCerrar }: Props) {
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#eef0f4' }}>
+        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: 'var(--ios-gray-fill)' }}>
           <label style={{ display: 'block', fontSize: 13, marginBottom: 6 }}>
             📅 Fecha para las cargas iniciales (clientes, proveedores, inventario)
           </label>
           <input type="date" value={fechaCarga} onChange={(e) => setFechaCarga(e.target.value)} />
-          <p style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>
+          <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', marginTop: 6 }}>
             Por default es ayer, para que ninguna de estas cargas cuente como movimiento
             de "hoy" en tu primer corte de caja.
           </p>
@@ -334,7 +334,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         {/* ---------- Importar lista de proveedores ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>🚚 Importar lista de proveedores</h3>
-          <p style={{ fontSize: 13, color: '#6b7280' }}>
+          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
             Pega los nombres, uno por línea. Se crean sin teléfono — lo puedes agregar después
             desde la búsqueda de proveedor en Compras o Gastos.
           </p>
@@ -353,7 +353,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         {/* ---------- Cargar facturas iniciales de proveedores ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>🧾 Cargar facturas iniciales de proveedores</h3>
-          <p style={{ fontSize: 13, color: '#6b7280' }}>
+          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
             Pega Proveedor, Teléfono, Factura e Importe (desde Excel o con comas). Si el
             proveedor no existe, se crea con ese teléfono. Cada fila queda como una factura
             pendiente real — aparece en "Facturas pendientes" y se puede abonar normal.
@@ -373,7 +373,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         {/* ---------- Cargar inventario inicial ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>📦 Cargar inventario inicial</h3>
-          <p style={{ fontSize: 13, color: '#6b7280' }}>
+          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
             Pega las filas de tu tabla (Producto, Marca, Costo, Precio, Stock) — puedes pegar
             directo desde Excel/Sheets, o separadas por comas. Si el producto o la marca no
             existen, se crean automáticamente.
@@ -393,7 +393,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         {/* ---------- Cargar saldos iniciales de cartera ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>💰 Cargar saldos iniciales de cartera</h3>
-          <p style={{ fontSize: 13, color: '#6b7280' }}>
+          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
             Pega Nombre y Saldo (uno por línea, desde Excel o separado por coma). Busca al
             cliente por su nombre exacto — debe estar ya dado de alta (usa "Importar lista" en
             Clientes si todavía no). Cada fila crea una <strong>nota real</strong> que se puede
@@ -411,8 +411,8 @@ export function AdminHerramientas({ onCerrar }: Props) {
             {cargandoSaldos ? 'Cargando...' : `Cargar ${saldosDetectados.length} nota(s)`}
           </button>
 
-          <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e5e5ea' }}>
-            <p style={{ fontSize: 12, color: '#6b7280' }}>
+          <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--ios-separator)' }}>
+            <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
               ¿Ya habías cargado saldos con la versión anterior de esta herramienta (donde solo
               quedaba un número en el cliente, sin nota)? Conviértelos en notas reales:
             </p>
@@ -425,7 +425,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         {/* ---------- Corregir estados de pago desincronizados ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>🩹 Corregir notas/facturas con "Saldo $0.00" que no dicen "Pagada"</h3>
-          <p style={{ fontSize: 13, color: '#6b7280' }}>
+          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
             Un residuo diminuto de punto flotante en abonos parciales encadenados podía dejar
             el saldo pendiente en algo como $0.00000000003 en vez de exactamente $0 — se ve
             como "$0.00" en pantalla, pero la nota se quedaba marcada "parcial" para siempre en
@@ -438,16 +438,16 @@ export function AdminHerramientas({ onCerrar }: Props) {
         </div>
 
         {/* ---------- Reset / borrado de datos (zona de peligro) ---------- */}
-        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem', background: '#fff2f1' }}>
-          <h3 style={{ color: '#b91c1c' }}>⚠️ Borrar datos del sistema</h3>
+        <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem', background: 'var(--peligro-fondo)' }}>
+          <h3 style={{ color: 'var(--peligro)' }}>⚠️ Borrar datos del sistema</h3>
 
           {pasoReset === 'inicial' && (
             <>
-              <p style={{ fontSize: 13, color: '#7f1d1d' }}>
+              <p style={{ fontSize: 13, color: 'var(--peligro-oscuro)' }}>
                 Borra datos reales del sistema — esto <strong>no se puede deshacer</strong>. Se
                 guarda un respaldo automático justo antes, por si hace falta recuperar algo.
               </p>
-              <button onClick={() => setPasoReset('elegir')} style={{ background: '#b91c1c', color: 'white' }}>
+              <button onClick={() => setPasoReset('elegir')} style={{ background: 'var(--peligro)', color: 'white' }}>
                 Quiero borrar datos
               </button>
             </>
@@ -455,14 +455,14 @@ export function AdminHerramientas({ onCerrar }: Props) {
 
           {pasoReset === 'elegir' && (
             <div style={{ display: 'grid', gap: 8 }}>
-              <p style={{ fontSize: 13, color: '#7f1d1d' }}>¿Qué quieres borrar?</p>
+              <p style={{ fontSize: 13, color: 'var(--peligro-oscuro)' }}>¿Qué quieres borrar?</p>
 
               <button
                 onClick={() => { setOpcionesReset(OPCIONES_TODO_TODO); setPasoReset('confirmar'); }}
                 style={{ textAlign: 'left', padding: '0.75rem', background: 'white' }}
               >
                 <strong>Todo todo</strong>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>
+                <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                   Ventas, compras, gastos, depósitos, cortes, cotizaciones, clientes, proveedores
                   y productos. Reinicia la numeración de ventas y cotizaciones desde el #1 — como
                   si el sistema nunca se hubiera usado.
@@ -474,7 +474,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 style={{ textAlign: 'left', padding: '0.75rem', background: 'white' }}
               >
                 <strong>Elegir qué borrar</strong>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>
+                <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                   Solo algunas categorías de datos (por ejemplo nada más los gastos, o nada más
                   las ventas de prueba).
                 </div>
@@ -536,7 +536,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 Clientes, proveedores y productos (catálogos)
               </label>
               {!catalogosDisponible && (
-                <p style={{ fontSize: 12, color: '#6b7280', marginLeft: 26 }}>
+                <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', marginLeft: 26 }}>
                   Para borrar catálogos primero marca ventas/compras/ajustes, cotizaciones y gastos —
                   todos hacen referencia a clientes, proveedores o productos.
                 </p>
@@ -555,7 +555,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 <button
                   onClick={() => setPasoReset('confirmar')}
                   disabled={!algunaOpcionElegida}
-                  style={{ flex: 1, background: '#b91c1c', color: 'white' }}
+                  style={{ flex: 1, background: 'var(--peligro)', color: 'white' }}
                 >
                   Continuar
                 </button>
@@ -566,19 +566,19 @@ export function AdminHerramientas({ onCerrar }: Props) {
 
           {pasoReset === 'confirmar' && (
             <div style={{ display: 'grid', gap: 8 }}>
-              <p style={{ fontSize: 13, color: '#7f1d1d' }}>Se va a borrar, para siempre:</p>
-              <ul style={{ fontSize: 13, color: '#7f1d1d', margin: 0, paddingLeft: 20 }}>
+              <p style={{ fontSize: 13, color: 'var(--peligro-oscuro)' }}>Se va a borrar, para siempre:</p>
+              <ul style={{ fontSize: 13, color: 'var(--peligro-oscuro)', margin: 0, paddingLeft: 20 }}>
                 {resumenOpcionesReset(opcionesReset).map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
               {opcionesReset.reiniciarNumeracion && (
-                <p style={{ fontSize: 12, color: '#7f1d1d' }}>
+                <p style={{ fontSize: 12, color: 'var(--peligro-oscuro)' }}>
                   La numeración de ventas/cotizaciones volverá a empezar en #1.
                 </p>
               )}
               {(opcionesReset.ventasComprasAjustes || opcionesReset.gastos || opcionesReset.depositos) && (
-                <p style={{ fontSize: 12, color: '#7f1d1d' }}>
+                <p style={{ fontSize: 12, color: 'var(--peligro-oscuro)' }}>
                   {balancesSeReinician
                     ? 'El saldo de efectivo y de banco se reiniciará a $0.'
                     : 'El saldo de efectivo/banco NO se reiniciará automáticamente — quizá necesites corregirlo a mano en Configuración.'}
@@ -597,7 +597,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 <button
                   onClick={confirmarReset}
                   disabled={confirmacionReset !== 'BORRAR TODO' || reseteando}
-                  style={{ flex: 1, background: '#b91c1c', color: 'white' }}
+                  style={{ flex: 1, background: 'var(--peligro)', color: 'white' }}
                 >
                   {reseteando ? 'Borrando...' : 'Confirmar y borrar'}
                 </button>

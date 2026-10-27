@@ -103,19 +103,19 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
 
         {mensaje && <div className="banner-mensaje">{mensaje}</div>}
 
-        {cargando && <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>}
+        {cargando && <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>}
 
         {venta && esAdmin && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             <button
               onClick={() => setPestana('detalle')}
-              style={pestana === 'detalle' ? {} : { background: 'transparent', color: '#6b7280' }}
+              style={pestana === 'detalle' ? {} : { background: 'transparent', color: 'var(--ios-secondary-label)' }}
             >
               Detalle
             </button>
             <button
               onClick={() => setPestana('utilidad')}
-              style={pestana === 'utilidad' ? {} : { background: 'transparent', color: '#6b7280' }}
+              style={pestana === 'utilidad' ? {} : { background: 'transparent', color: 'var(--ios-secondary-label)' }}
             >
               📈 Utilidad
             </button>
@@ -124,9 +124,9 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
 
         {venta && pestana === 'utilidad' && esAdmin && (
           <div style={{ display: 'grid', gap: 8 }}>
-            {cargandoUtilidad && <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando utilidad...</p>}
+            {cargandoUtilidad && <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando utilidad...</p>}
             {!cargandoUtilidad && !utilidad && (
-              <p style={{ textAlign: 'center', color: '#6b7280' }}>No se pudo cargar la utilidad de esta venta.</p>
+              <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>No se pudo cargar la utilidad de esta venta.</p>
             )}
             {utilidad && (
               <>
@@ -136,7 +136,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
                       <span>
                         {it.producto} {it.marca} · {it.cantidad} kg
                         <br />
-                        <small style={{ color: '#6b7280' }}>
+                        <small style={{ color: 'var(--ios-secondary-label)' }}>
                           Costo {formatoMoneda(it.costoUnitario)} · Precio {formatoMoneda(it.precioUnitario)}
                         </small>
                       </span>
@@ -217,7 +217,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
               <button
                 className="boton-secundario"
                 onClick={() => setConfirmandoCancelacion(true)}
-                style={{ width: '100%', marginTop: 8, background: '#fff2f1', color: '#b91c1c' }}
+                style={{ width: '100%', marginTop: 8, background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
               >
                 🗑️ Cancelar venta
               </button>

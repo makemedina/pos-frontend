@@ -145,10 +145,10 @@ export function ReciboModal({ datos, onCerrar }: Props) {
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         {cargando || !config ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando recibo...</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando recibo...</p>
         ) : (
           <>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, border: '1px solid var(--borde-suave)', borderRadius: 12, overflow: 'hidden' }}>
               <ReciboVenta config={config} datos={datos} elementId={ELEMENT_ID} />
             </div>
 

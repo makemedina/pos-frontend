@@ -20,9 +20,9 @@ function formatoTamano(bytes: number): string {
 }
 
 function etiquetaTipo(tipo: BackupInfo['tipo']): { texto: string; color: string } {
-  if (tipo === 'automatico') return { texto: 'Automático (medianoche)', color: '#007aff' };
+  if (tipo === 'automatico') return { texto: 'Automático (medianoche)', color: 'var(--ios-blue)' };
   if (tipo === 'pre-restauracion') return { texto: 'Antes de una restauración', color: '#b45309' };
-  return { texto: 'Manual', color: '#16a34a' };
+  return { texto: 'Manual', color: 'var(--exito)' };
 }
 
 export function AdminBackups({ onCerrar }: Props) {
@@ -137,7 +137,7 @@ export function AdminBackups({ onCerrar }: Props) {
           </div>
         </div>
 
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
           Respaldo completo de toda la base de datos (ventas, compras, clientes, proveedores,
           inventario, todo). Se guarda fuera del sistema, en Cloudflare. Además del botón manual,
           todos los días a medianoche se hace uno automático.
@@ -152,9 +152,9 @@ export function AdminBackups({ onCerrar }: Props) {
         )}
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
         ) : !noConfigurado && backups.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>Todavía no hay ningún respaldo.</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Todavía no hay ningún respaldo.</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
             {backups.map((b) => {
@@ -165,7 +165,7 @@ export function AdminBackups({ onCerrar }: Props) {
                     <div>
                       <strong>{formatoFechaHora(new Date(b.fecha))}</strong>
                       <div style={{ fontSize: 12, color: etiqueta.color, fontWeight: 600 }}>{etiqueta.texto}</div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoTamano(b.tamano)}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoTamano(b.tamano)}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       <button onClick={() => descargar(b.key)} disabled={ocupadoKey === b.key}>
@@ -173,13 +173,13 @@ export function AdminBackups({ onCerrar }: Props) {
                       </button>
                       <button
                         onClick={() => pedirRestaurar(b.key)}
-                        style={{ background: '#fff2f1', color: '#b91c1c' }}
+                        style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                       >
                         Restaurar
                       </button>
                       <button
                         onClick={() => pedirEliminar(b.key)}
-                        style={{ background: '#fff2f1', color: '#b91c1c' }}
+                        style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                       >
                         Eliminar
                       </button>
@@ -223,7 +223,7 @@ export function AdminBackups({ onCerrar }: Props) {
                         <button
                           onClick={confirmarRestaurar}
                           disabled={textoConfirmacion !== 'RESTAURAR' || restaurando}
-                          style={{ flex: 1, background: '#b91c1c', color: 'white' }}
+                          style={{ flex: 1, background: 'var(--peligro)', color: 'white' }}
                         >
                           {restaurando ? 'Restaurando...' : 'Confirmar y restaurar'}
                         </button>

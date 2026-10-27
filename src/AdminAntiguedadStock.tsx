@@ -45,13 +45,13 @@ export function AdminAntiguedadStock({ onCerrar }: Props) {
 
         {!cargando && (
           <>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+            <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
               Un lote se marca crítico cuando lleva más de {DIAS_CRITICO} días en stock sin venderse.
             </p>
 
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
-                <strong style={{ color: criticos.length > 0 ? '#b91c1c' : undefined }}>{criticos.length}</strong> lote{criticos.length !== 1 ? 's' : ''} crítico{criticos.length !== 1 ? 's' : ''}
+                <strong style={{ color: criticos.length > 0 ? 'var(--peligro)' : undefined }}>{criticos.length}</strong> lote{criticos.length !== 1 ? 's' : ''} crítico{criticos.length !== 1 ? 's' : ''}
               </div>
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
                 Valor en crítico: <strong>{formatoMoneda(valorCritico)}</strong>
@@ -68,7 +68,7 @@ export function AdminAntiguedadStock({ onCerrar }: Props) {
         {cargando ? (
           <p>Cargando...</p>
         ) : lotesVisibles.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>{soloCriticos ? 'No hay lotes críticos ahora mismo.' : 'No hay lotes en stock.'}</p>
+          <p style={{ color: 'var(--ios-secondary-label)' }}>{soloCriticos ? 'No hay lotes críticos ahora mismo.' : 'No hay lotes en stock.'}</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {lotesVisibles.map((l) => (
@@ -79,13 +79,13 @@ export function AdminAntiguedadStock({ onCerrar }: Props) {
                   boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
                   padding: '0.75rem',
                   borderRadius: 14,
-                  background: l.critico ? '#fff2f1' : undefined,
+                  background: l.critico ? 'var(--peligro-fondo)' : undefined,
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <strong>{l.producto} {l.marca}</strong>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>
+                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                       Proveedor: {l.proveedor} · Ingresó {formatoFecha(new Date(l.fechaIngreso))}
                     </div>
                     <div style={{ fontSize: 13 }}>
@@ -93,10 +93,10 @@ export function AdminAntiguedadStock({ onCerrar }: Props) {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 700, color: l.critico ? '#b91c1c' : undefined }}>
+                    <div style={{ fontWeight: 700, color: l.critico ? 'var(--peligro)' : undefined }}>
                       {l.diasEnStock} día{l.diasEnStock !== 1 ? 's' : ''}
                     </div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoMoneda(l.valorEnStock)}</div>
+                    <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(l.valorEnStock)}</div>
                   </div>
                 </div>
               </div>

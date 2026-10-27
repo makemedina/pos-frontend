@@ -194,7 +194,7 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
             {cargando ? (
               <p>Cargando...</p>
             ) : cotizaciones.length === 0 ? (
-              <p style={{ color: '#6b7280' }}>No hay cotizaciones pendientes.</p>
+              <p style={{ color: 'var(--ios-secondary-label)' }}>No hay cotizaciones pendientes.</p>
             ) : (
               <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
                 {cotizaciones.map((c) => (
@@ -206,8 +206,8 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <div>
                         <strong>Cotización #{c.folio}</strong>
-                        <div style={{ fontSize: 13, color: '#6b7280' }}>{c.cliente.nombre}</div>
-                        <div style={{ fontSize: 12, color: '#9ca3af' }}>
+                        <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{c.cliente.nombre}</div>
+                        <div style={{ fontSize: 12, color: 'var(--texto-tenue)' }}>
                           {formatoFechaHora(new Date(c.fecha))} · {c.vendedor.nombre}
                         </div>
                       </div>
@@ -226,15 +226,15 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
           <>
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
               <div>Cliente: <strong>{detalle.cliente.nombre}</strong></div>
-              <div style={{ fontSize: 13, color: '#6b7280' }}>{detalle.cliente.telefono}</div>
-              <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px solid #e5e5ea' }} />
+              <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{detalle.cliente.telefono}</div>
+              <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px solid var(--ios-separator)' }} />
               {detalle.items.map((i) => (
                 <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, marginBottom: 4 }}>
                   <span>{i.producto} {i.marca} · {i.cantidad} kg</span>
                   <span>{formatoMoneda(i.cantidad * i.precioUnitario)}</span>
                 </div>
               ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, marginTop: 6, paddingTop: 6, borderTop: '1px solid #e5e5ea' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--ios-separator)' }}>
                 <span>Total</span>
                 <span>{formatoMoneda(detalle.total)}</span>
               </div>
@@ -330,7 +330,7 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
                 <button
                   className="boton-secundario"
                   onClick={() => setConfirmandoCancelar(true)}
-                  style={{ background: '#fff2f1', color: '#b91c1c' }}
+                  style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                 >
                   🗑️ Cancelar cotización
                 </button>

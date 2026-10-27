@@ -123,21 +123,21 @@ export function AdminTransacciones({ onCerrar }: Props) {
           <button
             type="button"
             onClick={() => setFiltroTipo('todo')}
-            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'todo' ? '2px solid #007aff' : '1px solid #e5e7eb', background: filtroTipo === 'todo' ? '#eff6ff' : '#f8fafc' }}
+            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'todo' ? '2px solid var(--ios-blue)' : '1px solid var(--borde-suave)', background: filtroTipo === 'todo' ? '#eff6ff' : 'var(--fondo-suave)' }}
           >
             Todas
           </button>
           <button
             type="button"
             onClick={() => setFiltroTipo('Venta')}
-            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'Venta' ? '2px solid #007aff' : '1px solid #e5e7eb', background: filtroTipo === 'Venta' ? '#eff6ff' : '#f8fafc' }}
+            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'Venta' ? '2px solid var(--ios-blue)' : '1px solid var(--borde-suave)', background: filtroTipo === 'Venta' ? '#eff6ff' : 'var(--fondo-suave)' }}
           >
             Ventas
           </button>
           <button
             type="button"
             onClick={() => setFiltroTipo('Compra')}
-            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'Compra' ? '2px solid #007aff' : '1px solid #e5e7eb', background: filtroTipo === 'Compra' ? '#eff6ff' : '#f8fafc' }}
+            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'Compra' ? '2px solid var(--ios-blue)' : '1px solid var(--borde-suave)', background: filtroTipo === 'Compra' ? '#eff6ff' : 'var(--fondo-suave)' }}
           >
             Compras
           </button>
@@ -146,7 +146,7 @@ export function AdminTransacciones({ onCerrar }: Props) {
         {cargando ? (
           <p>Cargando transacciones...</p>
         ) : transaccionesFiltradas.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>No se encontraron transacciones.</p>
+          <p style={{ color: 'var(--ios-secondary-label)' }}>No se encontraron transacciones.</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {transaccionesFiltradas.map((transaccion) => (
@@ -155,12 +155,12 @@ export function AdminTransacciones({ onCerrar }: Props) {
                   <div>
                     <strong>{transaccion.tipo}</strong>
                     <div>{transaccion.referencia}</div>
-                    <div style={{ color: '#6b7280', fontSize: 12 }}>{transaccion.contrapartida}</div>
+                    <div style={{ color: 'var(--ios-secondary-label)', fontSize: 12 }}>{transaccion.contrapartida}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontWeight: 700 }}>${transaccion.monto.toFixed(2)}</div>
-                    <div style={{ color: '#6b7280', fontSize: 12 }}>{formatearFecha(transaccion.fecha)}</div>
-                    {transaccion.metodoPago ? <div style={{ fontSize: 12, color: '#6b7280' }}>{transaccion.metodoPago}</div> : null}
+                    <div style={{ color: 'var(--ios-secondary-label)', fontSize: 12 }}>{formatearFecha(transaccion.fecha)}</div>
+                    {transaccion.metodoPago ? <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{transaccion.metodoPago}</div> : null}
                   </div>
                 </div>
               </div>

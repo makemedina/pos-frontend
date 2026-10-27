@@ -180,7 +180,7 @@ export function AdminDepositos({ onCerrar }: Props) {
           </div>
         </div>
 
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
           Úsalo cuando deposites al banco el efectivo de las ventas (por ejemplo, para pagarle a un
           proveedor por transferencia). Es un traspaso interno: baja de efectivo y sube en banco, no
           afecta ventas, gastos ni la utilidad.
@@ -188,7 +188,7 @@ export function AdminDepositos({ onCerrar }: Props) {
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
-        <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #e5e5ea' }}>
+        <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--ios-separator)' }}>
           {(['registrar', 'historico'] as const).map((p) => (
             <button
               key={p}
@@ -197,9 +197,9 @@ export function AdminDepositos({ onCerrar }: Props) {
                 background: 'none',
                 border: 'none',
                 padding: '8px 4px',
-                borderBottom: pestana === p ? '2px solid #007aff' : '2px solid transparent',
+                borderBottom: pestana === p ? '2px solid var(--ios-blue)' : '2px solid transparent',
                 fontWeight: pestana === p ? 700 : 400,
-                color: pestana === p ? '#007aff' : '#374151',
+                color: pestana === p ? 'var(--ios-blue)' : 'var(--texto-fuerte)',
               }}
             >
               {p === 'registrar' ? 'Registrar' : 'Histórico'}
@@ -221,11 +221,11 @@ export function AdminDepositos({ onCerrar }: Props) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                border: '2px dashed #c7c7cc',
+                border: '2px dashed var(--ios-gray-3)',
                 borderRadius: 12,
                 padding: '1.25rem',
                 cursor: 'pointer',
-                color: '#007aff',
+                color: 'var(--ios-blue)',
                 fontWeight: 600,
                 textAlign: 'center',
               }}
@@ -262,14 +262,14 @@ export function AdminDepositos({ onCerrar }: Props) {
               onChange={(e) => setBusqueda(e.target.value)}
             />
             <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
-              {depositosFiltrados.length === 0 && <p style={{ color: '#6b7280' }}>No hay depósitos que coincidan.</p>}
+              {depositosFiltrados.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay depósitos que coincidan.</p>}
               {depositosFiltrados.map((deposito) => (
                 <div key={deposito.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <div>
                       <strong>{formatoMoneda(Number(deposito.monto))}</strong>
-                      {deposito.notas && <div style={{ fontSize: 13, color: '#6b7280' }}>{deposito.notas}</div>}
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoFechaHora(new Date(deposito.fecha))}</div>
+                      {deposito.notas && <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{deposito.notas}</div>}
+                      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoFechaHora(new Date(deposito.fecha))}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <small>{deposito.registradoPor.nombre}</small>
@@ -324,7 +324,7 @@ export function AdminDepositos({ onCerrar }: Props) {
                     <button
                       className="boton-secundario"
                       onClick={() => setConfirmandoId(deposito.id)}
-                      style={{ width: '100%', marginTop: 8, background: '#fff2f1', color: '#b91c1c' }}
+                      style={{ width: '100%', marginTop: 8, background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                     >
                       🗑️ Cancelar depósito
                     </button>

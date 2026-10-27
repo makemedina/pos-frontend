@@ -19,11 +19,11 @@ interface Props {
 }
 
 const ETIQUETAS_TIPO: Record<MovimientoVariante['tipo'], { texto: string; color: string }> = {
-  entrada: { texto: 'Entrada (compra)', color: '#16a34a' },
-  salida: { texto: 'Salida (venta)', color: '#b91c1c' },
-  merma: { texto: 'Merma', color: '#b91c1c' },
-  correccion_positiva: { texto: 'Corrección +', color: '#16a34a' },
-  correccion_negativa: { texto: 'Corrección −', color: '#b91c1c' },
+  entrada: { texto: 'Entrada (compra)', color: 'var(--exito)' },
+  salida: { texto: 'Salida (venta)', color: 'var(--peligro)' },
+  merma: { texto: 'Merma', color: 'var(--peligro)' },
+  correccion_positiva: { texto: 'Corrección +', color: 'var(--exito)' },
+  correccion_negativa: { texto: 'Corrección −', color: 'var(--peligro)' },
 };
 
 export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste, esAdmin }: Props) {
@@ -191,7 +191,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                   justifyContent: 'space-between',
                   padding: '0.5rem 0.75rem',
                   borderRadius: 10,
-                  background: '#f8fafc',
+                  background: 'var(--fondo-suave)',
                   fontWeight: 700,
                 }}
               >
@@ -204,7 +204,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
               <p>Cargando...</p>
             ) : (
               <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                {productosVisibles.length === 0 && <p style={{ color: '#6b7280' }}>No hay productos que coincidan.</p>}
+                {productosVisibles.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay productos que coincidan.</p>}
                 {productosVisibles.map((p) => (
                   <div
                     key={p.id}
@@ -221,9 +221,9 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                   >
                     <div>
                       <strong>{p.producto}</strong> {p.marca}
-                      {p.pocoStock && <span style={{ color: '#b91c1c', fontSize: 12 }}> · poco stock</span>}
+                      {p.pocoStock && <span style={{ color: 'var(--peligro)', fontSize: 12 }}> · poco stock</span>}
                       {p.lotes.map((l, i) => (
-                        <div key={i} style={{ fontSize: 12, color: '#6b7280' }}>
+                        <div key={i} style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                           {formatoKg(l.cantidadDisponible)} kg a {formatoMoneda(l.costoUnitario)}/kg
                         </div>
                       ))}
@@ -288,12 +288,12 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                   </div>
                 )}
                 <div>Stock disponible: <strong>{formatoKg(productoElegido.stockDisponible)} kg</strong></div>
-                <div style={{ fontSize: 13, color: '#6b7280' }}>Precio de venta: {formatoMoneda(productoElegido.precioVenta)}/kg</div>
+                <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Precio de venta: {formatoMoneda(productoElegido.precioVenta)}/kg</div>
                 {productoElegido.lotes.length > 0 && (
                   <div style={{ marginTop: 4 }}>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>Lotes en stock (costo de compra):</div>
+                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Lotes en stock (costo de compra):</div>
                     {productoElegido.lotes.map((l, i) => (
-                      <div key={i} style={{ fontSize: 13, color: '#6b7280' }}>
+                      <div key={i} style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                         {formatoKg(l.cantidadDisponible)} kg a {formatoMoneda(l.costoUnitario)}/kg · ingresó {formatoFecha(new Date(l.fechaIngreso))}
                       </div>
                     ))}
@@ -313,7 +313,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
             {cargandoHistorial ? (
               <p>Cargando...</p>
             ) : historial.length === 0 ? (
-              <p style={{ color: '#6b7280' }}>Sin movimientos registrados.</p>
+              <p style={{ color: 'var(--ios-secondary-label)' }}>Sin movimientos registrados.</p>
             ) : (
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {historial.map((m) => {
@@ -335,13 +335,13 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                       <div>
                         <div style={{ fontSize: 12, color: info.color, fontWeight: 600 }}>{info.texto}</div>
                         <div style={{ fontSize: 13 }}>{m.referencia}</div>
-                        <div style={{ fontSize: 11, color: '#9ca3af' }}>{formatoFechaHora(new Date(m.fecha))}</div>
+                        <div style={{ fontSize: 11, color: 'var(--texto-tenue)' }}>{formatoFechaHora(new Date(m.fecha))}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? '#16a34a' : '#b91c1c' }}>
+                        <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? 'var(--exito)' : 'var(--peligro)' }}>
                           {m.cantidad >= 0 ? '+' : ''}{formatoKg(m.cantidad)} kg
                         </div>
-                        {clickeable && <div style={{ fontSize: 11, color: '#007aff' }}>Ver detalle →</div>}
+                        {clickeable && <div style={{ fontSize: 11, color: 'var(--ios-blue)' }}>Ver detalle →</div>}
                       </div>
                     </div>
                   );

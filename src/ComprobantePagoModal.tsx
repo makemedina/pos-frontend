@@ -113,7 +113,7 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         {cargando || !config ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando comprobante...</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando comprobante...</p>
         ) : (
           <>
             <div
@@ -127,7 +127,7 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
                 fontSize: 13,
                 lineHeight: 1.5,
                 margin: '0 auto 16px',
-                border: '1px solid #e5e7eb',
+                border: '1px solid var(--borde-suave)',
                 borderRadius: 12,
               }}
             >
@@ -190,7 +190,7 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
               {config.piePaginaRecibo && (
                 <div style={{ textAlign: 'center', marginTop: 12 }}>{config.piePaginaRecibo}</div>
               )}
-              <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: '#6b7280' }}>
+              <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                 Gracias por su pago
               </div>
             </div>

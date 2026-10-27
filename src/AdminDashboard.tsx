@@ -370,8 +370,8 @@ export function AdminDashboard({ onCerrar }: Props) {
                 />
                 <span>
                   <span style={{ textDecoration: p.hecho ? 'line-through' : 'none' }}>{p.concepto}</span>
-                  {p.cliente && <div style={{ fontSize: 13, color: '#6b7280' }}>🧑‍🤝‍🧑 {p.cliente.nombre}</div>}
-                  {p.notas && <div style={{ fontSize: 13, color: '#6b7280' }}>{p.notas}</div>}
+                  {p.cliente && <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>🧑‍🤝‍🧑 {p.cliente.nombre}</div>}
+                  {p.notas && <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{p.notas}</div>}
                 </span>
               </label>
             ))}
@@ -453,7 +453,7 @@ export function AdminDashboard({ onCerrar }: Props) {
               >
                 <strong>Medio de pago</strong>
                 <div>{data.porcentajeEfectivo.toFixed(1)}% efectivo</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{(100 - data.porcentajeEfectivo).toFixed(1)}% transferencia</div>
+                <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{(100 - data.porcentajeEfectivo).toFixed(1)}% transferencia</div>
               </div>
             </div>
 
@@ -465,14 +465,14 @@ export function AdminDashboard({ onCerrar }: Props) {
                 >
                   <h3 style={{ margin: 0 }}>Gastos</h3>
                   <div style={{ textAlign: 'right' }}>
-                    <strong style={{ color: '#b91c1c' }}>{formatoMoneda(data.totalGastos)}</strong>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>
+                    <strong style={{ color: 'var(--peligro)' }}>{formatoMoneda(data.totalGastos)}</strong>
+                    <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                       {data.gastosCantidad} gasto{data.gastosCantidad === 1 ? '' : 's'} · ver por día
                     </div>
                   </div>
                 </div>
                 <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.gastosPorCategoria.length === 0 && <p style={{ color: '#6b7280' }}>Sin gastos en este periodo.</p>}
+                  {data.gastosPorCategoria.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin gastos en este periodo.</p>}
                   {(mostrarTodosGastos ? data.gastosPorCategoria : data.gastosPorCategoria.slice(0, ESPACIOS_POR_SECCION)).map((c) => (
                     <div
                       key={`${c.departamento}-${c.categoria}`}
@@ -481,7 +481,7 @@ export function AdminDashboard({ onCerrar }: Props) {
                     >
                       <span>
                         {c.categoria}
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                        <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                           {c.departamento} · {data.totalGastos > 0 ? ((c.total / data.totalGastos) * 100).toFixed(1) : '0.0'}%
                         </div>
                       </span>
@@ -503,7 +503,7 @@ export function AdminDashboard({ onCerrar }: Props) {
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Productos más vendidos por volumen</h3>
                 <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.productosMasVendidos.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                  {data.productosMasVendidos.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>}
                   {(mostrarTodosProductosVolumen ? data.productosMasVendidos : data.productosMasVendidos.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, cantidad]) => (
                     <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>{nombre}</span>
@@ -525,7 +525,7 @@ export function AdminDashboard({ onCerrar }: Props) {
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Productos más vendidos por valor</h3>
                 <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.productosMasVendidosPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                  {data.productosMasVendidosPorValor.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>}
                   {(mostrarTodosProductos ? data.productosMasVendidosPorValor : data.productosMasVendidosPorValor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
                     <div
                       key={nombre}
@@ -551,7 +551,7 @@ export function AdminDashboard({ onCerrar }: Props) {
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Mejores clientes por valor</h3>
                 <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.mejoresClientesPorValor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                  {data.mejoresClientesPorValor.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>}
                   {(mostrarTodosClientes ? data.mejoresClientesPorValor : data.mejoresClientesPorValor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
                     <div
                       key={nombre}
@@ -580,11 +580,11 @@ export function AdminDashboard({ onCerrar }: Props) {
               {data.ventasPorOrigen && (
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3 style={{ marginBottom: 4 }}>Ventas por origen del cliente</h3>
-                <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 8px' }}>
+                <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: '0 0 8px' }}>
                   Cómo llegaron los clientes que compraron. "Nuevos" son los dados de alta en este periodo.
                 </p>
                 <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.ventasPorOrigen.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                  {data.ventasPorOrigen.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>}
                   {data.ventasPorOrigen.map((o) => (
                     <div
                       key={o.origen}
@@ -593,7 +593,7 @@ export function AdminDashboard({ onCerrar }: Props) {
                     >
                       <span>
                         {etiquetaOrigen(o.origen)}
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                        <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                           {o.ventasCantidad} venta{o.ventasCantidad === 1 ? '' : 's'} · {o.clientesConCompra} cliente
                           {o.clientesConCompra === 1 ? '' : 's'}
                           {o.clientesNuevos > 0 &&
@@ -602,7 +602,7 @@ export function AdminDashboard({ onCerrar }: Props) {
                       </span>
                       <div style={{ textAlign: 'right' }}>
                         <strong>{formatoMoneda(o.totalVentas)}</strong>
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                        <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                           {data.totalVentas > 0 ? ((o.totalVentas / data.totalVentas) * 100).toFixed(1) : '0.0'}%
                         </div>
                       </div>
@@ -615,7 +615,7 @@ export function AdminDashboard({ onCerrar }: Props) {
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Ventas por vendedor</h3>
                 <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.ventasPorVendedor.length === 0 && <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>}
+                  {data.ventasPorVendedor.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>}
                   {(mostrarTodosVendedores ? data.ventasPorVendedor : data.ventasPorVendedor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
                     <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>{nombre}</span>
@@ -646,11 +646,11 @@ export function AdminDashboard({ onCerrar }: Props) {
               <button className="boton-cerrar" onClick={() => setMetricaExpandida(null)}>✕</button>
             </div>
             {data.detallePorDia.length === 0 ? (
-              <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>
+              <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>
             ) : (
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {data.detallePorDia.map((d) => (
-                  <div key={d.fecha} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                  <div key={d.fecha} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                     <span style={{ textTransform: 'capitalize' }}>{formatearFechaDia(d.fecha)}</span>
                     <strong>{METRICAS_INFO[metricaExpandida].obtenerValor(d)}</strong>
                   </div>
@@ -672,10 +672,10 @@ export function AdminDashboard({ onCerrar }: Props) {
             </div>
             <div style={{ display: 'grid', gap: '0.5rem' }}>
               {detalleGastos.gastos.map((g) => (
-                <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                   <span>
                     {g.concepto}
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>
+                    <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                       {formatoFecha(g.fecha)} · {etiquetaMetodoPago(g.metodoPago)}
                       {g.proveedor ? ` · ${g.proveedor}` : ''}
                     </div>
@@ -697,16 +697,16 @@ export function AdminDashboard({ onCerrar }: Props) {
               </p>
               <button className="boton-cerrar" onClick={() => setDetalleOrigen(null)}>✕</button>
             </div>
-            <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 8 }}>
+            <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)', marginBottom: 8 }}>
               Utilidad en papel: {formatoMoneda(detalleOrigen.utilidadBruta)} · Clientes nuevos en el periodo:{' '}
               {detalleOrigen.clientesNuevos} ({detalleOrigen.clientesNuevosQueCompraron} ya compraron)
             </div>
             {detalleOrigen.clientes.length === 0 ? (
-              <p style={{ color: '#6b7280' }}>Ningún cliente de este origen compró en el periodo.</p>
+              <p style={{ color: 'var(--ios-secondary-label)' }}>Ningún cliente de este origen compró en el periodo.</p>
             ) : (
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {detalleOrigen.clientes.map(([cliente, valor]) => (
-                  <div key={cliente} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                  <div key={cliente} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                     <span>{cliente}</span>
                     <strong>{formatoMoneda(valor)}</strong>
                   </div>
@@ -725,11 +725,11 @@ export function AdminDashboard({ onCerrar }: Props) {
               <button className="boton-cerrar" onClick={() => setDetalleProducto(null)}>✕</button>
             </div>
             {(data.detalleProductosPorValor[detalleProducto] ?? []).length === 0 ? (
-              <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>
+              <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>
             ) : (
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {data.detalleProductosPorValor[detalleProducto].map(([cliente, valor]) => (
-                  <div key={cliente} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                  <div key={cliente} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                     <span>{cliente}</span>
                     <strong>{formatoMoneda(valor)}</strong>
                   </div>
@@ -748,7 +748,7 @@ export function AdminDashboard({ onCerrar }: Props) {
               <button className="boton-cerrar" onClick={() => setDetalleCliente(null)}>✕</button>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid #e5e5ea', marginBottom: 8 }}>
+            <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--ios-separator)', marginBottom: 8 }}>
               {(['valor', 'volumen'] as const).map((p) => (
                 <button
                   key={p}
@@ -758,9 +758,9 @@ export function AdminDashboard({ onCerrar }: Props) {
                     border: 'none',
                     padding: '8px 4px',
                     borderRadius: 0,
-                    borderBottom: detalleClientePestana === p ? '2px solid #007aff' : '2px solid transparent',
+                    borderBottom: detalleClientePestana === p ? '2px solid var(--ios-blue)' : '2px solid transparent',
                     fontWeight: detalleClientePestana === p ? 700 : 400,
-                    color: detalleClientePestana === p ? '#007aff' : '#374151',
+                    color: detalleClientePestana === p ? 'var(--ios-blue)' : 'var(--texto-fuerte)',
                   }}
                 >
                   {p === 'valor' ? 'Por valor' : 'Por volumen'}
@@ -770,11 +770,11 @@ export function AdminDashboard({ onCerrar }: Props) {
 
             {detalleClientePestana === 'valor' ? (
               (data.detalleClientesPorValor[detalleCliente] ?? []).length === 0 ? (
-                <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>
+                <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>
               ) : (
                 <div style={{ display: 'grid', gap: '0.5rem' }}>
                   {data.detalleClientesPorValor[detalleCliente].map(([producto, valor]) => (
-                    <div key={producto} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                    <div key={producto} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                       <span>{producto}</span>
                       <strong>{formatoMoneda(valor)}</strong>
                     </div>
@@ -782,11 +782,11 @@ export function AdminDashboard({ onCerrar }: Props) {
                 </div>
               )
             ) : (data.detalleClientesPorVolumen[detalleCliente] ?? []).length === 0 ? (
-              <p style={{ color: '#6b7280' }}>Sin datos en este periodo.</p>
+              <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>
             ) : (
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 {data.detalleClientesPorVolumen[detalleCliente].map(([producto, cantidad]) => (
-                  <div key={producto} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                  <div key={producto} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                     <span>{producto}</span>
                     <strong>{formatoKg(cantidad)} kg</strong>
                   </div>

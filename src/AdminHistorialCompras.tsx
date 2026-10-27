@@ -294,7 +294,7 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
         {cargando ? (
           <p>Cargando...</p>
         ) : compras.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>No hay compras con esos filtros.</p>
+          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay compras con esos filtros.</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {comprasOrdenadas.map((c) => (
@@ -302,24 +302,24 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <strong>{proveedor ? formatoFecha(new Date(c.fecha)) : c.proveedor.nombre}</strong>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>
+                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                       {proveedor ? '' : `${formatoFecha(new Date(c.fecha))} · `}Factura: {c.numeroFactura || 'sin número'}
                     </div>
                     {proveedor && c.items.length > 0 && (
-                      <div style={{ fontSize: 12, color: '#374151' }}>
+                      <div style={{ fontSize: 12, color: 'var(--texto-fuerte)' }}>
                         {c.items.map((it) => `${it.producto} ${it.cantidad} kg`).join(' · ')}
                       </div>
                     )}
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>
+                    <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                       {c.metodosPago.join(', ') || 'Sin pago registrado'}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div><strong>{formatoMoneda(c.total)}</strong></div>
                     {c.cancelada ? (
-                      <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>❌ Cancelada</div>
+                      <div style={{ fontSize: 12, color: 'var(--peligro)', fontWeight: 700 }}>❌ Cancelada</div>
                     ) : (
-                      <div style={{ fontSize: 12, color: c.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                      <div style={{ fontSize: 12, color: c.estadoPago === 'pagada' ? 'var(--exito)' : 'var(--peligro)' }}>
                         {c.estadoPago === 'pagada' ? 'Pagada' : `Saldo: ${formatoMoneda(c.saldoPendiente)}`}
                       </div>
                     )}

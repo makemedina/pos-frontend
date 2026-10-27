@@ -29,11 +29,11 @@ type Periodo =
   | 'rango';
 
 const ETIQUETAS_TIPO: Record<MovimientoInventario['tipo'], { texto: string; color: string }> = {
-  entrada: { texto: 'Entrada (compra)', color: '#16a34a' },
-  salida: { texto: 'Salida (venta)', color: '#b91c1c' },
-  merma: { texto: 'Merma', color: '#b91c1c' },
-  correccion_positiva: { texto: 'Corrección +', color: '#16a34a' },
-  correccion_negativa: { texto: 'Corrección −', color: '#b91c1c' },
+  entrada: { texto: 'Entrada (compra)', color: 'var(--exito)' },
+  salida: { texto: 'Salida (venta)', color: 'var(--peligro)' },
+  merma: { texto: 'Merma', color: 'var(--peligro)' },
+  correccion_positiva: { texto: 'Corrección +', color: 'var(--exito)' },
+  correccion_negativa: { texto: 'Corrección −', color: 'var(--peligro)' },
 };
 
 function formatDateInput(date: Date) {
@@ -207,28 +207,28 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Entradas</strong>
                   <div>{formatoKg(resumen.entradasKg)} kg</div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.entradasValor)}</div>
+                  <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(resumen.entradasValor)}</div>
                 </div>
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Salidas</strong>
                   <div>{formatoKg(resumen.salidasKg)} kg</div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.salidasValor)}</div>
+                  <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(resumen.salidasValor)}</div>
                 </div>
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Merma</strong>
                   <div>{formatoKg(resumen.mermaKg)} kg</div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.mermaValor)}</div>
+                  <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(resumen.mermaValor)}</div>
                 </div>
                 <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <strong>Corrección neta</strong>
                   <div>{formatoKg(resumen.correccionNetaKg)} kg</div>
-                  <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoMoneda(resumen.correccionNetaValor)}</div>
+                  <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(resumen.correccionNetaValor)}</div>
                 </div>
               </div>
             )}
 
             <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-              {movimientos.length === 0 && <p style={{ color: '#6b7280' }}>No hay movimientos con esos filtros.</p>}
+              {movimientos.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay movimientos con esos filtros.</p>}
               {movimientos.map((m) => {
                 const info = ETIQUETAS_TIPO[m.tipo];
                 return (
@@ -242,14 +242,14 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
                         <strong>{m.producto}</strong> {m.marca}
                       </div>
                       <div style={{ fontSize: 12, color: info.color, fontWeight: 600 }}>{info.texto}</div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>{m.referencia}</div>
-                      <div style={{ fontSize: 11, color: '#9ca3af' }}>{formatoFechaHora(new Date(m.fecha))}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{m.referencia}</div>
+                      <div style={{ fontSize: 11, color: 'var(--texto-tenue)' }}>{formatoFechaHora(new Date(m.fecha))}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? '#16a34a' : '#b91c1c' }}>
+                      <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? 'var(--exito)' : 'var(--peligro)' }}>
                         {m.cantidad >= 0 ? '+' : ''}{formatoKg(m.cantidad)} kg
                       </div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoMoneda(m.valor)}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(m.valor)}</div>
                     </div>
                   </div>
                 );

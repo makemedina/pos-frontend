@@ -68,7 +68,7 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         {ventas.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>No hay ventas pendientes por subir. Todo está sincronizado.</p>
+          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay ventas pendientes por subir. Todo está sincronizado.</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {ventas.map((v) => (
@@ -84,14 +84,14 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <div>
                     <strong>{v.resumen.clienteNombre}</strong>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>
+                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                       {formatoFechaHora(new Date(v.resumen.fecha))} · {v.resumen.totalItems} producto{v.resumen.totalItems !== 1 ? 's' : ''}
                     </div>
                     {v.estado === 'error' && (
-                      <div style={{ fontSize: 12, color: '#b91c1c', marginTop: 4 }}>⚠ {v.error}</div>
+                      <div style={{ fontSize: 12, color: 'var(--peligro)', marginTop: 4 }}>⚠ {v.error}</div>
                     )}
                     {v.estado === 'pendiente' && (
-                      <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Esperando conexión...</div>
+                      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)', marginTop: 4 }}>Esperando conexión...</div>
                     )}
                   </div>
                   <strong>{formatoMoneda(v.resumen.total)}</strong>
@@ -107,7 +107,7 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
           </div>
         )}
 
-        <p style={{ fontSize: 12, color: '#9ca3af' }}>
+        <p style={{ fontSize: 12, color: 'var(--texto-tenue)' }}>
           Las ventas "esperando conexión" se suben solas en cuanto vuelva internet. Las que tienen
           error necesitan revisión (por ejemplo, si el stock cambió mientras no había conexión).
         </p>

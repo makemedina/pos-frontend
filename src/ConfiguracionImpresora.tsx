@@ -156,7 +156,7 @@ export function ConfiguracionImpresora({ onCerrar }: Props) {
               {probando ? 'Imprimiendo...' : '🖨️ Imprimir prueba'}
             </button>
 
-            <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+            <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: 0 }}>
               Usa Chrome en Android. Si tu impresora no imprime nada, puede que use un UUID de
               Bluetooth distinto al configurado por default — avísale a soporte el modelo exacto.
             </p>

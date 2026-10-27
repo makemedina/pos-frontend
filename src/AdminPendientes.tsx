@@ -203,12 +203,12 @@ export function AdminPendientes({ onCerrar }: Props) {
             />
             <span>
               <strong style={{ textDecoration: p.hecho ? 'line-through' : 'none' }}>{p.concepto}</strong>
-              <div style={{ fontSize: 12, color: vencido ? '#b91c1c' : '#6b7280', fontWeight: vencido ? 700 : 400 }}>
+              <div style={{ fontSize: 12, color: vencido ? 'var(--peligro)' : 'var(--ios-secondary-label)', fontWeight: vencido ? 700 : 400 }}>
                 {new Date(p.fecha).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
                 {vencido && ' · Vencido'}
               </div>
               {p.cliente && (
-                <div style={{ fontSize: 13, color: '#374151', marginTop: 4 }}>
+                <div style={{ fontSize: 13, color: 'var(--texto-fuerte)', marginTop: 4 }}>
                   🧑‍🤝‍🧑 {p.cliente.nombre}
                   {' · '}
                   <a href={`tel:${p.cliente.telefono}`} onClick={(e) => e.stopPropagation()}>
@@ -216,8 +216,8 @@ export function AdminPendientes({ onCerrar }: Props) {
                   </a>
                 </div>
               )}
-              {p.notas && <div style={{ fontSize: 13, color: '#374151', marginTop: 4 }}>{p.notas}</div>}
-              <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>Agregado por {p.registradoPor.nombre}</div>
+              {p.notas && <div style={{ fontSize: 13, color: 'var(--texto-fuerte)', marginTop: 4 }}>{p.notas}</div>}
+              <div style={{ fontSize: 11, color: 'var(--texto-tenue)', marginTop: 2 }}>Agregado por {p.registradoPor.nombre}</div>
             </span>
           </label>
           <div style={{ display: 'flex', gap: 2 }}>
@@ -256,7 +256,7 @@ export function AdminPendientes({ onCerrar }: Props) {
           </div>
         </div>
 
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
           Recordatorios y tareas sueltas programadas para un día específico. Los de hoy también aparecen en
           "Llamadas de hoy".
         </p>
@@ -267,8 +267,8 @@ export function AdminPendientes({ onCerrar }: Props) {
             disabled={cambiandoNotif}
             style={{
               justifySelf: 'start',
-              background: notifActivas ? '#dcfce7' : '#f3f4f6',
-              color: notifActivas ? '#166534' : '#111',
+              background: notifActivas ? 'var(--exito-fondo)' : 'var(--fondo-gris)',
+              color: notifActivas ? 'var(--exito-oscuro)' : '#111',
               fontSize: 13,
               padding: '6px 12px',
             }}
@@ -328,7 +328,7 @@ export function AdminPendientes({ onCerrar }: Props) {
                       }}
                     >
                       {clientesFiltrados.length === 0 ? (
-                        <div style={{ padding: '0.5rem 0.75rem', color: '#6b7280', fontSize: 13 }}>Sin resultados.</div>
+                        <div style={{ padding: '0.5rem 0.75rem', color: 'var(--ios-secondary-label)', fontSize: 13 }}>Sin resultados.</div>
                       ) : (
                         clientesFiltrados.map((c) => (
                           <div
@@ -356,41 +356,41 @@ export function AdminPendientes({ onCerrar }: Props) {
         )}
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
         ) : pendientes.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>No hay pendientes. Usa "+ Nuevo" para agregar uno.</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>No hay pendientes. Usa "+ Nuevo" para agregar uno.</p>
         ) : (
           <>
             {vencidos.length > 0 && (
               <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                <strong style={{ fontSize: 13, color: '#b91c1c' }}>Vencidos ({vencidos.length})</strong>
+                <strong style={{ fontSize: 13, color: 'var(--peligro)' }}>Vencidos ({vencidos.length})</strong>
                 {vencidos.map((p) => tarjeta(p, true))}
               </div>
             )}
 
             {deHoy.length > 0 && (
               <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                <strong style={{ fontSize: 13, color: '#6b7280' }}>Hoy ({deHoy.length})</strong>
+                <strong style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Hoy ({deHoy.length})</strong>
                 {deHoy.map((p) => tarjeta(p))}
               </div>
             )}
 
             {proximos.length > 0 && (
               <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                <strong style={{ fontSize: 13, color: '#6b7280' }}>Próximos ({proximos.length})</strong>
+                <strong style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Próximos ({proximos.length})</strong>
                 {proximos.map((p) => tarjeta(p))}
               </div>
             )}
 
             {activos.length === 0 && (
-              <p style={{ textAlign: 'center', color: '#6b7280' }}>No hay pendientes activos. 🎉</p>
+              <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>No hay pendientes activos. 🎉</p>
             )}
 
             {completados.length > 0 && (
               <div style={{ display: 'grid', gap: '0.5rem' }}>
                 <button
                   onClick={() => setMostrarCompletados((v) => !v)}
-                  style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: 13, cursor: 'pointer', textAlign: 'left', padding: 0 }}
+                  style={{ background: 'none', border: 'none', color: 'var(--ios-secondary-label)', fontSize: 13, cursor: 'pointer', textAlign: 'left', padding: 0 }}
                 >
                   {mostrarCompletados ? '▾' : '▸'} Completados ({completados.length})
                 </button>

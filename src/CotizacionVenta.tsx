@@ -21,8 +21,8 @@ function AvisoCotizacion() {
         fontWeight: 800,
         fontSize: 15,
         lineHeight: 1.3,
-        color: '#b91c1c',
-        border: '2px solid #b91c1c',
+        color: 'var(--peligro)',
+        border: '2px solid var(--peligro)',
         borderRadius: 6,
         padding: '6px 4px',
         margin: '10px 0',
@@ -96,7 +96,7 @@ export function CotizacionVenta({ config, datos, elementId }: Props) {
         <span>{formatoMoneda(datos.total)}</span>
       </div>
 
-      <div style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: '#6b7280' }}>
+      <div style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: 'var(--ios-secondary-label)' }}>
         Cotización sin compromiso — precios sujetos a cambio hasta confirmar la venta.
       </div>
 

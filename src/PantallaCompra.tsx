@@ -283,11 +283,11 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
             alignItems: 'center',
             justifyContent: 'center',
             gap: 8,
-            border: '2px dashed #c7c7cc',
+            border: '2px dashed var(--ios-gray-3)',
             borderRadius: 12,
             padding: '1.25rem',
             cursor: 'pointer',
-            color: '#007aff',
+            color: 'var(--ios-blue)',
             fontWeight: 600,
             textAlign: 'center',
           }}

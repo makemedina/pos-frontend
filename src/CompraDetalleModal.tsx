@@ -227,7 +227,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
         </div>
 
         {mensaje && <div className="banner-mensaje">{mensaje}</div>}
-        {cargando && <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>}
+        {cargando && <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>}
 
         {compra && (
           <div id={ELEMENT_ID}>
@@ -284,14 +284,14 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
                 <h3 style={{ fontSize: 15, marginBottom: 6 }}>Historial de abonos</h3>
                 <div style={{ display: 'grid', gap: '0.5rem' }}>
                   {pagos.map((p) => (
-                    <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                    <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>
                           {formatoFecha(new Date(p.fecha))} · {new Date(p.fecha).toLocaleTimeString()} · {p.metodoPago}
                           <br />
-                          <small style={{ color: '#6b7280' }}>Registró: {p.registradoPor.nombre}</small>
+                          <small style={{ color: 'var(--ios-secondary-label)' }}>Registró: {p.registradoPor.nombre}</small>
                         </span>
-                        <strong style={p.cancelado ? { textDecoration: 'line-through', color: '#9ca3af' } : undefined}>
+                        <strong style={p.cancelado ? { textDecoration: 'line-through', color: 'var(--texto-tenue)' } : undefined}>
                           {formatoMoneda(p.monto)}
                         </strong>
                       </div>
@@ -336,7 +336,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
                           <button
                             className="boton-secundario"
                             onClick={() => pedirCancelarPago(p.id)}
-                            style={{ marginTop: 6, width: '100%', background: '#fff2f1', color: '#b91c1c' }}
+                            style={{ marginTop: 6, width: '100%', background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                           >
                             🗑️ Cancelar pago
                           </button>
@@ -390,7 +390,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
               <button
                 className="boton-secundario"
                 onClick={() => setConfirmandoCancelacion(true)}
-                style={{ width: '100%', marginTop: 8, background: '#fff2f1', color: '#b91c1c' }}
+                style={{ width: '100%', marginTop: 8, background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
               >
                 🗑️ Cancelar compra
               </button>

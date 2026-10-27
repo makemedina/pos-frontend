@@ -181,7 +181,7 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                 </div>
                 <div>Saldo en banco: {formatoMoneda(resumen.corteExistente?.saldoBancoContado)}</div>
                 {onVerHistorial && (
-                  <p style={{ fontSize: 13, color: '#6b7280', marginTop: 8 }}>
+                  <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', marginTop: 8 }}>
                     Si te equivocaste al capturarlo, corrígelo desde el botón "Histórico".
                   </p>
                 )}
@@ -190,13 +190,13 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
               <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Captura del día</h3>
                 {resumen && (
-                  <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                  <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: 0 }}>
                     El sistema lleva {formatoMoneda(resumen.saldoEfectivoSistema)} en efectivo — compáralo contra lo que cuentes:
                   </p>
                 )}
                 <input value={efectivoContado} onChange={(e) => setEfectivoContado(e.target.value)} type="number" step="0.01" placeholder="Efectivo contado" required />
                 {resumen && (
-                  <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+                  <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: 0 }}>
                     El sistema lleva {formatoMoneda(resumen.saldoBancoSistema)} en bancos (por transferencias) — compáralo contra tu banco real:
                   </p>
                 )}

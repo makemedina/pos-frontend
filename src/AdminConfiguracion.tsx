@@ -160,7 +160,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
 
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
               <h3>🏦 Saldo en bancos</h3>
-              <p style={{ fontSize: 13, color: '#6b7280' }}>
+              <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                 Este número sube solo con cada venta/abono por transferencia, y baja solo con
                 cada gasto, compra o pago a proveedor por transferencia. Solo cámbialo a mano
                 para poner el saldo inicial o para corregirlo si no coincide con el banco real.
@@ -181,7 +181,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
 
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
               <h3>💵 Saldo en efectivo</h3>
-              <p style={{ fontSize: 13, color: '#6b7280' }}>
+              <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                 Sube solo con cada venta/abono en efectivo, y baja solo con cada gasto, compra o
                 pago a proveedor en efectivo.
               </p>
@@ -204,7 +204,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
               onClick={onIrARecibo}
             >
               <strong>Configuración del recibo →</strong>
-              <p style={{ fontSize: 13, color: '#6b7280', margin: '4px 0 0' }}>
+              <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: '4px 0 0' }}>
                 Datos del cliente, encabezado, pie de página e impresora.
               </p>
             </div>

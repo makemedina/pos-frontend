@@ -53,7 +53,7 @@ export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, ultimoPrec
           <button className="boton-cerrar" onClick={onCerrar}>✕</button>
         </div>
 
-        <p style={{ fontSize: 13, color: '#6b7280' }}>
+        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
           Disponible: <strong>{formatoKg(disponibleReal)} kg</strong>
           {cantidadYaEnCarrito > 0 && ` (ya tienes ${formatoKg(cantidadYaEnCarrito)} kg de este producto en la nota)`}
         </p>
@@ -100,7 +100,7 @@ export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, ultimoPrec
             )}
 
             {ultimoPrecio && (
-              <p style={{ fontSize: 12, color: '#6b7280', margin: 0 }}>
+              <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: 0 }}>
                 Último precio a este cliente: {formatoMoneda(ultimoPrecio.precioUnitario)}/kg
                 ({formatoFecha(new Date(ultimoPrecio.fecha))}) — precio de lista:{' '}
                 {formatoMoneda(variante.precioVenta)}/kg

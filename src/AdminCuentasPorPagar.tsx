@@ -32,11 +32,11 @@ function CampoFotoComprobante({ id, archivo, onCambio }: { id: string; archivo: 
           alignItems: 'center',
           justifyContent: 'center',
           gap: 8,
-          border: '2px dashed #c7c7cc',
+          border: '2px dashed var(--ios-gray-3)',
           borderRadius: 12,
           padding: '1.25rem',
           cursor: 'pointer',
-          color: '#007aff',
+          color: 'var(--ios-blue)',
           fontWeight: 600,
           textAlign: 'center',
         }}
@@ -510,7 +510,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
               onChange={(e) => setBusqueda(e.target.value)}
             />
             <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
-              {proveedoresFiltrados.length === 0 && <p style={{ color: '#6b7280' }}>No hay proveedores que coincidan.</p>}
+              {proveedoresFiltrados.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay proveedores que coincidan.</p>}
               {proveedoresFiltrados.map((p) => (
                 <div
                   key={p.id}
@@ -520,11 +520,11 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <strong>{p.nombre}</strong>
-                      <div style={{ fontSize: 13, color: '#6b7280' }}>{p.telefono || ''}</div>
+                      <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{p.telefono || ''}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 700, color: '#b91c1c' }}>{formatoMoneda(p.saldoTotal)}</div>
-                      <div style={{ fontSize: 12, color: '#6b7280' }}>
+                      <div style={{ fontWeight: 700, color: 'var(--peligro)' }}>{formatoMoneda(p.saldoTotal)}</div>
+                      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                         {p.facturasConSaldo} factura{p.facturasConSaldo !== 1 ? 's' : ''} pendiente{p.facturasConSaldo !== 1 ? 's' : ''}
                       </div>
                     </div>
@@ -540,7 +540,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                   justifyContent: 'space-between',
                   padding: '0.75rem',
                   borderRadius: 14,
-                  background: '#f8fafc',
+                  background: 'var(--fondo-suave)',
                   fontWeight: 700,
                 }}
               >
@@ -597,7 +597,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                   />
                 </label>
 
-                <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+                <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
                   Marca las facturas que se pagan con este importe — cada una se rellena con su saldo, pero puedes cambiarlo.
                 </p>
 
@@ -607,7 +607,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     return (
                       <div
                         key={f.id}
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}
                       >
                         <input
                           type="checkbox"
@@ -616,7 +616,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                         />
                         <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => toggleFacturaPago(f)}>
                           <strong>{f.numeroFactura || 'Sin numero'}</strong>
-                          <div style={{ fontSize: 12, color: '#6b7280' }}>
+                          <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                             Compra: {formatoFecha(new Date(f.fecha))} · Saldo: {formatoMoneda(f.saldoPendiente)}
                           </div>
                         </div>
@@ -642,17 +642,17 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     justifyContent: 'space-between',
                     padding: '0.5rem 0.75rem',
                     borderRadius: 10,
-                    background: restantePorDistribuir < 0 ? '#fff2f1' : '#f8fafc',
+                    background: restantePorDistribuir < 0 ? 'var(--peligro-fondo)' : 'var(--fondo-suave)',
                     fontWeight: 700,
                   }}
                 >
                   <span>Por distribuir</span>
-                  <span style={{ color: restantePorDistribuir < 0 ? '#b91c1c' : undefined }}>
+                  <span style={{ color: restantePorDistribuir < 0 ? 'var(--peligro)' : undefined }}>
                     {formatoMoneda(restantePorDistribuir)}
                   </span>
                 </div>
                 {restantePorDistribuir < 0 && (
-                  <p style={{ fontSize: 12, color: '#b91c1c', margin: 0 }}>
+                  <p style={{ fontSize: 12, color: 'var(--peligro)', margin: 0 }}>
                     Asignaste más de lo que dice el importe del pago entregado.
                   </p>
                 )}
@@ -671,7 +671,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
             )}
 
             <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
-              {facturasDelProveedor.length === 0 && <p style={{ color: '#6b7280' }}>No hay facturas pendientes de este proveedor.</p>}
+              {facturasDelProveedor.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay facturas pendientes de este proveedor.</p>}
               {facturasDelProveedor.map((f) => (
                 <div
                   key={f.id}
@@ -688,7 +688,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div>Total: {formatoMoneda(f.total)}</div>
-                      <div style={{ fontSize: 12, color: '#b91c1c' }}>Saldo: {formatoMoneda(f.saldoPendiente)}</div>
+                      <div style={{ fontSize: 12, color: 'var(--peligro)' }}>Saldo: {formatoMoneda(f.saldoPendiente)}</div>
                     </div>
                   </div>
                 </div>
@@ -717,16 +717,16 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
 
             <h3>Historial de abonos</h3>
             <div style={{ display: 'grid', gap: '0.5rem' }}>
-              {pagos.length === 0 && <p style={{ color: '#6b7280' }}>Aún no se ha registrado ningún abono.</p>}
+              {pagos.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Aún no se ha registrado ningún abono.</p>}
               {pagos.map((p) => (
-                <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid #e5e5ea', paddingBottom: 6 }}>
+                <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>
                       {formatoFecha(new Date(p.fecha))} · {new Date(p.fecha).toLocaleTimeString()} · {p.metodoPago}
                       <br />
-                      <small style={{ color: '#6b7280' }}>Registró: {p.registradoPor.nombre}</small>
+                      <small style={{ color: 'var(--ios-secondary-label)' }}>Registró: {p.registradoPor.nombre}</small>
                     </span>
-                    <strong style={p.cancelado ? { textDecoration: 'line-through', color: '#9ca3af' } : undefined}>
+                    <strong style={p.cancelado ? { textDecoration: 'line-through', color: 'var(--texto-tenue)' } : undefined}>
                       {formatoMoneda(p.monto)}
                     </strong>
                   </div>
@@ -782,7 +782,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                       <button
                         className="boton-secundario"
                         onClick={() => pedirCancelarPago(p.id)}
-                        style={{ marginTop: 6, width: '100%', background: '#fff2f1', color: '#b91c1c' }}
+                        style={{ marginTop: 6, width: '100%', background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                       >
                         🗑️ Cancelar pago
                       </button>
@@ -826,27 +826,27 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
           <>
             <button onClick={volverAFacturasDesdeHistorial} style={{ justifySelf: 'start' }}>← Facturas de {proveedorElegido.nombre}</button>
 
-            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+            <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
               Todos los pagos que se le han entregado a {proveedorElegido.nombre}, aunque hayan cubierto varias
               facturas a la vez. Cancelar uno revierte TODAS las facturas que cubrió.
             </p>
 
             <div style={{ display: 'grid', gap: '0.5rem' }}>
-              {gruposPago.length === 0 && <p style={{ color: '#6b7280' }}>Aún no se le ha hecho ningún pago a este proveedor.</p>}
+              {gruposPago.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Aún no se le ha hecho ningún pago a este proveedor.</p>}
               {gruposPago.map((g) => (
                 <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>
                       {formatoFechaHora(new Date(g.fecha))} · {g.metodosPago.join(' + ') || '—'}
                       <br />
-                      <small style={{ color: '#6b7280' }}>Registró: {g.registradoPor}</small>
+                      <small style={{ color: 'var(--ios-secondary-label)' }}>Registró: {g.registradoPor}</small>
                     </span>
-                    <strong style={g.cancelado ? { textDecoration: 'line-through', color: '#9ca3af' } : undefined}>
+                    <strong style={g.cancelado ? { textDecoration: 'line-through', color: 'var(--texto-tenue)' } : undefined}>
                       {formatoMoneda(g.montoTotal)}
                     </strong>
                   </div>
 
-                  <div style={{ marginTop: 6, fontSize: 13, color: '#6b7280' }}>
+                  <div style={{ marginTop: 6, fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                     Cubrió{g.facturas.length > 1 ? ` ${g.facturas.length} facturas` : ' 1 factura'}:{' '}
                     {g.facturas.map((f, idx) => (
                       <span key={f.compraId + idx} style={f.cancelado ? { textDecoration: 'line-through' } : undefined}>
@@ -907,7 +907,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                       <button
                         className="boton-secundario"
                         onClick={() => pedirCancelarGrupo(g.grupoKey)}
-                        style={{ marginTop: 6, width: '100%', background: '#fff2f1', color: '#b91c1c' }}
+                        style={{ marginTop: 6, width: '100%', background: 'var(--peligro-fondo)', color: 'var(--peligro)' }}
                       >
                         🗑️ Cancelar este pago
                       </button>

@@ -98,7 +98,7 @@ export function ConfiguracionRecibo({ onCerrar, onIrAImpresora }: Props) {
               onClick={onIrAImpresora}
             >
               <strong>Configuración de la impresora →</strong>
-              <p style={{ fontSize: 13, color: '#6b7280', margin: '4px 0 0' }}>
+              <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: '4px 0 0' }}>
                 Conectar impresora, tamaño de papel, prueba de impresión.
               </p>
             </div>

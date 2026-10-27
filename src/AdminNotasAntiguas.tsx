@@ -42,13 +42,13 @@ export function AdminNotasAntiguas({ onCerrar }: Props) {
 
         {!cargando && (
           <>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+            <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
               Notas a crédito con saldo pendiente que llevan más de {DIAS_ANTIGUEDAD} días sin liquidarse.
             </p>
 
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
-                <strong style={{ color: notas.length > 0 ? '#b91c1c' : undefined }}>{notas.length}</strong> nota{notas.length !== 1 ? 's' : ''} antigua{notas.length !== 1 ? 's' : ''}
+                <strong style={{ color: notas.length > 0 ? 'var(--peligro)' : undefined }}>{notas.length}</strong> nota{notas.length !== 1 ? 's' : ''} antigua{notas.length !== 1 ? 's' : ''}
               </div>
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
                 Saldo pendiente: <strong>{formatoMoneda(totalPendiente)}</strong>
@@ -60,7 +60,7 @@ export function AdminNotasAntiguas({ onCerrar }: Props) {
         {cargando ? (
           <p>Cargando...</p>
         ) : notas.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>No hay notas con más de {DIAS_ANTIGUEDAD} días sin liquidarse.</p>
+          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay notas con más de {DIAS_ANTIGUEDAD} días sin liquidarse.</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {notas.map((n) => (
@@ -71,21 +71,21 @@ export function AdminNotasAntiguas({ onCerrar }: Props) {
                   boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)',
                   padding: '0.75rem',
                   borderRadius: 14,
-                  background: '#fff2f1',
+                  background: 'var(--peligro-fondo)',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <strong>{n.clienteNombre}</strong>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>
+                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                       {n.clienteTelefono} · Nota #{n.folio} · {formatoFecha(new Date(n.fecha))}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 700, color: '#b91c1c' }}>
+                    <div style={{ fontWeight: 700, color: 'var(--peligro)' }}>
                       {n.diasAntiguedad} día{n.diasAntiguedad !== 1 ? 's' : ''}
                     </div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>{formatoMoneda(n.saldoPendiente)}</div>
+                    <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(n.saldoPendiente)}</div>
                   </div>
                 </div>
               </div>

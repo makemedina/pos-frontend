@@ -1009,7 +1009,7 @@ export default function App() {
           />
 
           {cargando && catalogo.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#6b7280', marginTop: 24 }}>Cargando catalogo...</p>
+            <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)', marginTop: 24 }}>Cargando catalogo...</p>
           ) : catalogoFiltrado.length === 0 ? (
             <p className="sin-resultados">No hay productos que coincidan.</p>
           ) : (
@@ -1105,7 +1105,7 @@ export default function App() {
           alignItems: 'center',
           padding: '6px 12px',
           background: '#fff',
-          borderBottom: '1px solid #e5e7eb',
+          borderBottom: '1px solid var(--borde-suave)',
         }}
       >
         <img src={logoMrCarnes} alt="Mr Carnes" style={{ height: 28, width: 'auto' }} />
@@ -1119,7 +1119,7 @@ export default function App() {
             left: 0,
             right: 0,
             zIndex: 20,
-            background: '#ff9500',
+            background: 'var(--ios-orange)',
             color: 'white',
             textAlign: 'center',
             fontSize: 12,
@@ -1202,7 +1202,7 @@ export default function App() {
           >
             <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 8 }}>
               <strong>{usuario.nombre}</strong>
-              <small style={{ color: '#6b7280' }}>{usuario.rolBase}</small>
+              <small style={{ color: 'var(--ios-secondary-label)' }}>{usuario.rolBase}</small>
             </div>
 
             {OPCIONES_MENU.filter((o) => puedeVer(o.pantalla, usuario)).map((o) => (
@@ -1224,7 +1224,7 @@ export default function App() {
                 <span style={{ fontSize: 20 }}>{o.icono}</span>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{o.titulo}</div>
-                  <div style={{ fontSize: 12, color: '#6b7280' }}>{o.descripcion}</div>
+                  <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{o.descripcion}</div>
                 </div>
               </div>
             ))}

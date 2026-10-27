@@ -41,15 +41,15 @@ export function AjusteDetalleModal({ ajusteId, onCerrar }: Props) {
             <div>
               <strong>{ajuste.producto}</strong> {ajuste.marca}
             </div>
-            <div style={{ fontSize: 13, color: '#6b7280' }}>{formatoFechaHora(new Date(ajuste.fecha))}</div>
+            <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{formatoFechaHora(new Date(ajuste.fecha))}</div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e5ea', paddingTop: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--ios-separator)', paddingTop: 8 }}>
               <span>Cantidad</span>
               <strong>{formatoKg(ajuste.cantidad)} kg</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Impacto en utilidad</span>
-              <strong style={{ color: ajuste.impactoUtilidad >= 0 ? '#16a34a' : '#b91c1c' }}>
+              <strong style={{ color: ajuste.impactoUtilidad >= 0 ? 'var(--exito)' : 'var(--peligro)' }}>
                 {formatoMoneda(ajuste.impactoUtilidad)}
               </strong>
             </div>

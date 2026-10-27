@@ -20,7 +20,7 @@ const BORDE = '1px solid #d1d5db';
 // izquierda en la primera columna): con encabezado/columna fijos la tabla
 // no puede usar border-collapse, y con borde completo se verian dobles.
 const celdaBase: CSSProperties = { borderRight: BORDE, borderBottom: BORDE, padding: '6px 8px', whiteSpace: 'nowrap' };
-const celdaEncabezado: CSSProperties = { ...celdaBase, borderTop: BORDE, background: '#f3f4f6', fontWeight: 600, textAlign: 'left' };
+const celdaEncabezado: CSSProperties = { ...celdaBase, borderTop: BORDE, background: 'var(--fondo-gris)', fontWeight: 600, textAlign: 'left' };
 
 // Fecha corta para que quepa debajo del precio en la celda (ej. "8 oct"),
 // con el año solo cuando no es el actual.
@@ -50,7 +50,7 @@ function CampoConLista({
   const texto = valor.trim().toLowerCase();
   const visibles = opciones.filter((o) => o.toLowerCase().includes(texto));
   const esNuevo = texto !== '' && !opciones.some((o) => mismoTexto(o, valor));
-  const estiloOpcion: CSSProperties = { padding: '0.6rem 0.85rem', cursor: 'pointer', borderBottom: '1px solid #f3f4f6', color: '#1c1c1e' };
+  const estiloOpcion: CSSProperties = { padding: '0.6rem 0.85rem', cursor: 'pointer', borderBottom: '1px solid var(--fondo-gris)', color: 'var(--ios-label)' };
 
   return (
     <div style={{ position: 'relative', flex: '1 1 180px' }}>
@@ -84,7 +84,7 @@ function CampoConLista({
             </div>
           ))}
           {esNuevo && (
-            <div onClick={() => setAbierto(false)} style={{ ...estiloOpcion, color: '#007aff', fontWeight: 500 }}>
+            <div onClick={() => setAbierto(false)} style={{ ...estiloOpcion, color: 'var(--ios-blue)', fontWeight: 500 }}>
               + Agregar “{valor.trim()}” como nuevo
             </div>
           )}
@@ -358,10 +358,10 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
           </div>
         </div>
 
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
           Precio por kg de cada proveedor, solo los actualizados en los últimos 10 días. Parte del costo de la última compra y se actualiza solo al registrar una
           compra nueva; toca cualquier celda para cambiarlo si el proveedor te avisa de otro precio. En{' '}
-          <span style={{ background: '#dcfce7', color: '#166534', fontWeight: 600, padding: '0 4px', borderRadius: 4 }}>verde</span>{' '}
+          <span style={{ background: 'var(--exito-fondo)', color: 'var(--exito-oscuro)', fontWeight: 600, padding: '0 4px', borderRadius: 4 }}>verde</span>{' '}
           el mejor precio de cada producto, y con ✎ los capturados a mano (distintos a la última compra).
         </p>
 
@@ -398,9 +398,9 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
         </div>
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>Cargando...</p>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
         ) : filas.length === 0 ? (
-          <p style={{ textAlign: 'center', color: '#6b7280' }}>
+          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>
             No hay precios de los últimos 10 días. Agrega un producto y un proveedor para empezar, o registra una compra.
           </p>
         ) : (
@@ -428,7 +428,7 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
               onScroll={(e) => sincronizar(e.currentTarget)}
               style={{ overflow: 'auto', maxHeight: '60vh', gridColumn: 2 }}
             >
-            <table ref={tablaRef} style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', fontSize: 14, color: '#1c1c1e' }}>
+            <table ref={tablaRef} style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%', fontSize: 14, color: 'var(--ios-label)' }}>
               <thead>
                 <tr>
                   <th ref={thProductoRef} style={{ ...celdaEncabezado, borderLeft: BORDE, position: 'sticky', top: 0, left: 0, zIndex: 3 }}>Producto</th>
@@ -480,16 +480,16 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
                               textAlign: 'right',
                               cursor: 'pointer',
                               minWidth: 90,
-                              background: esMejor ? '#dcfce7' : undefined,
+                              background: esMejor ? 'var(--exito-fondo)' : undefined,
                             }}
                           >
                             {precio && (
                               <>
-                                <div style={{ fontWeight: esMejor ? 700 : 400, color: esMejor ? '#166534' : undefined }}>
+                                <div style={{ fontWeight: esMejor ? 700 : 400, color: esMejor ? 'var(--exito-oscuro)' : undefined }}>
                                   {precio.origen === 'manual' && <span style={{ fontSize: 11, marginRight: 4 }}>✎</span>}
                                   {formatoMoneda(precio.costo)}
                                 </div>
-                                <div style={{ fontSize: 11, color: '#6b7280' }}>{fechaCorta(precio.actualizadoEn)}</div>
+                                <div style={{ fontSize: 11, color: 'var(--ios-secondary-label)' }}>{fechaCorta(precio.actualizadoEn)}</div>
                               </>
                             )}
                           </td>

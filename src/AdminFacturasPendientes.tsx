@@ -84,7 +84,7 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
         {cargando ? (
           <p>Cargando...</p>
         ) : facturasFiltradas.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>No hay facturas pendientes que coincidan.</p>
+          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay facturas pendientes que coincidan.</p>
         ) : (
           <>
             <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
@@ -93,7 +93,7 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <strong>{f.proveedor.nombre}</strong>
-                      <div style={{ fontSize: 13, color: '#6b7280' }}>{f.proveedor.telefono || ''}</div>
+                      <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{f.proveedor.telefono || ''}</div>
                       <div style={{ fontSize: 13 }}>Factura: {f.numeroFactura || 'Sin factura'}</div>
                       <div style={{ fontSize: 13 }}>Compra: {formatoFecha(new Date(f.fecha))}</div>
                       <div style={{ fontSize: 13 }}>
@@ -102,7 +102,7 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div>Total: {formatoMoneda(f.total)}</div>
-                      <div style={{ fontWeight: 700, color: '#b91c1c' }}>Saldo: {formatoMoneda(f.saldoPendiente)}</div>
+                      <div style={{ fontWeight: 700, color: 'var(--peligro)' }}>Saldo: {formatoMoneda(f.saldoPendiente)}</div>
                     </div>
                   </div>
                 </div>
@@ -115,7 +115,7 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
                 justifyContent: 'space-between',
                 padding: '0.75rem',
                 borderRadius: 14,
-                background: '#f8fafc',
+                background: 'var(--fondo-suave)',
                 fontWeight: 700,
               }}
             >

@@ -222,7 +222,7 @@ export function AdminHistorialVentas({
           <div
             className="banner-mensaje"
             onClick={onVerAntiguedadStock}
-            style={{ background: '#fff2f1', color: '#b91c1c', cursor: 'pointer' }}
+            style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)', cursor: 'pointer' }}
           >
             ⏳ Tienes {lotesAntiguosCount} lote{lotesAntiguosCount !== 1 ? 's' : ''} con más de 15 días en stock — toca para verlos
           </div>
@@ -232,7 +232,7 @@ export function AdminHistorialVentas({
           <div
             className="banner-mensaje"
             onClick={onVerAnaliticaVentas}
-            style={{ background: '#fff2f1', color: '#b91c1c', cursor: 'pointer' }}
+            style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)', cursor: 'pointer' }}
           >
             🎯 Tienes {clientesEnRiesgoCount} cliente{clientesEnRiesgoCount !== 1 ? 's' : ''} en riesgo — toca para ver a quién llamarle
           </div>
@@ -242,7 +242,7 @@ export function AdminHistorialVentas({
           <div
             className="banner-mensaje"
             onClick={onVerLlamadasHoy}
-            style={{ background: '#fff2f1', color: '#b91c1c', cursor: 'pointer' }}
+            style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)', cursor: 'pointer' }}
           >
             📞 Tienes {llamadasPendientesHoyCount} llamada{llamadasPendientesHoyCount !== 1 ? 's' : ''} pendiente{llamadasPendientesHoyCount !== 1 ? 's' : ''} hoy — toca para ver
           </div>
@@ -252,7 +252,7 @@ export function AdminHistorialVentas({
           <div
             className="banner-mensaje"
             onClick={onVerNotasAntiguas}
-            style={{ background: '#fff2f1', color: '#b91c1c', cursor: 'pointer' }}
+            style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)', cursor: 'pointer' }}
           >
             📆 Tienes {notasAntiguasCount} nota{notasAntiguasCount !== 1 ? 's' : ''} con más de 7 días sin liquidarse — toca para ver
           </div>
@@ -356,7 +356,7 @@ export function AdminHistorialVentas({
         {cargando ? (
           <p>Cargando...</p>
         ) : ventas.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>No hay ventas con esos filtros.</p>
+          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay ventas con esos filtros.</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {ventas.map((v) => (
@@ -368,29 +368,29 @@ export function AdminHistorialVentas({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <strong>Venta #{v.folio}</strong>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>
+                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                       {formatoFechaHora(new Date(v.fecha))}
                     </div>
                     <div style={{ fontSize: 13 }}>
                       <span style={{ fontSize: 16, fontWeight: 700 }}>{v.cliente.nombre}</span> · {v.cliente.telefono}
                     </div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>
+                    <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
                       Vendio: {v.vendedor.nombre} · {v.metodosPago.map(etiquetaMetodoPago).join(', ') || 'sin pago registrado'}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div><strong>{formatoMoneda(v.total)}</strong></div>
                     {v.cancelada ? (
-                      <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>❌ Cancelada</div>
+                      <div style={{ fontSize: 12, color: 'var(--peligro)', fontWeight: 700 }}>❌ Cancelada</div>
                     ) : (
-                      <div style={{ fontSize: 12, color: v.estadoPago === 'pagada' ? '#16a34a' : '#b91c1c' }}>
+                      <div style={{ fontSize: 12, color: v.estadoPago === 'pagada' ? 'var(--exito)' : 'var(--peligro)' }}>
                         {v.estadoPago === 'pagada' ? 'Pagada' : `Saldo: ${formatoMoneda(v.saldoPendiente)}`}
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div style={{ marginTop: 8, fontSize: 13, color: '#374151' }}>
+                <div style={{ marginTop: 8, fontSize: 13, color: 'var(--texto-fuerte)' }}>
                   {v.items.map((it, idx) => (
                     <div key={idx} style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span>{it.producto} {it.marca} · {it.cantidad} kg</span>

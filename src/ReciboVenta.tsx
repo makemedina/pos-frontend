@@ -99,7 +99,7 @@ export function ReciboVenta({ config, datos, elementId }: Props) {
       {config.piePaginaRecibo && (
         <div style={{ textAlign: 'center', marginTop: 12 }}>{config.piePaginaRecibo}</div>
       )}
-      <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: '#6b7280' }}>
+      <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--ios-secondary-label)' }}>
         Gracias por su compra
       </div>
     </div>

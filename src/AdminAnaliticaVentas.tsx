@@ -44,7 +44,7 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         {!cargando && (
-          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
             Compara a cada cliente contra su propio historial (no contra un promedio general). Se
             marca cuando su ritmo de compra o su gasto de los últimos 30 días cae a {UMBRAL_RIESGO}%
             o menos de lo normal para él — llámales para ofrecerles producto antes de perderlos del todo.
@@ -53,40 +53,40 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
 
         {!cargando && clientes.length > 0 && (
           <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-            <strong style={{ color: '#b91c1c' }}>{clientes.length}</strong> cliente{clientes.length !== 1 ? 's' : ''} en riesgo
+            <strong style={{ color: 'var(--peligro)' }}>{clientes.length}</strong> cliente{clientes.length !== 1 ? 's' : ''} en riesgo
           </div>
         )}
 
         {cargando ? (
           <p>Cargando...</p>
         ) : clientes.length === 0 ? (
-          <p style={{ color: '#6b7280' }}>No hay clientes en riesgo por ahora — necesitas al menos 3 compras de un cliente para poder comparar su ritmo.</p>
+          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay clientes en riesgo por ahora — necesitas al menos 3 compras de un cliente para poder comparar su ritmo.</p>
         ) : (
           <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
             {clientes.map((c) => (
               <div
                 key={c.id}
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, background: '#fff2f1' }}
+                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, background: 'var(--peligro-fondo)' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <strong>{c.nombre}</strong>
                     <div style={{ fontSize: 13 }}>
-                      <a href={`tel:${c.telefono}`} style={{ color: '#007aff' }}>{c.telefono}</a>
+                      <a href={`tel:${c.telefono}`} style={{ color: 'var(--ios-blue)' }}>{c.telefono}</a>
                     </div>
-                    <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 600, marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: 'var(--peligro)', fontWeight: 600, marginTop: 2 }}>
                       {etiquetaMotivo(c.motivo)}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', fontSize: 13 }}>
                     <div>{c.diasSinComprar} día{c.diasSinComprar !== 1 ? 's' : ''} sin comprar</div>
-                    <div style={{ color: '#6b7280', fontSize: 12 }}>
+                    <div style={{ color: 'var(--ios-secondary-label)', fontSize: 12 }}>
                       (normal: cada {c.intervaloPromedioDias} día{c.intervaloPromedioDias !== 1 ? 's' : ''})
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', marginTop: 8, fontSize: 12, color: '#6b7280', borderTop: '1px solid #fecaca', paddingTop: 6 }}>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: 8, fontSize: 12, color: 'var(--ios-secondary-label)', borderTop: '1px solid #fecaca', paddingTop: 6 }}>
                   <span>Ritmo actual: <strong>{c.ritmoPct}%</strong> de lo normal</span>
                   {c.gastoRecientePct !== null && (
                     <span>Gasto últimos 30 días: <strong>{c.gastoRecientePct}%</strong> de lo normal</span>

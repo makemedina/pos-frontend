@@ -74,7 +74,7 @@ export function SeleccionarClienteVenta({ onSeleccionar, onCerrar }: Props) {
         </header>
 
         <h2 style={{ margin: 0 }}>¿A quién le vendes?</h2>
-        <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
           Elige o crea el cliente antes de armar la nota, para poder sugerirte el último precio que
           le diste a cada producto.
         </p>
