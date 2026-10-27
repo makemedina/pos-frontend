@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Icono, type NombreIcono } from './iconos';
 import {
   obtenerCatalogo,
   registrarVenta,
@@ -111,7 +112,7 @@ type Pantalla =
 
 interface OpcionMenu {
   pantalla: Pantalla;
-  icono: string;
+  icono: NombreIcono;
   titulo: string;
   descripcion: string;
   clase: string;
@@ -121,14 +122,14 @@ interface OpcionMenu {
 // de inicio -- Ventas ya no es un grupo aparte, es la pantalla de inicio
 // misma. Cada una se filtra segun los permisos reales del usuario.
 const OPCIONES_MENU: OpcionMenu[] = [
-  { pantalla: 'inicio', icono: '🛒', titulo: 'Ventas', descripcion: 'Pantalla principal: ventas y nueva venta', clase: '' },
-  { pantalla: 'clientes', icono: '🧑‍🤝‍🧑', titulo: 'Clientes', descripcion: 'Lista de clientes: alta, edición y datos', clase: 'boton-flotante-cartera' },
-  { pantalla: 'clientesMenu', icono: '💵', titulo: 'Cobranza', descripcion: 'Cartera, notas antiguas, llamadas y pendientes', clase: 'boton-flotante-cartera' },
-  { pantalla: 'proveedoresMenu', icono: '🚚', titulo: 'Proveedores', descripcion: 'Compras, facturas y cuentas por pagar', clase: 'boton-flotante-cuentas' },
-  { pantalla: 'inventarioMenu', icono: '🥩', titulo: 'Inventario', descripcion: 'Productos, stock y movimientos', clase: 'boton-flotante-ajuste' },
-  { pantalla: 'finanzasMenu', icono: '💸', titulo: 'Finanzas', descripcion: 'Corte, gastos y estadísticas', clase: 'boton-flotante-gastos' },
-  { pantalla: 'configuracionMenu', icono: '⚙️', titulo: 'Configuración', descripcion: 'Negocio, usuarios y herramientas', clase: 'boton-flotante-ajuste' },
-  { pantalla: 'prospeccion', icono: '🗺️', titulo: 'Prospección', descripcion: 'Ruta de prospección y ventas en campo', clase: '' },
+  { pantalla: 'inicio', icono: 'ventas', titulo: 'Ventas', descripcion: 'Pantalla principal: ventas y nueva venta', clase: '' },
+  { pantalla: 'clientes', icono: 'clientes', titulo: 'Clientes', descripcion: 'Lista de clientes: alta, edición y datos', clase: 'boton-flotante-cartera' },
+  { pantalla: 'clientesMenu', icono: 'cobranza', titulo: 'Cobranza', descripcion: 'Cartera, notas antiguas, llamadas y pendientes', clase: 'boton-flotante-cartera' },
+  { pantalla: 'proveedoresMenu', icono: 'proveedores', titulo: 'Proveedores', descripcion: 'Compras, facturas y cuentas por pagar', clase: 'boton-flotante-cuentas' },
+  { pantalla: 'inventarioMenu', icono: 'inventario', titulo: 'Inventario', descripcion: 'Productos, stock y movimientos', clase: 'boton-flotante-ajuste' },
+  { pantalla: 'finanzasMenu', icono: 'finanzas', titulo: 'Finanzas', descripcion: 'Corte, gastos y estadísticas', clase: 'boton-flotante-gastos' },
+  { pantalla: 'configuracionMenu', icono: 'configuracion', titulo: 'Configuración', descripcion: 'Negocio, usuarios y herramientas', clase: 'boton-flotante-ajuste' },
+  { pantalla: 'prospeccion', icono: 'prospeccion', titulo: 'Prospección', descripcion: 'Ruta de prospección y ventas en campo', clase: '' },
 ];
 
 // A que seccion de OPCIONES_MENU pertenece cada pantalla de detalle -- solo
@@ -1080,7 +1081,7 @@ export default function App() {
               className={`sidebar-desktop-item${seccionActivaSidebar === o.pantalla ? ' activo' : ''}`}
               onClick={() => abrirPantalla(o.pantalla)}
             >
-              <span className="sidebar-desktop-icono">{o.icono}</span>
+              <span className="sidebar-desktop-icono"><Icono nombre={o.icono} /></span>
               <span>{o.titulo}</span>
             </div>
           ))}
@@ -1221,7 +1222,7 @@ export default function App() {
                   cursor: 'pointer',
                 }}
               >
-                <span style={{ fontSize: 20 }}>{o.icono}</span>
+                <Icono nombre={o.icono} />
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{o.titulo}</div>
                   <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{o.descripcion}</div>

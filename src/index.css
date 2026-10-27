@@ -201,9 +201,10 @@ textarea:focus {
   }
 
   .sidebar-desktop-icono {
-    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 22px;
-    text-align: center;
   }
 
   .sidebar-desktop-footer {
