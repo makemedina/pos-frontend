@@ -41,28 +41,28 @@ export function AjusteDetalleModal({ ajusteId, onCerrar }: Props) {
             <div>
               <strong>{ajuste.producto}</strong> {ajuste.marca}
             </div>
-            <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{formatoFechaHora(new Date(ajuste.fecha))}</div>
+            <div className="t-tenue-13">{formatoFechaHora(new Date(ajuste.fecha))}</div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--ios-separator)', paddingTop: 8 }}>
               <span>Cantidad</span>
               <strong>{formatoKg(ajuste.cantidad)} kg</strong>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div className="fila-entre">
               <span>Impacto en utilidad</span>
               <strong style={{ color: ajuste.impactoUtilidad >= 0 ? 'var(--exito)' : 'var(--peligro)' }}>
                 {formatoMoneda(ajuste.impactoUtilidad)}
               </strong>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div className="fila-entre">
               <span>Motivo</span>
               <strong>{ajuste.motivo}</strong>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div className="fila-entre">
               <span>Solicitado por</span>
               <strong>{ajuste.solicitadoPor}</strong>
             </div>
             {ajuste.autorizadoPor && (
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div className="fila-entre">
                 <span>Autorizado por</span>
                 <strong>{ajuste.autorizadoPor}</strong>
               </div>

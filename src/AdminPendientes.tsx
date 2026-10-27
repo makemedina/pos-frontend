@@ -245,11 +245,11 @@ export function AdminPendientes({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+    <div className="pantalla-centrada pantalla-arriba">
       <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 620, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0 }}>Pendientes</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+        <div className="fila-entre-centro">
+          <h2 className="m-0">Pendientes</h2>
+          <div className="fila-gap-8">
             <button onClick={() => (formAbierto ? limpiarForm() : setFormAbierto(true))}>
               {formAbierto ? 'Cancelar' : '+ Nuevo'}
             </button>
@@ -257,7 +257,7 @@ export function AdminPendientes({ onCerrar }: Props) {
           </div>
         </div>
 
-        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+        <p className="t-tenue-13-m0">
           Recordatorios y tareas sueltas programadas para un día específico. Los de hoy también aparecen en
           "Llamadas de hoy".
         </p>
@@ -283,7 +283,7 @@ export function AdminPendientes({ onCerrar }: Props) {
         {formAbierto && (
           <div style={{ ...CARD, display: 'grid', gap: '0.5rem' }}>
             {editandoId && <strong style={{ fontSize: 14 }}><Icono nombre="editar" size={16} /> Editando pendiente</strong>}
-            <label style={{ display: 'grid', gap: '0.25rem' }}>
+            <label className="grid-gap-025">
               <span>¿Qué hay que hacer?</span>
               <input
                 value={concepto}
@@ -292,7 +292,7 @@ export function AdminPendientes({ onCerrar }: Props) {
                 autoFocus
               />
             </label>
-            <label style={{ display: 'grid', gap: '0.25rem' }}>
+            <label className="grid-gap-025">
               <span>¿Qué día?</span>
               <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
             </label>
@@ -346,7 +346,7 @@ export function AdminPendientes({ onCerrar }: Props) {
                 </>
               )}
             </div>
-            <label style={{ display: 'grid', gap: '0.25rem' }}>
+            <label className="grid-gap-025">
               <span>Notas (opcional)</span>
               <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} style={{ resize: 'vertical' }} />
             </label>
@@ -357,38 +357,38 @@ export function AdminPendientes({ onCerrar }: Props) {
         )}
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
+          <p className="t-centro-tenue">Cargando...</p>
         ) : pendientes.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>No hay pendientes. Usa "+ Nuevo" para agregar uno.</p>
+          <p className="t-centro-tenue">No hay pendientes. Usa "+ Nuevo" para agregar uno.</p>
         ) : (
           <>
             {vencidos.length > 0 && (
-              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="lista-tarjetas grid-gap-05">
                 <strong style={{ fontSize: 13, color: 'var(--peligro)' }}>Vencidos ({vencidos.length})</strong>
                 {vencidos.map((p) => tarjeta(p, true))}
               </div>
             )}
 
             {deHoy.length > 0 && (
-              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                <strong style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Hoy ({deHoy.length})</strong>
+              <div className="lista-tarjetas grid-gap-05">
+                <strong className="t-tenue-13">Hoy ({deHoy.length})</strong>
                 {deHoy.map((p) => tarjeta(p))}
               </div>
             )}
 
             {proximos.length > 0 && (
-              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                <strong style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Próximos ({proximos.length})</strong>
+              <div className="lista-tarjetas grid-gap-05">
+                <strong className="t-tenue-13">Próximos ({proximos.length})</strong>
                 {proximos.map((p) => tarjeta(p))}
               </div>
             )}
 
             {activos.length === 0 && (
-              <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>No hay pendientes activos. 🎉</p>
+              <p className="t-centro-tenue">No hay pendientes activos. 🎉</p>
             )}
 
             {completados.length > 0 && (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="grid-gap-05">
                 <button
                   onClick={() => setMostrarCompletados((v) => !v)}
                   style={{ background: 'none', border: 'none', color: 'var(--ios-secondary-label)', fontSize: 13, cursor: 'pointer', textAlign: 'left', padding: 0 }}

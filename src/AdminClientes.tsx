@@ -94,7 +94,7 @@ function FormularioDireccion({
   }
 
   return (
-    <div style={{ display: 'grid', gap: 8 }}>
+    <div className="grid-gap-8">
       <input placeholder="Calle y número" value={valores.calle} onChange={(e) => set('calle', e.target.value)} />
       <input placeholder="Colonia" value={valores.colonia} onChange={(e) => set('colonia', e.target.value)} />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -465,11 +465,11 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>{cliente ? cliente.nombre : 'Clientes'}</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             {!clienteId && <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>}
             <button onClick={clienteId ? volverALista : onCerrar}>
               {clienteId ? '← Clientes' : 'Cerrar'}
@@ -488,7 +488,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 <option value="conDeuda">Con deuda</option>
                 <option value="sinDeuda">Sin deuda</option>
               </select>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div className="fila-gap-8">
                 <button onClick={() => setMostrarAlta(true)}>+ Nuevo cliente</button>
                 <button onClick={() => setMostrarImportar(true)}><Icono nombre="pendientes" size={16} /> Importar lista</button>
               </div>
@@ -527,7 +527,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
             </p>
 
             {mostrarAlta && (
-              <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <div className="tarjeta-grid-05">
                 <input placeholder="Nombre del negocio" value={nombreNuevo} onChange={(e) => setNombreNuevo(e.target.value)} />
                 <input
                   placeholder="Nombre del contacto (opcional)"
@@ -547,7 +547,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 <label className="etiqueta">Dirección de entrega de mercancía (si es distinta)</label>
                 <FormularioDireccion valores={direccionEntregaNueva} onChange={setDireccionEntregaNueva} />
 
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="fila-gap-8">
                   <button onClick={crearNuevoCliente}>Guardar</button>
                   <button onClick={() => setMostrarAlta(false)}>Cancelar</button>
                 </div>
@@ -555,8 +555,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
             )}
 
             {mostrarImportar && (
-              <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-                <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+              <div className="tarjeta-grid-05">
+                <p className="t-tenue-13">
                   Pega la lista de nombres, uno por línea. Se crean sin teléfono — lo puedes
                   agregar después desde el detalle de cada cliente.
                 </p>
@@ -567,7 +567,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                   onChange={(e) => setTextoImportar(e.target.value)}
                   style={{ width: '100%', resize: 'vertical', fontFamily: 'inherit' }}
                 />
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="fila-gap-8">
                   <button onClick={importarLista} disabled={importando}>
                     {importando ? 'Importando...' : `Importar ${textoImportar.split('\n').filter((l) => l.trim()).length} clientes`}
                   </button>
@@ -586,8 +586,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
             {cargandoLista ? (
               <p>Cargando...</p>
             ) : (
-              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                {clientesFiltrados.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay clientes que coincidan.</p>}
+              <div className="lista-tarjetas grid-gap-05">
+                {clientesFiltrados.length === 0 && <p className="t-tenue">No hay clientes que coincidan.</p>}
                 {clientesFiltrados.map((c) => (
                   <div
                     key={c.id}
@@ -596,7 +596,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                   >
                     <div>
                       <strong>{c.nombre}</strong>
-                      <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{c.telefono}</div>
+                      <div className="t-tenue-13">{c.telefono}</div>
                       <div style={{ fontSize: 12, color: 'var(--texto-tenue)' }}>
                         {c.ultimaCompra
                           ? `Última compra: ${formatoFecha(c.ultimaCompra)} (${haceDias(c.ultimaCompra)})`
@@ -616,7 +616,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         {/* ---------- DETALLE DE UN CLIENTE ---------- */}
         {clienteId && cliente && (
           <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="fila-entre-centro">
               <span style={{ fontSize: 14, color: 'var(--ios-secondary-label)' }}>Saldo</span>
               <strong style={{ fontSize: 18, color: cliente.saldoTotal > 0 ? 'var(--peligro)' : 'var(--exito)' }}>
                 {formatoMoneda(cliente.saldoTotal)}
@@ -643,7 +643,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
             </div>
 
             {pestana === 'datos' && (
-              <div style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <div className="tarjeta-grid-075">
                 <label>
                   Nombre del negocio
                   <input value={editNombre} onChange={(e) => setEditNombre(e.target.value)} />
@@ -770,14 +770,14 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
 
                 {confirmandoEliminar && (
                   <div className="bloque-autorizacion">
-                    <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                    <p className="texto-alerta fw-600">
                       ¿Seguro que quieres eliminar a "{cliente.nombre}"? No se puede deshacer.
                     </p>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                      <button onClick={confirmarEliminarCliente} disabled={eliminando} style={{ flex: 1 }}>
+                    <div className="fila-gap-8-mt-8">
+                      <button onClick={confirmarEliminarCliente} disabled={eliminando} className="flex-1">
                         {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
                       </button>
-                      <button onClick={() => setConfirmandoEliminar(false)} style={{ flex: 1 }}>
+                      <button onClick={() => setConfirmandoEliminar(false)} className="flex-1">
                         No, regresar
                       </button>
                     </div>
@@ -787,7 +787,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
             )}
 
             {pestana === 'transacciones' && (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="grid-gap-05">
                 <input
                   className="buscador"
                   placeholder="Buscar por producto, marca o código"
@@ -797,20 +797,20 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                 {cargandoVentas ? (
                   <p>Cargando...</p>
                 ) : ventasFiltradas.length === 0 ? (
-                  <p style={{ color: 'var(--ios-secondary-label)' }}>No hay transacciones que coincidan.</p>
+                  <p className="t-tenue">No hay transacciones que coincidan.</p>
                 ) : (
                   ventasFiltradas.map((v) => (
                     <div
                       key={v.id}
-                      style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                      className="tarjeta-click"
                       onClick={() => setNotaAbierta(v.id)}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div className="fila-entre">
                         <div>
                           <strong>Venta #{v.folio}</strong>
-                          <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoFecha(new Date(v.fecha))}</div>
+                          <div className="t-tenue-12">{formatoFecha(new Date(v.fecha))}</div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
+                        <div className="t-der">
                           <div>{formatoMoneda(v.total)}</div>
                           <div style={{ fontSize: 12, color: v.estadoPago === 'pagada' ? 'var(--exito)' : 'var(--peligro)' }}>
                             {v.estadoPago === 'pagada' ? 'Pagada' : `Saldo: ${formatoMoneda(v.saldoPendiente)}`}
@@ -824,11 +824,11 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
             )}
 
             {pestana === 'movimientos' && (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="grid-gap-05">
                 {cargandoMovimientos ? (
                   <p>Cargando...</p>
                 ) : movimientos.length === 0 ? (
-                  <p style={{ color: 'var(--ios-secondary-label)' }}>Sin movimientos.</p>
+                  <p className="t-tenue">Sin movimientos.</p>
                 ) : (
                   movimientos.map((m) => (
                     <div
@@ -839,7 +839,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                         {m.tipo === 'venta' ? <><Icono nombre="ventas" size={16} /> Venta</> : <><Icono nombre="cobranza" size={16} /> Abono</>} #{m.folio}
                         {m.cancelado && <span style={{ color: 'var(--peligro)', fontWeight: 600 }}> (cancelado)</span>}
                         <br />
-                        <small style={{ color: 'var(--ios-secondary-label)' }}>{formatoFechaHora(new Date(m.fecha))}</small>
+                        <small className="t-tenue">{formatoFechaHora(new Date(m.fecha))}</small>
                       </span>
                       <strong style={{ color: m.tipo === 'venta' ? 'var(--peligro)' : 'var(--exito)', textDecoration: m.cancelado ? 'line-through' : 'none' }}>
                         {m.tipo === 'venta' ? '+' : '-'}{formatoMoneda(m.monto)}

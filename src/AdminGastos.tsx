@@ -401,11 +401,11 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
   }, {});
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>Gastos</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             {pestana === 'historico' && <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>}
             <button onClick={onCerrar}>Cerrar</button>
           </div>
@@ -433,7 +433,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
         </div>
 
         {pestana === 'registrar' && (
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+          <form onSubmit={handleSubmit} className="tarjeta-grid-075">
             <h3>Registrar gasto</h3>
             <input value={concepto} onChange={(e) => setConcepto(e.target.value)} placeholder="Concepto" required />
             <input value={monto} onChange={(e) => setMonto(e.target.value)} type="number" step="0.01" placeholder="Monto" required />
@@ -461,12 +461,12 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                     </optgroup>
                   ))}
                 </select>
-                <button type="button" className="boton-secundario" onClick={() => setMostrarNuevaCategoria(true)} style={{ width: '100%', marginTop: 0 }}>
+                <button type="button" className="boton-secundario w-100-mt-0" onClick={() => setMostrarNuevaCategoria(true)}>
                   + Nueva categoría
                 </button>
               </>
             ) : (
-              <div style={{ display: 'grid', gap: 8 }}>
+              <div className="grid-gap-8">
                 <input
                   placeholder="Nombre de la categoría"
                   value={nombreCategoriaNueva}
@@ -477,7 +477,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                     <option key={d} value={d}>{d}</option>
                   ))}
                 </select>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="fila-gap-8">
                   <button type="button" onClick={crearCategoriaNueva}>Guardar categoría</button>
                   <button type="button" onClick={() => setMostrarNuevaCategoria(false)}>Cancelar</button>
                 </div>
@@ -504,7 +504,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                   </div>
                 ))}
                 {busquedaProveedor.length >= 2 && resultadosProveedor.length === 0 && (
-                  <button type="button" className="boton-secundario" onClick={crearProveedorDesdeGasto} style={{ width: '100%', marginTop: 0 }}>
+                  <button type="button" className="boton-secundario w-100-mt-0" onClick={crearProveedorDesdeGasto}>
                     + Agregar "{busquedaProveedor}" como proveedor nuevo
                   </button>
                 )}
@@ -561,8 +561,8 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
         {pestana === 'historico' && (
           <>
             <div style={{ ...CARD, display: 'grid', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <label style={{ display: 'grid', gap: '0.25rem' }}>
+              <div className="fila-gap-075-wrap">
+                <label className="grid-gap-025">
                   <span>Periodo</span>
                   <select value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
                     <option value="dia">Hoy</option>
@@ -581,18 +581,18 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
 
                 {periodo === 'rango' && (
                   <>
-                    <label style={{ display: 'grid', gap: '0.25rem' }}>
+                    <label className="grid-gap-025">
                       <span>Desde</span>
                       <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
                     </label>
-                    <label style={{ display: 'grid', gap: '0.25rem' }}>
+                    <label className="grid-gap-025">
                       <span>Hasta</span>
                       <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
                     </label>
                   </>
                 )}
 
-                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                <label className="grid-gap-025">
                   <span>Categoría</span>
                   <select value={categoriaFiltro} onChange={(e) => setCategoriaFiltro(e.target.value)}>
                     <option value="">Todas</option>
@@ -606,7 +606,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                   </select>
                 </label>
 
-                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                <label className="grid-gap-025">
                   <span>Método de pago</span>
                   <select value={metodoPagoFiltro} onChange={(e) => setMetodoPagoFiltro(e.target.value)}>
                     <option value="">Todos</option>
@@ -642,7 +642,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
             </div>
 
             {!cargandoHistorial && (
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div className="fila-gap-075-wrap">
                 <div style={{ ...CARD, flex: 1 }}>
                   <strong>{gastosActivos.length}</strong> gasto{gastosActivos.length !== 1 ? 's' : ''}
                 </div>
@@ -654,7 +654,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
 
             {!cargandoHistorial && Object.keys(totalPorDepartamento).length > 0 && (
               <div style={{ ...CARD, display: 'grid', gap: 4 }}>
-                <strong style={{ fontSize: 13 }}>Por departamento</strong>
+                <strong className="fs-13">Por departamento</strong>
                 {Object.entries(totalPorDepartamento)
                   .sort((a, b) => b[1] - a[1])
                   .map(([departamento, monto]) => (
@@ -672,15 +672,15 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
               value={busquedaGasto}
               onChange={(e) => setBusquedaGasto(e.target.value)}
             />
-            <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
+            <div className="lista-tarjetas grid-gap-075">
               {cargandoHistorial && <p>Cargando...</p>}
               {!cargandoHistorial && gastosFiltrados.length === 0 && (
-                <p style={{ color: 'var(--ios-secondary-label)' }}>No hay gastos que coincidan.</p>
+                <p className="t-tenue">No hay gastos que coincidan.</p>
               )}
               {!cargandoHistorial && gastosFiltrados.map((gasto) => (
-                <div key={gasto.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <div key={gasto.id} className="tarjeta-sombra">
                   {editandoId === gasto.id ? (
-                    <div style={{ display: 'grid', gap: 8 }}>
+                    <div className="grid-gap-8">
                       <label className="etiqueta">Concepto</label>
                       <input value={editConcepto} onChange={(e) => setEditConcepto(e.target.value)} />
                       <label className="etiqueta">Monto</label>
@@ -703,24 +703,24 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                       <label className="etiqueta">Día en que se aplica el gasto</label>
                       <input type="date" value={editFecha} onChange={(e) => setEditFecha(e.target.value)} />
                       <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                        <button onClick={() => guardarEdicion(gasto.id)} disabled={guardandoEdicion} style={{ flex: 1 }}>
+                        <button onClick={() => guardarEdicion(gasto.id)} disabled={guardandoEdicion} className="flex-1">
                           {guardandoEdicion ? 'Guardando...' : 'Guardar cambios'}
                         </button>
-                        <button className="boton-secundario" onClick={cancelarEdicion} disabled={guardandoEdicion} style={{ flex: 1 }}>
+                        <button className="boton-secundario flex-1" onClick={cancelarEdicion} disabled={guardandoEdicion}>
                           Cancelar
                         </button>
                       </div>
                     </div>
                   ) : (
                     <>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div className="fila-entre">
                         <div>
                           <strong>{gasto.concepto}</strong>
                           <div>{gasto.categoria.nombre}</div>
-                          {gasto.proveedor && <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>Proveedor: {gasto.proveedor.nombre}</div>}
-                          <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoFecha(new Date(gasto.fecha))}</div>
+                          {gasto.proveedor && <div className="t-tenue-12">Proveedor: {gasto.proveedor.nombre}</div>}
+                          <div className="t-tenue-12">{formatoFecha(new Date(gasto.fecha))}</div>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
+                        <div className="t-der">
                           <div>{formatoMoneda(Number(gasto.monto))}</div>
                           <small>{gasto.registradoPor.nombre}</small>
                         </div>
@@ -750,12 +750,12 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                   )}
 
                   {editandoId === gasto.id ? null : gasto.cancelado ? (
-                    <div className="aviso-alerta" style={{ marginTop: 8 }}>
+                    <div className="aviso-alerta mt-8">
                       ❌ Cancelado{gasto.canceladoEn ? ` el ${formatoFechaHora(new Date(gasto.canceladoEn))}` : ''}
                     </div>
                   ) : confirmandoId === gasto.id ? (
-                    <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
-                      <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                    <div className="bloque-autorizacion mt-8">
+                      <p className="texto-alerta fw-600">
                         ¿Seguro que quieres cancelar este gasto? No se puede deshacer.
                       </p>
                       {necesitaAutorizacion && (
@@ -773,11 +773,11 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                           />
                         </>
                       )}
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                        <button onClick={() => confirmarCancelacion(gasto.id)} disabled={cancelando} style={{ flex: 1 }}>
+                      <div className="fila-gap-8-mt-8">
+                        <button onClick={() => confirmarCancelacion(gasto.id)} disabled={cancelando} className="flex-1">
                           {cancelando ? 'Cancelando...' : 'Sí, cancelar'}
                         </button>
-                        <button onClick={() => { setConfirmandoId(null); setNecesitaAutorizacion(false); }} style={{ flex: 1 }}>
+                        <button onClick={() => { setConfirmandoId(null); setNecesitaAutorizacion(false); }} className="flex-1">
                           No, regresar
                         </button>
                       </div>

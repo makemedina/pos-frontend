@@ -129,11 +129,11 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>Movimientos de inventario</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>
             <button onClick={onCerrar}>Cerrar</button>
           </div>
@@ -142,8 +142,8 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, display: 'grid', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <label style={{ display: 'grid', gap: '0.25rem' }}>
+          <div className="fila-gap-075-wrap">
+            <label className="grid-gap-025">
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
                 <option value="dia">Hoy</option>
@@ -161,11 +161,11 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
 
             {periodo === 'rango' && (
               <>
-                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                <label className="grid-gap-025">
                   <span>Desde</span>
                   <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
                 </label>
-                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                <label className="grid-gap-025">
                   <span>Hasta</span>
                   <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
                 </label>
@@ -205,31 +205,31 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
           <>
             {resumen && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
-                <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <div className="tarjeta-sombra">
                   <strong>Entradas</strong>
                   <div>{formatoKg(resumen.entradasKg)} kg</div>
-                  <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(resumen.entradasValor)}</div>
+                  <div className="t-tenue-13">{formatoMoneda(resumen.entradasValor)}</div>
                 </div>
-                <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <div className="tarjeta-sombra">
                   <strong>Salidas</strong>
                   <div>{formatoKg(resumen.salidasKg)} kg</div>
-                  <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(resumen.salidasValor)}</div>
+                  <div className="t-tenue-13">{formatoMoneda(resumen.salidasValor)}</div>
                 </div>
-                <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <div className="tarjeta-sombra">
                   <strong>Merma</strong>
                   <div>{formatoKg(resumen.mermaKg)} kg</div>
-                  <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(resumen.mermaValor)}</div>
+                  <div className="t-tenue-13">{formatoMoneda(resumen.mermaValor)}</div>
                 </div>
-                <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <div className="tarjeta-sombra">
                   <strong>Corrección neta</strong>
                   <div>{formatoKg(resumen.correccionNetaKg)} kg</div>
-                  <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(resumen.correccionNetaValor)}</div>
+                  <div className="t-tenue-13">{formatoMoneda(resumen.correccionNetaValor)}</div>
                 </div>
               </div>
             )}
 
-            <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-              {movimientos.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay movimientos con esos filtros.</p>}
+            <div className="lista-tarjetas grid-gap-05">
+              {movimientos.length === 0 && <p className="t-tenue">No hay movimientos con esos filtros.</p>}
               {movimientos.map((m) => {
                 const info = ETIQUETAS_TIPO[m.tipo];
                 return (
@@ -243,14 +243,14 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
                         <strong>{m.producto}</strong> {m.marca}
                       </div>
                       <div style={{ fontSize: 12, color: info.color, fontWeight: 600 }}>{info.texto}</div>
-                      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{m.referencia}</div>
+                      <div className="t-tenue-12">{m.referencia}</div>
                       <div style={{ fontSize: 11, color: 'var(--texto-tenue)' }}>{formatoFechaHora(new Date(m.fecha))}</div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    <div className="t-der">
                       <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? 'var(--exito)' : 'var(--peligro)' }}>
                         {m.cantidad >= 0 ? '+' : ''}{formatoKg(m.cantidad)} kg
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(m.valor)}</div>
+                      <div className="t-tenue-12">{formatoMoneda(m.valor)}</div>
                     </div>
                   </div>
                 );

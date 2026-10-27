@@ -34,9 +34,9 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>Analítica de ventas</h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
@@ -44,7 +44,7 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         {!cargando && (
-          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+          <p className="t-tenue-13-m0">
             Compara a cada cliente contra su propio historial (no contra un promedio general). Se
             marca cuando su ritmo de compra o su gasto de los últimos 30 días cae a {UMBRAL_RIESGO}%
             o menos de lo normal para él — llámales para ofrecerles producto antes de perderlos del todo.
@@ -52,7 +52,7 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
         )}
 
         {!cargando && clientes.length > 0 && (
-          <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+          <div className="tarjeta-sombra">
             <strong style={{ color: 'var(--peligro)' }}>{clientes.length}</strong> cliente{clientes.length !== 1 ? 's' : ''} en riesgo
           </div>
         )}
@@ -60,9 +60,9 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
         {cargando ? (
           <p>Cargando...</p>
         ) : clientes.length === 0 ? (
-          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay clientes en riesgo por ahora — necesitas al menos 3 compras de un cliente para poder comparar su ritmo.</p>
+          <p className="t-tenue">No hay clientes en riesgo por ahora — necesitas al menos 3 compras de un cliente para poder comparar su ritmo.</p>
         ) : (
-          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="lista-tarjetas grid-gap-075">
             {clientes.map((c) => (
               <div
                 key={c.id}
@@ -71,7 +71,7 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <strong>{c.nombre}</strong>
-                    <div style={{ fontSize: 13 }}>
+                    <div className="fs-13">
                       <a href={`tel:${c.telefono}`} style={{ color: 'var(--acento)' }}>{c.telefono}</a>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--peligro)', fontWeight: 600, marginTop: 2 }}>

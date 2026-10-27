@@ -116,22 +116,21 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>Proveedores</h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="fila-gap-8">
           <input
-            className="buscador"
+            className="buscador flex-1"
             placeholder="Buscar por nombre o teléfono"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            style={{ flex: 1 }}
           />
           <button onClick={() => setMostrarAlta(true)} style={{ width: 'auto', padding: '0 16px' }}>
             + Nuevo
@@ -139,10 +138,10 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
         </div>
 
         {mostrarAlta && (
-          <div style={{ display: 'grid', gap: '0.5rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+          <div className="tarjeta-grid-05">
             <input placeholder="Nombre" value={nombreNuevo} onChange={(e) => setNombreNuevo(e.target.value)} />
             <input placeholder="Teléfono (opcional)" value={telefonoNuevo} onChange={(e) => setTelefonoNuevo(e.target.value)} />
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="fila-gap-8">
               <button onClick={crear}>Guardar</button>
               <button onClick={() => setMostrarAlta(false)}>Cancelar</button>
             </div>
@@ -150,30 +149,30 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
         )}
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
+          <p className="t-centro-tenue">Cargando...</p>
         ) : proveedoresFiltrados.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>No hay proveedores que coincidan.</p>
+          <p className="t-centro-tenue">No hay proveedores que coincidan.</p>
         ) : (
-          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
+          <div className="lista-tarjetas grid-gap-05">
             {proveedoresFiltrados.map((p) => (
-              <div key={p.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+              <div key={p.id} className="tarjeta-sombra">
                 {editandoId === p.id ? (
-                  <div style={{ display: 'grid', gap: 8 }}>
+                  <div className="grid-gap-8">
                     <input value={nombreEdicion} onChange={(e) => setNombreEdicion(e.target.value)} placeholder="Nombre" />
                     <input value={telefonoEdicion} onChange={(e) => setTelefonoEdicion(e.target.value)} placeholder="Teléfono" />
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={guardarEdicion} style={{ flex: 1 }}>Guardar</button>
-                      <button onClick={() => setEditandoId(null)} style={{ flex: 1 }}>Cancelar</button>
+                    <div className="fila-gap-8">
+                      <button onClick={guardarEdicion} className="flex-1">Guardar</button>
+                      <button onClick={() => setEditandoId(null)} className="flex-1">Cancelar</button>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="fila-entre-centro">
                     <div
                       onClick={puedeVerCostos ? () => setProveedorCompras(p) : undefined}
                       style={{ cursor: puedeVerCostos ? 'pointer' : undefined, flex: 1 }}
                     >
                       <strong>{p.nombre}</strong>
-                      <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+                      <div className="t-tenue-13">
                         {p.telefono || 'Sin teléfono'}
                         {puedeVerCostos && <span style={{ color: 'var(--acento)' }}> · Ver compras ›</span>}
                       </div>
@@ -196,15 +195,15 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
                 )}
 
                 {confirmandoEliminarId === p.id && (
-                  <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
-                    <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                  <div className="bloque-autorizacion mt-8">
+                    <p className="texto-alerta fw-600">
                       ¿Seguro que quieres eliminar a "{p.nombre}"? No se puede deshacer.
                     </p>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                      <button onClick={() => confirmarEliminar(p.id, p.nombre)} disabled={eliminando} style={{ flex: 1 }}>
+                    <div className="fila-gap-8-mt-8">
+                      <button onClick={() => confirmarEliminar(p.id, p.nombre)} disabled={eliminando} className="flex-1">
                         {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
                       </button>
-                      <button onClick={() => setConfirmandoEliminarId(null)} style={{ flex: 1 }}>
+                      <button onClick={() => setConfirmandoEliminarId(null)} className="flex-1">
                         No, regresar
                       </button>
                     </div>

@@ -177,7 +177,7 @@ export function Checkout({
         </div>
 
         <label className="etiqueta">Pago (efectivo y/o transferencia)</label>
-        <label style={{ fontSize: 13 }}>
+        <label className="fs-13">
           Efectivo
           <div className="campo-precio">
             <span>$</span>
@@ -192,7 +192,7 @@ export function Checkout({
             />
           </div>
         </label>
-        <label style={{ fontSize: 13 }}>
+        <label className="fs-13">
           Transferencia
           <div className="campo-precio">
             <span>$</span>
@@ -209,7 +209,7 @@ export function Checkout({
         </label>
 
         {saldoFavorDisponible > 0 && (
-          <label style={{ fontSize: 13 }}>
+          <label className="fs-13">
             Saldo a favor (tiene {formatoMoneda(saldoFavorDisponible)} disponible)
             <div className="campo-precio">
               <span>$</span>

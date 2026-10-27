@@ -228,7 +228,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
         </div>
 
         {mensaje && <div className="banner-mensaje">{mensaje}</div>}
-        {cargando && <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>}
+        {cargando && <p className="t-centro-tenue">Cargando...</p>}
 
         {compra && (
           <div id={ELEMENT_ID}>
@@ -274,7 +274,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
             </div>
 
             {compra.cancelada && (
-              <div className="aviso-alerta" style={{ marginTop: 8 }}>
+              <div className="aviso-alerta mt-8">
                 ❌ Esta compra fue cancelada{compra.canceladaEn ? ` el ${formatoFechaHora(new Date(compra.canceladaEn))}` : ''}.
                 El inventario que había agregado ya se puso en cero.
               </div>
@@ -283,14 +283,14 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
             {!compra.cancelada && pagos.length > 0 && (
               <div style={{ marginTop: 12 }}>
                 <h3 style={{ fontSize: 15, marginBottom: 6 }}>Historial de abonos</h3>
-                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                <div className="grid-gap-05">
                   {pagos.map((p) => (
                     <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div className="fila-entre">
                         <span>
                           {formatoFecha(new Date(p.fecha))} · {new Date(p.fecha).toLocaleTimeString()} · {p.metodoPago}
                           <br />
-                          <small style={{ color: 'var(--ios-secondary-label)' }}>Registró: {p.registradoPor.nombre}</small>
+                          <small className="t-tenue">Registró: {p.registradoPor.nombre}</small>
                         </span>
                         <strong style={p.cancelado ? { textDecoration: 'line-through', color: 'var(--texto-tenue)' } : undefined}>
                           {formatoMoneda(p.monto)}
@@ -298,15 +298,15 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
                       </div>
 
                       {p.cancelado && (
-                        <div className="aviso-alerta" style={{ marginTop: 6 }}>
+                        <div className="aviso-alerta mt-6">
                           ❌ Cancelado{p.canceladoEn ? ` el ${formatoFechaHora(new Date(p.canceladoEn))}` : ''}
                         </div>
                       )}
 
                       {!p.cancelado &&
                         (confirmandoCancelarPagoId === p.id ? (
-                          <div className="bloque-autorizacion" style={{ marginTop: 6 }}>
-                            <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                          <div className="bloque-autorizacion mt-6">
+                            <p className="texto-alerta fw-600">
                               ¿Seguro que quieres cancelar este pago? No se puede deshacer.
                             </p>
                             {necesitaAutorizacionPago && (
@@ -324,11 +324,11 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
                                 />
                               </>
                             )}
-                            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                              <button onClick={() => confirmarCancelarPago(p.id)} disabled={cancelandoPago} style={{ flex: 1 }}>
+                            <div className="fila-gap-8-mt-8">
+                              <button onClick={() => confirmarCancelarPago(p.id)} disabled={cancelandoPago} className="flex-1">
                                 {cancelandoPago ? 'Cancelando...' : 'Sí, cancelar'}
                               </button>
-                              <button onClick={() => setConfirmandoCancelarPagoId(null)} style={{ flex: 1 }}>
+                              <button onClick={() => setConfirmandoCancelarPagoId(null)} className="flex-1">
                                 No, regresar
                               </button>
                             </div>
@@ -372,18 +372,18 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
 
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               {!imagenBlob ? (
-                <button onClick={generarImagen} disabled={!!exportando} style={{ flex: 1 }}>
+                <button onClick={generarImagen} disabled={!!exportando} className="flex-1">
                   {exportando === 'imagen' ? 'Generando...' : <><Icono nombre="imagen" size={16} /> Generar imagen</>}
                 </button>
               ) : (
-                <button onClick={compartirImagenLista} style={{ flex: 1 }}><Icono nombre="compartir" size={16} /> Compartir imagen</button>
+                <button onClick={compartirImagenLista} className="flex-1"><Icono nombre="compartir" size={16} /> Compartir imagen</button>
               )}
               {!pdfBlob ? (
-                <button onClick={generarPdf} disabled={!!exportando} style={{ flex: 1 }}>
+                <button onClick={generarPdf} disabled={!!exportando} className="flex-1">
                   {exportando === 'pdf' ? 'Generando...' : <><Icono nombre="documento" size={16} /> Generar PDF</>}
                 </button>
               ) : (
-                <button onClick={compartirPdfListo} style={{ flex: 1 }}><Icono nombre="compartir" size={16} /> Compartir PDF</button>
+                <button onClick={compartirPdfListo} className="flex-1"><Icono nombre="compartir" size={16} /> Compartir PDF</button>
               )}
             </div>
 
@@ -398,8 +398,8 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
             )}
 
             {confirmandoCancelacion && (
-              <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
-                <p className="texto-alerta" style={{ fontWeight: 600 }}>
+              <div className="bloque-autorizacion mt-8">
+                <p className="texto-alerta fw-600">
                   ¿Seguro que quieres cancelar esta compra? Solo se puede si nada de esa
                   mercancía se ha vendido todavía. Esta acción no se puede deshacer.
                 </p>
@@ -420,8 +420,8 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
                   </>
                 )}
 
-                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                  <button onClick={confirmarCancelacion} disabled={cancelando} style={{ flex: 1 }}>
+                <div className="fila-gap-8-mt-8">
+                  <button onClick={confirmarCancelacion} disabled={cancelando} className="flex-1">
                     {cancelando ? 'Cancelando...' : 'Sí, cancelar compra'}
                   </button>
                   <button
@@ -429,7 +429,7 @@ export function CompraDetalleModal({ compraId, onCerrar, onCancelada }: Props) {
                       setConfirmandoCancelacion(false);
                       setNecesitaAutorizacion(false);
                     }}
-                    style={{ flex: 1 }}
+                    className="flex-1"
                   >
                     No, regresar
                   </button>

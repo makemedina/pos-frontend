@@ -156,11 +156,11 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
   );
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>{productoElegido ? `${productoElegido.producto} · ${productoElegido.marca}` : 'Productos'}</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             {!productoElegido && <button onClick={onIrAjusteGeneral}>⚖️ Ajuste de inventario</button>}
             <button onClick={productoElegido ? volverALista : onCerrar}>
               {productoElegido ? '← Productos' : 'Cerrar'}
@@ -204,8 +204,8 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
             {cargando ? (
               <p>Cargando...</p>
             ) : (
-              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                {productosVisibles.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay productos que coincidan.</p>}
+              <div className="lista-tarjetas grid-gap-05">
+                {productosVisibles.length === 0 && <p className="t-tenue">No hay productos que coincidan.</p>}
                 {productosVisibles.map((p) => (
                   <div
                     key={p.id}
@@ -224,7 +224,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                       <strong>{p.producto}</strong> {p.marca}
                       {p.pocoStock && <span style={{ color: 'var(--peligro)', fontSize: 12 }}> · poco stock</span>}
                       {p.lotes.map((l, i) => (
-                        <div key={i} style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                        <div key={i} className="t-tenue-12">
                           {formatoKg(l.cantidadDisponible)} kg a {formatoMoneda(l.costoUnitario)}/kg
                         </div>
                       ))}
@@ -247,7 +247,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                     <input
                       value={nombreEdicion}
                       onChange={(e) => setNombreEdicion(e.target.value)}
-                      style={{ flex: 1 }}
+                      className="flex-1"
                       autoFocus
                     />
                     <button onClick={guardarNombre} disabled={guardandoNombre || !nombreEdicion.trim()}>
@@ -270,7 +270,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                     <input
                       value={marcaEdicion}
                       onChange={(e) => setMarcaEdicion(e.target.value)}
-                      style={{ flex: 1 }}
+                      className="flex-1"
                       autoFocus
                     />
                     <button onClick={guardarMarca} disabled={guardandoMarca || !marcaEdicion.trim()}>
@@ -289,12 +289,12 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                   </div>
                 )}
                 <div>Stock disponible: <strong>{formatoKg(productoElegido.stockDisponible)} kg</strong></div>
-                <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Precio de venta: {formatoMoneda(productoElegido.precioVenta)}/kg</div>
+                <div className="t-tenue-13">Precio de venta: {formatoMoneda(productoElegido.precioVenta)}/kg</div>
                 {productoElegido.lotes.length > 0 && (
                   <div style={{ marginTop: 4 }}>
-                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Lotes en stock (costo de compra):</div>
+                    <div className="t-tenue-13">Lotes en stock (costo de compra):</div>
                     {productoElegido.lotes.map((l, i) => (
-                      <div key={i} style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+                      <div key={i} className="t-tenue-13">
                         {formatoKg(l.cantidadDisponible)} kg a {formatoMoneda(l.costoUnitario)}/kg · ingresó {formatoFecha(new Date(l.fechaIngreso))}
                       </div>
                     ))}
@@ -314,9 +314,9 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
             {cargandoHistorial ? (
               <p>Cargando...</p>
             ) : historial.length === 0 ? (
-              <p style={{ color: 'var(--ios-secondary-label)' }}>Sin movimientos registrados.</p>
+              <p className="t-tenue">Sin movimientos registrados.</p>
             ) : (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="grid-gap-05">
                 {historial.map((m) => {
                   const info = ETIQUETAS_TIPO[m.tipo];
                   const clickeable = !!m.navegarA;
@@ -335,10 +335,10 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                     >
                       <div>
                         <div style={{ fontSize: 12, color: info.color, fontWeight: 600 }}>{info.texto}</div>
-                        <div style={{ fontSize: 13 }}>{m.referencia}</div>
+                        <div className="fs-13">{m.referencia}</div>
                         <div style={{ fontSize: 11, color: 'var(--texto-tenue)' }}>{formatoFechaHora(new Date(m.fecha))}</div>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
+                      <div className="t-der">
                         <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? 'var(--exito)' : 'var(--peligro)' }}>
                           {m.cantidad >= 0 ? '+' : ''}{formatoKg(m.cantidad)} kg
                         </div>

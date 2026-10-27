@@ -305,22 +305,22 @@ export function AdminDashboard({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+    <div className="pantalla-centrada pantalla-arriba">
       <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 860, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="fila-entre-centro">
           <div>
-            <h2 style={{ margin: 0 }}>Dashboard</h2>
+            <h2 className="m-0">Dashboard</h2>
             <small style={{ color: '#666' }}>{filtroLabel}</small>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>
             <button onClick={onCerrar}>Cerrar</button>
           </div>
         </div>
 
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, display: 'grid', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <label style={{ display: 'grid', gap: '0.25rem' }}>
+          <div className="fila-gap-075-wrap">
+            <label className="grid-gap-025">
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
                 <option value="dia">Hoy</option>
@@ -338,11 +338,11 @@ export function AdminDashboard({ onCerrar }: Props) {
 
             {periodo === 'rango' && (
               <>
-                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                <label className="grid-gap-025">
                   <span>Desde</span>
                   <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
                 </label>
-                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                <label className="grid-gap-025">
                   <span>Hasta</span>
                   <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
                 </label>
@@ -356,7 +356,7 @@ export function AdminDashboard({ onCerrar }: Props) {
 
         {pendientesHoy.length > 0 && (
           <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
-            <h3 style={{ margin: 0 }}><Icono nombre="tarea" size={16} /> Pendientes de hoy</h3>
+            <h3 className="m-0"><Icono nombre="tarea" size={16} /> Pendientes de hoy</h3>
             {pendientesHoy.map((p) => (
               <label
                 key={p.id}
@@ -371,8 +371,8 @@ export function AdminDashboard({ onCerrar }: Props) {
                 />
                 <span>
                   <span style={{ textDecoration: p.hecho ? 'line-through' : 'none' }}>{p.concepto}</span>
-                  {p.cliente && <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}><Icono nombre="clientes" size={16} /> {p.cliente.nombre}</div>}
-                  {p.notas && <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{p.notas}</div>}
+                  {p.cliente && <div className="t-tenue-13"><Icono nombre="clientes" size={16} /> {p.cliente.nombre}</div>}
+                  {p.notas && <div className="t-tenue-13">{p.notas}</div>}
                 </span>
               </label>
             ))}
@@ -383,28 +383,28 @@ export function AdminDashboard({ onCerrar }: Props) {
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
               <div
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                className="tarjeta-click"
                 onClick={() => setMetricaExpandida('facturacion')}
               >
                 <strong>Facturación</strong>
                 <div>{formatoMoneda(data.totalVentas)}</div>
               </div>
               <div
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                className="tarjeta-click"
                 onClick={() => setMetricaExpandida('ventas')}
               >
                 <strong>Ventas</strong>
                 <div>{data.ventasCantidad}</div>
               </div>
               <div
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                className="tarjeta-click"
                 onClick={() => setMetricaExpandida('ticketMedio')}
               >
                 <strong>Ticket medio</strong>
                 <div>{formatoMoneda(data.ticketMedio)}</div>
               </div>
               <div
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                className="tarjeta-click"
                 onClick={() => setMetricaExpandida('kgVendidos')}
               >
                 <strong>Kg vendidos</strong>
@@ -414,47 +414,47 @@ export function AdminDashboard({ onCerrar }: Props) {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
               <div
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                className="tarjeta-click"
                 onClick={() => setMetricaExpandida('ganancia')}
               >
                 <strong>Utilidad en papel</strong>
                 <div>{formatoMoneda(data.utilidadBruta)}</div>
               </div>
               <div
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                className="tarjeta-click"
                 onClick={() => setMetricaExpandida('utilidadCobrada')}
               >
                 <strong>Utilidad cobrada</strong>
                 <div>{formatoMoneda(data.utilidadCobrada)}</div>
               </div>
               <div
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                className="tarjeta-click"
                 onClick={() => setMetricaExpandida('totalCobrado')}
               >
                 <strong>Total cobrado</strong>
                 <div>{formatoMoneda(data.totalCobrado)}</div>
               </div>
               <div
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                className="tarjeta-click"
                 onClick={() => setMetricaExpandida('utilidadNeta')}
               >
                 <strong>Utilidad neta</strong>
                 <div>{formatoMoneda(data.utilidadNeta)}</div>
               </div>
               <div
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                className="tarjeta-click"
                 onClick={() => setMetricaExpandida('utilidadNetaCobrada')}
               >
                 <strong>Utilidad neta cobrada</strong>
                 <div>{formatoMoneda(data.utilidadNetaCobrada)}</div>
               </div>
               <div
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                className="tarjeta-click"
                 onClick={() => setMetricaExpandida('medioDePago')}
               >
                 <strong>Medio de pago</strong>
                 <div>{data.porcentajeEfectivo.toFixed(1)}% efectivo</div>
-                <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{(100 - data.porcentajeEfectivo).toFixed(1)}% transferencia</div>
+                <div className="t-tenue-12">{(100 - data.porcentajeEfectivo).toFixed(1)}% transferencia</div>
               </div>
             </div>
 
@@ -464,16 +464,16 @@ export function AdminDashboard({ onCerrar }: Props) {
                   onClick={() => setMetricaExpandida('gastos')}
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', cursor: 'pointer', marginBottom: 8 }}
                 >
-                  <h3 style={{ margin: 0 }}>Gastos</h3>
-                  <div style={{ textAlign: 'right' }}>
+                  <h3 className="m-0">Gastos</h3>
+                  <div className="t-der">
                     <strong style={{ color: 'var(--peligro)' }}>{formatoMoneda(data.totalGastos)}</strong>
-                    <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                    <div className="t-tenue-12">
                       {data.gastosCantidad} gasto{data.gastosCantidad === 1 ? '' : 's'} · ver por día
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.gastosPorCategoria.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin gastos en este periodo.</p>}
+                <div className="grid-gap-05">
+                  {data.gastosPorCategoria.length === 0 && <p className="t-tenue">Sin gastos en este periodo.</p>}
                   {(mostrarTodosGastos ? data.gastosPorCategoria : data.gastosPorCategoria.slice(0, ESPACIOS_POR_SECCION)).map((c) => (
                     <div
                       key={`${c.departamento}-${c.categoria}`}
@@ -482,7 +482,7 @@ export function AdminDashboard({ onCerrar }: Props) {
                     >
                       <span>
                         {c.categoria}
-                        <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                        <div className="t-tenue-12">
                           {c.departamento} · {data.totalGastos > 0 ? ((c.total / data.totalGastos) * 100).toFixed(1) : '0.0'}%
                         </div>
                       </span>
@@ -503,10 +503,10 @@ export function AdminDashboard({ onCerrar }: Props) {
 
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Productos más vendidos por volumen</h3>
-                <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.productosMasVendidos.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>}
+                <div className="grid-gap-05">
+                  {data.productosMasVendidos.length === 0 && <p className="t-tenue">Sin datos en este periodo.</p>}
                   {(mostrarTodosProductosVolumen ? data.productosMasVendidos : data.productosMasVendidos.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, cantidad]) => (
-                    <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div key={nombre} className="fila-entre">
                       <span>{nombre}</span>
                       <strong>{formatoKg(cantidad)} kg</strong>
                     </div>
@@ -525,8 +525,8 @@ export function AdminDashboard({ onCerrar }: Props) {
 
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Productos más vendidos por valor</h3>
-                <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.productosMasVendidosPorValor.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>}
+                <div className="grid-gap-05">
+                  {data.productosMasVendidosPorValor.length === 0 && <p className="t-tenue">Sin datos en este periodo.</p>}
                   {(mostrarTodosProductos ? data.productosMasVendidosPorValor : data.productosMasVendidosPorValor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
                     <div
                       key={nombre}
@@ -551,8 +551,8 @@ export function AdminDashboard({ onCerrar }: Props) {
 
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Mejores clientes por valor</h3>
-                <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.mejoresClientesPorValor.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>}
+                <div className="grid-gap-05">
+                  {data.mejoresClientesPorValor.length === 0 && <p className="t-tenue">Sin datos en este periodo.</p>}
                   {(mostrarTodosClientes ? data.mejoresClientesPorValor : data.mejoresClientesPorValor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
                     <div
                       key={nombre}
@@ -584,8 +584,8 @@ export function AdminDashboard({ onCerrar }: Props) {
                 <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: '0 0 8px' }}>
                   Cómo llegaron los clientes que compraron. "Nuevos" son los dados de alta en este periodo.
                 </p>
-                <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.ventasPorOrigen.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>}
+                <div className="grid-gap-05">
+                  {data.ventasPorOrigen.length === 0 && <p className="t-tenue">Sin datos en este periodo.</p>}
                   {data.ventasPorOrigen.map((o) => (
                     <div
                       key={o.origen}
@@ -594,16 +594,16 @@ export function AdminDashboard({ onCerrar }: Props) {
                     >
                       <span>
                         {etiquetaOrigen(o.origen)}
-                        <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                        <div className="t-tenue-12">
                           {o.ventasCantidad} venta{o.ventasCantidad === 1 ? '' : 's'} · {o.clientesConCompra} cliente
                           {o.clientesConCompra === 1 ? '' : 's'}
                           {o.clientesNuevos > 0 &&
                             ` · ${o.clientesNuevos} nuevo${o.clientesNuevos === 1 ? '' : 's'} (${o.clientesNuevosQueCompraron} ya compr${o.clientesNuevosQueCompraron === 1 ? 'ó' : 'aron'})`}
                         </div>
                       </span>
-                      <div style={{ textAlign: 'right' }}>
+                      <div className="t-der">
                         <strong>{formatoMoneda(o.totalVentas)}</strong>
-                        <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                        <div className="t-tenue-12">
                           {data.totalVentas > 0 ? ((o.totalVentas / data.totalVentas) * 100).toFixed(1) : '0.0'}%
                         </div>
                       </div>
@@ -615,10 +615,10 @@ export function AdminDashboard({ onCerrar }: Props) {
 
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
                 <h3>Ventas por vendedor</h3>
-                <div style={{ display: 'grid', gap: '0.5rem' }}>
-                  {data.ventasPorVendedor.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>}
+                <div className="grid-gap-05">
+                  {data.ventasPorVendedor.length === 0 && <p className="t-tenue">Sin datos en este periodo.</p>}
                   {(mostrarTodosVendedores ? data.ventasPorVendedor : data.ventasPorVendedor.slice(0, ESPACIOS_POR_SECCION)).map(([nombre, valor]) => (
-                    <div key={nombre} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div key={nombre} className="fila-entre">
                       <span>{nombre}</span>
                       <strong>{formatoMoneda(valor)}</strong>
                     </div>
@@ -647,9 +647,9 @@ export function AdminDashboard({ onCerrar }: Props) {
               <button className="boton-cerrar" onClick={() => setMetricaExpandida(null)}>✕</button>
             </div>
             {data.detallePorDia.length === 0 ? (
-              <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>
+              <p className="t-tenue">Sin datos en este periodo.</p>
             ) : (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="grid-gap-05">
                 {data.detallePorDia.map((d) => (
                   <div key={d.fecha} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                     <span style={{ textTransform: 'capitalize' }}>{formatearFechaDia(d.fecha)}</span>
@@ -671,12 +671,12 @@ export function AdminDashboard({ onCerrar }: Props) {
               </p>
               <button className="boton-cerrar" onClick={() => setDetalleGastos(null)}>✕</button>
             </div>
-            <div style={{ display: 'grid', gap: '0.5rem' }}>
+            <div className="grid-gap-05">
               {detalleGastos.gastos.map((g) => (
                 <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                   <span>
                     {g.concepto}
-                    <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                    <div className="t-tenue-12">
                       {formatoFecha(g.fecha)} · {etiquetaMetodoPago(g.metodoPago)}
                       {g.proveedor ? ` · ${g.proveedor}` : ''}
                     </div>
@@ -703,9 +703,9 @@ export function AdminDashboard({ onCerrar }: Props) {
               {detalleOrigen.clientesNuevos} ({detalleOrigen.clientesNuevosQueCompraron} ya compraron)
             </div>
             {detalleOrigen.clientes.length === 0 ? (
-              <p style={{ color: 'var(--ios-secondary-label)' }}>Ningún cliente de este origen compró en el periodo.</p>
+              <p className="t-tenue">Ningún cliente de este origen compró en el periodo.</p>
             ) : (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="grid-gap-05">
                 {detalleOrigen.clientes.map(([cliente, valor]) => (
                   <div key={cliente} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                     <span>{cliente}</span>
@@ -726,9 +726,9 @@ export function AdminDashboard({ onCerrar }: Props) {
               <button className="boton-cerrar" onClick={() => setDetalleProducto(null)}>✕</button>
             </div>
             {(data.detalleProductosPorValor[detalleProducto] ?? []).length === 0 ? (
-              <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>
+              <p className="t-tenue">Sin datos en este periodo.</p>
             ) : (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="grid-gap-05">
                 {data.detalleProductosPorValor[detalleProducto].map(([cliente, valor]) => (
                   <div key={cliente} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                     <span>{cliente}</span>
@@ -771,9 +771,9 @@ export function AdminDashboard({ onCerrar }: Props) {
 
             {detalleClientePestana === 'valor' ? (
               (data.detalleClientesPorValor[detalleCliente] ?? []).length === 0 ? (
-                <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>
+                <p className="t-tenue">Sin datos en este periodo.</p>
               ) : (
-                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                <div className="grid-gap-05">
                   {data.detalleClientesPorValor[detalleCliente].map(([producto, valor]) => (
                     <div key={producto} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                       <span>{producto}</span>
@@ -783,9 +783,9 @@ export function AdminDashboard({ onCerrar }: Props) {
                 </div>
               )
             ) : (data.detalleClientesPorVolumen[detalleCliente] ?? []).length === 0 ? (
-              <p style={{ color: 'var(--ios-secondary-label)' }}>Sin datos en este periodo.</p>
+              <p className="t-tenue">Sin datos en este periodo.</p>
             ) : (
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
+              <div className="grid-gap-05">
                 {data.detalleClientesPorVolumen[detalleCliente].map(([producto, cantidad]) => (
                   <div key={producto} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                     <span>{producto}</span>

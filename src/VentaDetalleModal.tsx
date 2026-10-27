@@ -104,7 +104,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
 
         {mensaje && <div className="banner-mensaje">{mensaje}</div>}
 
-        {cargando && <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>}
+        {cargando && <p className="t-centro-tenue">Cargando...</p>}
 
         {venta && esAdmin && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -124,10 +124,10 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
         )}
 
         {venta && pestana === 'utilidad' && esAdmin && (
-          <div style={{ display: 'grid', gap: 8 }}>
-            {cargandoUtilidad && <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando utilidad...</p>}
+          <div className="grid-gap-8">
+            {cargandoUtilidad && <p className="t-centro-tenue">Cargando utilidad...</p>}
             {!cargandoUtilidad && !utilidad && (
-              <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>No se pudo cargar la utilidad de esta venta.</p>
+              <p className="t-centro-tenue">No se pudo cargar la utilidad de esta venta.</p>
             )}
             {utilidad && (
               <>
@@ -137,7 +137,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
                       <span>
                         {it.producto} {it.marca} · {it.cantidad} kg
                         <br />
-                        <small style={{ color: 'var(--ios-secondary-label)' }}>
+                        <small className="t-tenue">
                           Costo {formatoMoneda(it.costoUnitario)} · Precio {formatoMoneda(it.precioUnitario)}
                         </small>
                       </span>
@@ -204,7 +204,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
             </div>
 
             {venta.cancelada && (
-              <div className="aviso-alerta" style={{ marginTop: 8 }}>
+              <div className="aviso-alerta mt-8">
                 ❌ Esta venta fue cancelada{venta.canceladaEn ? ` el ${formatoFechaHora(new Date(venta.canceladaEn))}` : ''}.
                 El stock ya fue regresado al inventario.
               </div>
@@ -225,8 +225,8 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
             )}
 
             {confirmandoCancelacion && (
-              <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
-                <p className="texto-alerta" style={{ fontWeight: 600 }}>
+              <div className="bloque-autorizacion mt-8">
+                <p className="texto-alerta fw-600">
                   ¿Seguro que quieres cancelar esta venta? El stock se regresará al inventario
                   y el saldo pendiente quedará en cero. Esta acción no se puede deshacer.
                 </p>
@@ -247,8 +247,8 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
                   </>
                 )}
 
-                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                  <button onClick={confirmarCancelacion} disabled={cancelando} style={{ flex: 1 }}>
+                <div className="fila-gap-8-mt-8">
+                  <button onClick={confirmarCancelacion} disabled={cancelando} className="flex-1">
                     {cancelando ? 'Cancelando...' : 'Sí, cancelar venta'}
                   </button>
                   <button
@@ -256,7 +256,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
                       setConfirmandoCancelacion(false);
                       setNecesitaAutorizacion(false);
                     }}
-                    style={{ flex: 1 }}
+                    className="flex-1"
                   >
                     No, regresar
                   </button>

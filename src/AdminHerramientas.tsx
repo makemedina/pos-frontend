@@ -312,9 +312,9 @@ export function AdminHerramientas({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-760">
+        <div className="fila-entre-centro">
           <h2>Herramientas</h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
@@ -335,7 +335,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         {/* ---------- Importar lista de proveedores ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>🚚 Importar lista de proveedores</h3>
-          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+          <p className="t-tenue-13">
             Pega los nombres, uno por línea. Se crean sin teléfono — lo puedes agregar después
             desde la búsqueda de proveedor en Compras o Gastos.
           </p>
@@ -354,7 +354,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         {/* ---------- Cargar facturas iniciales de proveedores ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3><Icono nombre="recibo" size={16} /> Cargar facturas iniciales de proveedores</h3>
-          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+          <p className="t-tenue-13">
             Pega Proveedor, Teléfono, Factura e Importe (desde Excel o con comas). Si el
             proveedor no existe, se crea con ese teléfono. Cada fila queda como una factura
             pendiente real — aparece en "Facturas pendientes" y se puede abonar normal.
@@ -374,7 +374,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         {/* ---------- Cargar inventario inicial ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>📦 Cargar inventario inicial</h3>
-          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+          <p className="t-tenue-13">
             Pega las filas de tu tabla (Producto, Marca, Costo, Precio, Stock) — puedes pegar
             directo desde Excel/Sheets, o separadas por comas. Si el producto o la marca no
             existen, se crean automáticamente.
@@ -394,7 +394,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         {/* ---------- Cargar saldos iniciales de cartera ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>💰 Cargar saldos iniciales de cartera</h3>
-          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+          <p className="t-tenue-13">
             Pega Nombre y Saldo (uno por línea, desde Excel o separado por coma). Busca al
             cliente por su nombre exacto — debe estar ya dado de alta (usa "Importar lista" en
             Clientes si todavía no). Cada fila crea una <strong>nota real</strong> que se puede
@@ -413,7 +413,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
           </button>
 
           <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--ios-separator)' }}>
-            <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+            <p className="t-tenue-12">
               ¿Ya habías cargado saldos con la versión anterior de esta herramienta (donde solo
               quedaba un número en el cliente, sin nota)? Conviértelos en notas reales:
             </p>
@@ -426,7 +426,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
         {/* ---------- Corregir estados de pago desincronizados ---------- */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
           <h3>🩹 Corregir notas/facturas con "Saldo $0.00" que no dicen "Pagada"</h3>
-          <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+          <p className="t-tenue-13">
             Un residuo diminuto de punto flotante en abonos parciales encadenados podía dejar
             el saldo pendiente en algo como $0.00000000003 en vez de exactamente $0 — se ve
             como "$0.00" en pantalla, pero la nota se quedaba marcada "parcial" para siempre en
@@ -455,7 +455,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
           )}
 
           {pasoReset === 'elegir' && (
-            <div style={{ display: 'grid', gap: 8 }}>
+            <div className="grid-gap-8">
               <p style={{ fontSize: 13, color: 'var(--peligro-oscuro)' }}>¿Qué quieres borrar?</p>
 
               <button
@@ -463,7 +463,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 style={{ textAlign: 'left', padding: '0.75rem', background: 'white' }}
               >
                 <strong>Todo todo</strong>
-                <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                <div className="t-tenue-12">
                   Ventas, compras, gastos, depósitos, cortes, cotizaciones, clientes, proveedores
                   y productos. Reinicia la numeración de ventas y cotizaciones desde el #1 — como
                   si el sistema nunca se hubiera usado.
@@ -475,7 +475,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 style={{ textAlign: 'left', padding: '0.75rem', background: 'white' }}
               >
                 <strong>Elegir qué borrar</strong>
-                <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                <div className="t-tenue-12">
                   Solo algunas categorías de datos (por ejemplo nada más los gastos, o nada más
                   las ventas de prueba).
                 </div>
@@ -486,7 +486,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
           )}
 
           {pasoReset === 'selectivo' && (
-            <div style={{ display: 'grid', gap: 8 }}>
+            <div className="grid-gap-8">
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                 <input
                   type="checkbox"
@@ -552,7 +552,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 Reiniciar la numeración de ventas/cotizaciones desde el #1
               </label>
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <div className="fila-gap-8-mt-8">
                 <button
                   onClick={() => setPasoReset('confirmar')}
                   disabled={!algunaOpcionElegida}
@@ -560,13 +560,13 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 >
                   Continuar
                 </button>
-                <button onClick={cancelarReset} style={{ flex: 1 }}>Cancelar</button>
+                <button onClick={cancelarReset} className="flex-1">Cancelar</button>
               </div>
             </div>
           )}
 
           {pasoReset === 'confirmar' && (
-            <div style={{ display: 'grid', gap: 8 }}>
+            <div className="grid-gap-8">
               <p style={{ fontSize: 13, color: 'var(--peligro-oscuro)' }}>Se va a borrar, para siempre:</p>
               <ul style={{ fontSize: 13, color: 'var(--peligro-oscuro)', margin: 0, paddingLeft: 20 }}>
                 {resumenOpcionesReset(opcionesReset).map((item) => (
@@ -594,7 +594,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 onChange={(e) => setConfirmacionReset(e.target.value)}
                 placeholder="BORRAR TODO"
               />
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div className="fila-gap-8">
                 <button
                   onClick={confirmarReset}
                   disabled={confirmacionReset !== 'BORRAR TODO' || reseteando}
@@ -602,7 +602,7 @@ export function AdminHerramientas({ onCerrar }: Props) {
                 >
                   {reseteando ? 'Borrando...' : 'Confirmar y borrar'}
                 </button>
-                <button onClick={cancelarReset} disabled={reseteando} style={{ flex: 1 }}>
+                <button onClick={cancelarReset} disabled={reseteando} className="flex-1">
                   Cancelar
                 </button>
               </div>

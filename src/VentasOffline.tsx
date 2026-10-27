@@ -54,11 +54,11 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>Ventas sin sincronizar</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             <button onClick={sincronizarAhora} disabled={sincronizando}>
               {sincronizando ? 'Sincronizando...' : <><Icono nombre="sincronizar" size={16} /> Sincronizar ahora</>}
             </button>
@@ -69,9 +69,9 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         {ventas.length === 0 ? (
-          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay ventas pendientes por subir. Todo está sincronizado.</p>
+          <p className="t-tenue">No hay ventas pendientes por subir. Todo está sincronizado.</p>
         ) : (
-          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="lista-tarjetas grid-gap-075">
             {ventas.map((v) => (
               <div
                 key={v.id}
@@ -82,10 +82,10 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
                   borderRadius: 14,
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div className="fila-entre">
                   <div>
                     <strong>{v.resumen.clienteNombre}</strong>
-                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+                    <div className="t-tenue-13">
                       {formatoFechaHora(new Date(v.resumen.fecha))} · {v.resumen.totalItems} producto{v.resumen.totalItems !== 1 ? 's' : ''}
                     </div>
                     {v.estado === 'error' && (
@@ -97,11 +97,11 @@ export function VentasOffline({ onCerrar, onCambio }: Props) {
                   </div>
                   <strong>{formatoMoneda(v.resumen.total)}</strong>
                 </div>
-                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <div className="fila-gap-8-mt-8">
                   {v.estado === 'error' && (
-                    <button onClick={() => reintentar(v.id)} style={{ flex: 1 }}>Reintentar</button>
+                    <button onClick={() => reintentar(v.id)} className="flex-1">Reintentar</button>
                   )}
-                  <button onClick={() => descartar(v.id)} style={{ flex: 1 }}>Descartar</button>
+                  <button onClick={() => descartar(v.id)} className="flex-1">Descartar</button>
                 </div>
               </div>
             ))}

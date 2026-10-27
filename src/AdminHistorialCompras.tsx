@@ -161,11 +161,11 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
   const pendientePeriodo = compras.reduce((acc, c) => acc + c.saldoPendiente, 0);
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>{proveedor ? `Compras — ${proveedor.nombre}` : 'Historial de compras'}</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>
             <button onClick={onCerrar}>Cerrar</button>
           </div>
@@ -174,8 +174,8 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         <div style={{ ...CARD, display: 'grid', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <label style={{ display: 'grid', gap: '0.25rem' }}>
+          <div className="fila-gap-075-wrap">
+            <label className="grid-gap-025">
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
                 <option value="todos">Todo el historial</option>
@@ -194,18 +194,18 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
 
             {periodo === 'rango' && (
               <>
-                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                <label className="grid-gap-025">
                   <span>Desde</span>
                   <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
                 </label>
-                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                <label className="grid-gap-025">
                   <span>Hasta</span>
                   <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
                 </label>
               </>
             )}
 
-            <label style={{ display: 'grid', gap: '0.25rem' }}>
+            <label className="grid-gap-025">
               <span>Estado</span>
               <select value={estadoPago} onChange={(e) => setEstadoPago(e.target.value)}>
                 <option value="">Todos</option>
@@ -215,7 +215,7 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
               </select>
             </label>
 
-            <label style={{ display: 'grid', gap: '0.25rem' }}>
+            <label className="grid-gap-025">
               <span>Ordenar por</span>
               <select value={orden} onChange={(e) => setOrden(e.target.value as Orden)}>
                 <option value="fecha_desc">Más recientes</option>
@@ -279,7 +279,7 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
         </div>
 
         {!cargando && (
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div className="fila-gap-075-wrap">
             <div style={{ ...CARD, flex: 1 }}>
               <strong>{compras.length}</strong> compra{compras.length !== 1 ? 's' : ''}
             </div>
@@ -295,15 +295,15 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
         {cargando ? (
           <p>Cargando...</p>
         ) : compras.length === 0 ? (
-          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay compras con esos filtros.</p>
+          <p className="t-tenue">No hay compras con esos filtros.</p>
         ) : (
-          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="lista-tarjetas grid-gap-075">
             {comprasOrdenadas.map((c) => (
               <div key={c.id} style={{ ...CARD, cursor: 'pointer' }} onClick={() => setCompraAbierta(c.id)}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <strong>{proveedor ? formatoFecha(new Date(c.fecha)) : c.proveedor.nombre}</strong>
-                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+                    <div className="t-tenue-13">
                       {proveedor ? '' : `${formatoFecha(new Date(c.fecha))} · `}Factura: {c.numeroFactura || 'sin número'}
                     </div>
                     {proveedor && c.items.length > 0 && (
@@ -311,11 +311,11 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
                         {c.items.map((it) => `${it.producto} ${it.cantidad} kg`).join(' · ')}
                       </div>
                     )}
-                    <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                    <div className="t-tenue-12">
                       {c.metodosPago.join(', ') || 'Sin pago registrado'}
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div className="t-der">
                     <div><strong>{formatoMoneda(c.total)}</strong></div>
                     {c.cancelada ? (
                       <div style={{ fontSize: 12, color: 'var(--peligro)', fontWeight: 700 }}>❌ Cancelada</div>

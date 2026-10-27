@@ -41,7 +41,7 @@ export function ReciboVenta({ config, datos, elementId }: Props) {
         <div style={{ textAlign: 'center', marginTop: 6 }}>{config.encabezadoRecibo}</div>
       )}
 
-      <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+      <hr className="separador-punteado" />
 
       <div>Venta #{datos.folio}</div>
       <div>{datos.fecha}</div>
@@ -50,24 +50,24 @@ export function ReciboVenta({ config, datos, elementId }: Props) {
       {/* 3. Datos del cliente */}
       {config.mostrarDatosCliente && datos.cliente && (
         <>
-          <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+          <hr className="separador-punteado" />
           <div>Cliente: {datos.cliente.nombre}</div>
           {datos.cliente.telefono && <div>Tel: {datos.cliente.telefono}</div>}
         </>
       )}
 
       {/* 4. Cuerpo del recibo */}
-      <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+      <hr className="separador-punteado" />
       {datos.items.map((it, idx) => (
         <div key={idx} style={{ marginBottom: 6 }}>
           <div>{it.producto} {it.marca}</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div className="fila-entre">
             <span>{it.cantidad}kg x {formatoMoneda(it.precioUnitario)}</span>
             <span>{formatoMoneda((it.cantidad * it.precioUnitario))}</span>
           </div>
         </div>
       ))}
-      <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+      <hr className="separador-punteado" />
       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16 }}>
         <span>TOTAL</span>
         <span>{formatoMoneda(datos.total)}</span>
@@ -75,7 +75,7 @@ export function ReciboVenta({ config, datos, elementId }: Props) {
       {datos.pagos && datos.pagos.length > 0 && (
         <div style={{ marginTop: 4 }}>
           {datos.pagos.map((p, idx) => (
-            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div key={idx} className="fila-entre">
               <span>Pagado ({etiquetaMetodoPago(p.metodoPago)})</span>
               <span>{formatoMoneda(p.monto)}</span>
             </div>

@@ -24,7 +24,7 @@ function CampoFotoComprobante({ id, archivo, onCambio }: { id: string; archivo: 
   const previa = useMemo(() => (archivo ? URL.createObjectURL(archivo) : null), [archivo]);
   useEffect(() => () => { if (previa) URL.revokeObjectURL(previa); }, [previa]);
   return (
-    <div style={{ display: 'grid', gap: '0.5rem' }}>
+    <div className="grid-gap-05">
       <span>Foto del comprobante (obligatoria)</span>
       <label
         htmlFor={id}
@@ -485,9 +485,9 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>
             {nivel === 'proveedores' && 'Cuentas por pagar'}
             {nivel === 'facturas' && `Facturas de ${proveedorElegido?.nombre}`}
@@ -510,22 +510,22 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
-            <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
-              {proveedoresFiltrados.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay proveedores que coincidan.</p>}
+            <div className="lista-tarjetas grid-gap-075">
+              {proveedoresFiltrados.length === 0 && <p className="t-tenue">No hay proveedores que coincidan.</p>}
               {proveedoresFiltrados.map((p) => (
                 <div
                   key={p.id}
-                  style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                  className="tarjeta-click"
                   onClick={() => abrirProveedor(p)}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="fila-entre-centro">
                     <div>
                       <strong>{p.nombre}</strong>
-                      <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{p.telefono || ''}</div>
+                      <div className="t-tenue-13">{p.telefono || ''}</div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    <div className="t-der">
                       <div style={{ fontWeight: 700, color: 'var(--peligro)' }}>{formatoMoneda(p.saldoTotal)}</div>
-                      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                      <div className="t-tenue-12">
                         {p.facturasConSaldo} factura{p.facturasConSaldo !== 1 ? 's' : ''} pendiente{p.facturasConSaldo !== 1 ? 's' : ''}
                       </div>
                     </div>
@@ -555,15 +555,15 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         {/* ---------- NIVEL 2: FACTURAS DE UN PROVEEDOR ---------- */}
         {!cargando && nivel === 'facturas' && (
           <>
-            <button onClick={volverAProveedores} style={{ justifySelf: 'start' }}>← Todos los proveedores</button>
+            <button onClick={volverAProveedores} className="justify-start">← Todos los proveedores</button>
 
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="fila-gap-8">
               {!mostrarPagoMultiple && facturasDelProveedor.length > 0 && (
-                <button onClick={abrirPagoMultiple} style={{ justifySelf: 'start' }}>
+                <button onClick={abrirPagoMultiple} className="justify-start">
                   + Agregar pago
                 </button>
               )}
-              <button onClick={abrirHistorialPagos} className="boton-secundario" style={{ justifySelf: 'start' }}>
+              <button onClick={abrirHistorialPagos} className="boton-secundario justify-start">
                 <Icono nombre="pendientes" size={16} /> Ver todos los pagos
               </button>
             </div>
@@ -571,10 +571,10 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
             {mostrarPagoMultiple && (
               <form
                 onSubmit={handlePagoMultiple}
-                style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}
+                className="tarjeta-grid-075"
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0 }}>Agregar pago a {proveedorElegido?.nombre}</h3>
+                <div className="fila-entre-centro">
+                  <h3 className="m-0">Agregar pago a {proveedorElegido?.nombre}</h3>
                   <button type="button" onClick={cerrarPagoMultiple}>Cancelar</button>
                 </div>
 
@@ -598,11 +598,11 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                   />
                 </label>
 
-                <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+                <p className="t-tenue-13-m0">
                   Marca las facturas que se pagan con este importe — cada una se rellena con su saldo, pero puedes cambiarlo.
                 </p>
 
-                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                <div className="grid-gap-05">
                   {facturasDelProveedor.map((f) => {
                     const seleccionada = f.id in asignacionesPago;
                     return (
@@ -617,7 +617,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                         />
                         <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => toggleFacturaPago(f)}>
                           <strong>{f.numeroFactura || 'Sin numero'}</strong>
-                          <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                          <div className="t-tenue-12">
                             Compra: {formatoFecha(new Date(f.fecha))} · Saldo: {formatoMoneda(f.saldoPendiente)}
                           </div>
                         </div>
@@ -671,23 +671,23 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
               </form>
             )}
 
-            <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
-              {facturasDelProveedor.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay facturas pendientes de este proveedor.</p>}
+            <div className="lista-tarjetas grid-gap-075">
+              {facturasDelProveedor.length === 0 && <p className="t-tenue">No hay facturas pendientes de este proveedor.</p>}
               {facturasDelProveedor.map((f) => (
                 <div
                   key={f.id}
-                  style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                  className="tarjeta-click"
                   onClick={() => abrirFactura(f)}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="fila-entre-centro">
                     <div>
                       <strong>Factura: {f.numeroFactura || 'Sin factura'}</strong>
-                      <div style={{ fontSize: 13 }}>Compra: {formatoFecha(new Date(f.fecha))}</div>
-                      <div style={{ fontSize: 13 }}>
+                      <div className="fs-13">Compra: {formatoFecha(new Date(f.fecha))}</div>
+                      <div className="fs-13">
                         Vence: {f.fechaVencimiento ? formatoFecha(new Date(f.fechaVencimiento)) : 'Sin fecha'}
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    <div className="t-der">
                       <div>Total: {formatoMoneda(f.total)}</div>
                       <div style={{ fontSize: 12, color: 'var(--peligro)' }}>Saldo: {formatoMoneda(f.saldoPendiente)}</div>
                     </div>
@@ -701,14 +701,14 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         {/* ---------- NIVEL 3: HISTORIAL DE ABONOS DE LA FACTURA ---------- */}
         {!cargando && nivel === 'pagos' && facturaElegida && (
           <>
-            <button onClick={volverAFacturas} style={{ justifySelf: 'start' }}>← Facturas de {facturaElegida.proveedor.nombre}</button>
+            <button onClick={volverAFacturas} className="justify-start">← Facturas de {facturaElegida.proveedor.nombre}</button>
 
-            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div className="tarjeta-sombra">
+              <div className="fila-entre">
                 <span>Total de la factura</span>
                 <strong>{formatoMoneda(facturaElegida.total)}</strong>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div className="fila-entre">
                 <span>Saldo pendiente</span>
                 <strong className={facturaElegida.saldoPendiente > 0 ? 'texto-alerta' : ''}>
                   {formatoMoneda(facturaElegida.saldoPendiente)}
@@ -717,15 +717,15 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
             </div>
 
             <h3>Historial de abonos</h3>
-            <div style={{ display: 'grid', gap: '0.5rem' }}>
-              {pagos.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Aún no se ha registrado ningún abono.</p>}
+            <div className="grid-gap-05">
+              {pagos.length === 0 && <p className="t-tenue">Aún no se ha registrado ningún abono.</p>}
               {pagos.map((p) => (
                 <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div className="fila-entre">
                     <span>
                       {formatoFecha(new Date(p.fecha))} · {new Date(p.fecha).toLocaleTimeString()} · {p.metodoPago}
                       <br />
-                      <small style={{ color: 'var(--ios-secondary-label)' }}>Registró: {p.registradoPor.nombre}</small>
+                      <small className="t-tenue">Registró: {p.registradoPor.nombre}</small>
                     </span>
                     <strong style={p.cancelado ? { textDecoration: 'line-through', color: 'var(--texto-tenue)' } : undefined}>
                       {formatoMoneda(p.monto)}
@@ -734,25 +734,24 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
 
                   {p.tieneComprobante && (
                     <button
-                      className="boton-secundario"
+                      className="boton-secundario mt-6"
                       onClick={() => verFotoComprobante(p.id)}
                       disabled={cargandoFotoComprobante}
-                      style={{ marginTop: 6 }}
                     >
                       <Icono nombre="recibo" size={16} /> Ver comprobante
                     </button>
                   )}
 
                   {p.cancelado && (
-                    <div className="aviso-alerta" style={{ marginTop: 6 }}>
+                    <div className="aviso-alerta mt-6">
                       ❌ Cancelado{p.canceladoEn ? ` el ${formatoFechaHora(new Date(p.canceladoEn))}` : ''}
                     </div>
                   )}
 
                   {!p.cancelado &&
                     (confirmandoCancelarPagoId === p.id ? (
-                      <div className="bloque-autorizacion" style={{ marginTop: 6 }}>
-                        <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                      <div className="bloque-autorizacion mt-6">
+                        <p className="texto-alerta fw-600">
                           ¿Seguro que quieres cancelar este pago? No se puede deshacer.
                         </p>
                         {necesitaAutorizacionPago && (
@@ -770,11 +769,11 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                             />
                           </>
                         )}
-                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                          <button onClick={() => confirmarCancelarPago(p.id)} disabled={cancelandoPago} style={{ flex: 1 }}>
+                        <div className="fila-gap-8-mt-8">
+                          <button onClick={() => confirmarCancelarPago(p.id)} disabled={cancelandoPago} className="flex-1">
                             {cancelandoPago ? 'Cancelando...' : 'Sí, cancelar'}
                           </button>
-                          <button onClick={() => setConfirmandoCancelarPagoId(null)} style={{ flex: 1 }}>
+                          <button onClick={() => setConfirmandoCancelarPagoId(null)} className="flex-1">
                             No, regresar
                           </button>
                         </div>
@@ -793,7 +792,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
             </div>
 
             {facturaElegida.saldoPendiente > 0 && (
-              <form onSubmit={handlePago} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <form onSubmit={handlePago} className="tarjeta-grid-075">
                 <h3>Registrar nuevo abono</h3>
                 <label>
                   Monto (saldo pendiente: {formatoMoneda(facturaElegida.saldoPendiente)})
@@ -825,22 +824,22 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         {/* ---------- HISTORIAL DE PAGOS DEL PROVEEDOR (todas las facturas) ---------- */}
         {!cargando && nivel === 'historialPagos' && proveedorElegido && (
           <>
-            <button onClick={volverAFacturasDesdeHistorial} style={{ justifySelf: 'start' }}>← Facturas de {proveedorElegido.nombre}</button>
+            <button onClick={volverAFacturasDesdeHistorial} className="justify-start">← Facturas de {proveedorElegido.nombre}</button>
 
-            <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+            <p className="t-tenue-13-m0">
               Todos los pagos que se le han entregado a {proveedorElegido.nombre}, aunque hayan cubierto varias
               facturas a la vez. Cancelar uno revierte TODAS las facturas que cubrió.
             </p>
 
-            <div style={{ display: 'grid', gap: '0.5rem' }}>
-              {gruposPago.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Aún no se le ha hecho ningún pago a este proveedor.</p>}
+            <div className="grid-gap-05">
+              {gruposPago.length === 0 && <p className="t-tenue">Aún no se le ha hecho ningún pago a este proveedor.</p>}
               {gruposPago.map((g) => (
                 <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div className="fila-entre">
                     <span>
                       {formatoFechaHora(new Date(g.fecha))} · {g.metodosPago.join(' + ') || '—'}
                       <br />
-                      <small style={{ color: 'var(--ios-secondary-label)' }}>Registró: {g.registradoPor}</small>
+                      <small className="t-tenue">Registró: {g.registradoPor}</small>
                     </span>
                     <strong style={g.cancelado ? { textDecoration: 'line-through', color: 'var(--texto-tenue)' } : undefined}>
                       {formatoMoneda(g.montoTotal)}
@@ -858,25 +857,24 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
 
                   {g.comprobantePagoId && (
                     <button
-                      className="boton-secundario"
+                      className="boton-secundario mt-6"
                       onClick={() => verFotoComprobante(g.comprobantePagoId!)}
                       disabled={cargandoFotoComprobante}
-                      style={{ marginTop: 6 }}
                     >
                       <Icono nombre="recibo" size={16} /> Ver comprobante
                     </button>
                   )}
 
                   {g.cancelado && (
-                    <div className="aviso-alerta" style={{ marginTop: 6 }}>
+                    <div className="aviso-alerta mt-6">
                       ❌ Cancelado
                     </div>
                   )}
 
                   {!g.cancelado &&
                     (confirmandoCancelarGrupoKey === g.grupoKey ? (
-                      <div className="bloque-autorizacion" style={{ marginTop: 6 }}>
-                        <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                      <div className="bloque-autorizacion mt-6">
+                        <p className="texto-alerta fw-600">
                           ¿Seguro que quieres cancelar este pago? Se revertirán TODAS las facturas que cubrió.
                           No se puede deshacer.
                         </p>
@@ -895,11 +893,11 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                             />
                           </>
                         )}
-                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                          <button onClick={() => confirmarCancelarGrupo(g.grupoKey)} disabled={cancelandoGrupo} style={{ flex: 1 }}>
+                        <div className="fila-gap-8-mt-8">
+                          <button onClick={() => confirmarCancelarGrupo(g.grupoKey)} disabled={cancelandoGrupo} className="flex-1">
                             {cancelandoGrupo ? 'Cancelando...' : 'Sí, cancelar'}
                           </button>
-                          <button onClick={() => setConfirmandoCancelarGrupoKey(null)} style={{ flex: 1 }}>
+                          <button onClick={() => setConfirmandoCancelarGrupoKey(null)} className="flex-1">
                             No, regresar
                           </button>
                         </div>

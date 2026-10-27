@@ -138,9 +138,9 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-760">
+        <div className="fila-entre-centro">
           <h2>Corte de caja</h2>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {resumen && !cargando && (
@@ -177,7 +177,7 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
           <div id="corte-reporte" style={{ display: 'grid', gap: '1rem', background: 'white' }}>            {resumen?.yaExisteCorteHoy ? (
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, background: '#f0fdf4' }}>
                 <strong>El corte de hoy ya se realizó.</strong>
-                <div style={{ marginTop: 6 }}>
+                <div className="mt-6">
                   Efectivo contado: {formatoMoneda(resumen.corteExistente?.efectivoContado)}
                 </div>
                 <div>Saldo en banco: {formatoMoneda(resumen.corteExistente?.saldoBancoContado)}</div>
@@ -188,7 +188,7 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                 )}
               </div>
             ) : (
-              <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <form onSubmit={handleSubmit} className="tarjeta-grid-075">
                 <h3>Captura del día</h3>
                 {resumen && (
                   <p style={{ fontSize: 12, color: 'var(--ios-secondary-label)', margin: 0 }}>
@@ -230,7 +230,7 @@ export function AdminCorteCaja({ onCerrar, onVerHistorial }: Props) {
                         type="date"
                         value={fechaPersonalizada}
                         onChange={(e) => setFechaPersonalizada(e.target.value)}
-                        style={{ marginTop: 6 }}
+                        className="mt-6"
                       />
                     )}
                   </div>

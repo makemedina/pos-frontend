@@ -31,9 +31,9 @@ export function AdminNotasAntiguas({ onCerrar }: Props) {
   const totalPendiente = notas.reduce((acc, n) => acc + n.saldoPendiente, 0);
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>Notas antiguas</h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
@@ -42,11 +42,11 @@ export function AdminNotasAntiguas({ onCerrar }: Props) {
 
         {!cargando && (
           <>
-            <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+            <p className="t-tenue-13-m0">
               Notas a crédito con saldo pendiente que llevan más de {DIAS_ANTIGUEDAD} días sin liquidarse.
             </p>
 
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div className="fila-gap-075-wrap">
               <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
                 <strong style={{ color: notas.length > 0 ? 'var(--peligro)' : undefined }}>{notas.length}</strong> nota{notas.length !== 1 ? 's' : ''} antigua{notas.length !== 1 ? 's' : ''}
               </div>
@@ -60,9 +60,9 @@ export function AdminNotasAntiguas({ onCerrar }: Props) {
         {cargando ? (
           <p>Cargando...</p>
         ) : notas.length === 0 ? (
-          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay notas con más de {DIAS_ANTIGUEDAD} días sin liquidarse.</p>
+          <p className="t-tenue">No hay notas con más de {DIAS_ANTIGUEDAD} días sin liquidarse.</p>
         ) : (
-          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="lista-tarjetas grid-gap-075">
             {notas.map((n) => (
               <div
                 key={n.id}
@@ -77,15 +77,15 @@ export function AdminNotasAntiguas({ onCerrar }: Props) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <strong>{n.clienteNombre}</strong>
-                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+                    <div className="t-tenue-13">
                       {n.clienteTelefono} · Nota #{n.folio} · {formatoFecha(new Date(n.fecha))}
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div className="t-der">
                     <div style={{ fontWeight: 700, color: 'var(--peligro)' }}>
                       {n.diasAntiguedad} día{n.diasAntiguedad !== 1 ? 's' : ''}
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoMoneda(n.saldoPendiente)}</div>
+                    <div className="t-tenue-12">{formatoMoneda(n.saldoPendiente)}</div>
                   </div>
                 </div>
               </div>

@@ -90,9 +90,9 @@ export function ConfiguracionImpresora({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+    <div className="pantalla-centrada pantalla-arriba">
       <div style={{ width: '100%', maxWidth: 560, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="fila-entre-centro">
           <h2>Configuración de la impresora</h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
@@ -102,7 +102,7 @@ export function ConfiguracionImpresora({ onCerrar }: Props) {
         {cargando || !config ? (
           <p>Cargando...</p>
         ) : (
-          <div style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+          <div className="tarjeta-grid-075">
             <div>
               <strong>Impresora:</strong>{' '}
               {impresoraConectada()
@@ -153,7 +153,7 @@ export function ConfiguracionImpresora({ onCerrar }: Props) {
               {guardando ? 'Guardando...' : 'Guardar cambios'}
             </button>
 
-            <button type="button" onClick={probar} disabled={probando} style={{ marginTop: 8 }}>
+            <button type="button" onClick={probar} disabled={probando} className="mt-8">
               {probando ? 'Imprimiendo...' : <><Icono nombre="impresora" size={16} /> Imprimir prueba</>}
             </button>
 

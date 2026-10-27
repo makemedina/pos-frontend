@@ -42,9 +42,9 @@ export function ConfiguracionRecibo({ onCerrar, onIrAImpresora }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+    <div className="pantalla-centrada pantalla-arriba">
       <div style={{ width: '100%', maxWidth: 560, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="fila-entre-centro">
           <h2>Configuración del recibo</h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
@@ -55,7 +55,7 @@ export function ConfiguracionRecibo({ onCerrar, onIrAImpresora }: Props) {
           <p>Cargando...</p>
         ) : (
           <>
-            <div style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+            <div className="tarjeta-grid-075">
               <div className="fila-switch">
                 <span>Mostrar datos del cliente en el recibo</span>
                 <button

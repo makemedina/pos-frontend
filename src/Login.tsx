@@ -35,7 +35,7 @@ export function Login({ onLogin }: LoginProps) {
           alt="Mr Carnes"
           style={{ width: 160, margin: '0 auto 8px', display: 'block' }}
         />
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem' }}>
+        <form onSubmit={handleSubmit} className="grid-gap-075">
           <input value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="Teléfono" />
           <input value={pin} onChange={(e) => setPin(e.target.value)} placeholder="PIN" type="password" />
           {error && <p style={{ color: 'crimson', fontSize: 13 }}>{error}</p>}

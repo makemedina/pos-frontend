@@ -134,14 +134,14 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+    <div className="pantalla-centrada pantalla-arriba">
       <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 620, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="fila-entre-centro">
           <h2>Costos de {proveedorNombre}</h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
 
-        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+        <p className="t-tenue-13-m0">
           Precios de referencia que este proveedor ofrece por producto — es solo informativo, para comparar
           entre proveedores. No afecta el costo real que se registra al hacer una compra.
         </p>
@@ -208,17 +208,17 @@ export function ProveedorCostos({ proveedorId, proveedorNombre, onCerrar }: Prop
         </div>
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
+          <p className="t-centro-tenue">Cargando...</p>
         ) : costos.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Este proveedor no tiene costos registrados todavía.</p>
+          <p className="t-centro-tenue">Este proveedor no tiene costos registrados todavía.</p>
         ) : (
-          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
+          <div className="lista-tarjetas grid-gap-05">
             {costos.map((c) => (
-              <div key={c.varianteId} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={c.varianteId} className="tarjeta-sombra">
+                <div className="fila-entre-centro">
                   <div>
                     <strong>{c.producto}</strong>
-                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{c.marca}</div>
+                    <div className="t-tenue-13">{c.marca}</div>
                     <div style={{ fontSize: 12, color: 'var(--texto-tenue)' }}>
                       Guardado el {formatoFecha(new Date(c.actualizadoEn))} ({haceDias(c.actualizadoEn)})
                     </div>

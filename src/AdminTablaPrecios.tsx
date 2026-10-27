@@ -349,17 +349,17 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+    <div className="pantalla-centrada pantalla-arriba">
       <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 960, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="fila-entre-centro">
           <h2>Tabla de precios</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>
             <button onClick={onCerrar}>Cerrar</button>
           </div>
         </div>
 
-        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+        <p className="t-tenue-13-m0">
           Precio por kg de cada proveedor, solo los actualizados en los últimos 10 días. Parte del costo de la última compra y se actualiza solo al registrar una
           compra nueva; toca cualquier celda para cambiarlo si el proveedor te avisa de otro precio. En{' '}
           <span style={{ background: 'var(--exito-fondo)', color: 'var(--exito-oscuro)', fontWeight: 600, padding: '0 4px', borderRadius: 4 }}>verde</span>{' '}
@@ -399,9 +399,9 @@ export function AdminTablaPrecios({ onCerrar }: Props) {
         </div>
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
+          <p className="t-centro-tenue">Cargando...</p>
         ) : filas.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>
+          <p className="t-centro-tenue">
             No hay precios de los últimos 10 días. Agrega un producto y un proveedor para empezar, o registra una compra.
           </p>
         ) : (

@@ -114,7 +114,7 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         {cargando || !config ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando comprobante...</p>
+          <p className="t-centro-tenue">Cargando comprobante...</p>
         ) : (
           <>
             <div
@@ -145,7 +145,7 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
               {config.telefono && <div style={{ textAlign: 'center' }}>{config.telefono}</div>}
               {config.direccion && <div style={{ textAlign: 'center' }}>{config.direccion}</div>}
 
-              <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+              <hr className="separador-punteado" />
 
               <div style={{ textAlign: 'center', fontWeight: 700 }}>COMPROBANTE DE PAGO</div>
               <div>
@@ -155,30 +155,30 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
               </div>
               <div>{datos.fecha}</div>
 
-              <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+              <hr className="separador-punteado" />
               <div>{entidadLabel}: {datos.clienteNombre}</div>
               {datos.clienteTelefono && <div>Tel: {datos.clienteTelefono}</div>}
 
-              <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+              <hr className="separador-punteado" />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16 }}>
                 <span>MONTO ABONADO</span>
                 <span>{formatoMoneda(datos.monto)}</span>
               </div>
               <div style={{ marginTop: 4 }}>Método de pago: {etiquetaMetodoPago(datos.metodoPago)}</div>
 
-              <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+              <hr className="separador-punteado" />
               {datos.detalleNotas ? (
                 <>
                   <div style={{ fontWeight: 700, marginBottom: 4 }}>Desglose por {tituloDocumento.toLowerCase()}</div>
                   {datos.detalleNotas.map((d) => (
-                    <div key={d.folio} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div key={d.folio} className="fila-entre">
                       <span>{tituloDocumento} #{d.folio} (abonado {formatoMoneda(d.monto)})</span>
                       <span>Saldo: {formatoMoneda(d.saldoRestante)}</span>
                     </div>
                   ))}
                 </>
               ) : (
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div className="fila-entre">
                   <span>Saldo restante de esta {tituloDocumento.toLowerCase()}</span>
                   <span>{formatoMoneda(datos.saldoNotaRestante)}</span>
                 </div>
@@ -196,7 +196,7 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gap: 8 }}>
+            <div className="grid-gap-8">
               {!imagenBlob ? (
                 <button className="boton-primario" disabled={!!ocupado} onClick={generarImagen}>
                   {ocupado === 'imagen' ? 'Generando...' : <><Icono nombre="imagen" size={16} /> Generar imagen (WhatsApp)</>}
@@ -208,11 +208,11 @@ export function ComprobantePagoModal({ datos, onCerrar }: Props) {
               )}
 
               {!pdfBlob ? (
-                <button className="boton-secundario" disabled={!!ocupado} onClick={generarPdf} style={{ width: '100%', marginTop: 0 }}>
+                <button className="boton-secundario w-100-mt-0" disabled={!!ocupado} onClick={generarPdf}>
                   {ocupado === 'pdf' ? 'Generando...' : <><Icono nombre="documento" size={16} /> Generar PDF</>}
                 </button>
               ) : (
-                <button className="boton-secundario" onClick={compartirPdfListo} style={{ width: '100%', marginTop: 0 }}>
+                <button className="boton-secundario w-100-mt-0" onClick={compartirPdfListo}>
                   <Icono nombre="compartir" size={16} /> Compartir PDF
                 </button>
               )}

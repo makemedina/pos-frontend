@@ -100,9 +100,9 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+    <div className="pantalla-centrada pantalla-arriba">
       <div style={{ width: '100%', maxWidth: 560, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="fila-entre-centro">
           <h2>Configuración del negocio</h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
@@ -113,7 +113,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
           <p>Cargando...</p>
         ) : (
           <>
-            <div style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+            <div className="tarjeta-grid-075">
               <label>
                 Nombre del negocio
                 <input
@@ -161,7 +161,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
 
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
               <h3>🏦 Saldo en bancos</h3>
-              <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+              <p className="t-tenue-13">
                 Este número sube solo con cada venta/abono por transferencia, y baja solo con
                 cada gasto, compra o pago a proveedor por transferencia. Solo cámbialo a mano
                 para poner el saldo inicial o para corregirlo si no coincide con el banco real.
@@ -182,7 +182,7 @@ export function AdminConfiguracion({ onCerrar, onIrARecibo }: Props) {
 
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14, display: 'grid', gap: '0.5rem' }}>
               <h3><Icono nombre="cobranza" size={16} /> Saldo en efectivo</h3>
-              <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+              <p className="t-tenue-13">
                 Sube solo con cada venta/abono en efectivo, y baja solo con cada gasto, compra o
                 pago a proveedor en efectivo.
               </p>

@@ -66,22 +66,22 @@ export function CotizacionVenta({ config, datos, elementId }: Props) {
       {config.telefono && <div style={{ textAlign: 'center' }}>{config.telefono}</div>}
       {config.direccion && <div style={{ textAlign: 'center' }}>{config.direccion}</div>}
 
-      <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+      <hr className="separador-punteado" />
 
       <div style={{ textAlign: 'center', fontWeight: 700, fontSize: 15 }}>COTIZACIÓN</div>
       <div>Cotización #{datos.folio}</div>
       <div>{datos.fecha}</div>
       <div>Atendió: {datos.vendedor}</div>
 
-      <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+      <hr className="separador-punteado" />
       <div>Cliente: {datos.cliente.nombre}</div>
       {datos.cliente.telefono && <div>Tel: {datos.cliente.telefono}</div>}
 
-      <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+      <hr className="separador-punteado" />
       {datos.items.map((it, idx) => (
         <div key={idx} style={{ marginBottom: 6 }}>
           <div>{it.producto} {it.marca}</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div className="fila-entre">
             <span>{it.cantidad}kg x {formatoMoneda(it.precioUnitario)}</span>
             <span>{formatoMoneda((it.cantidad * it.precioUnitario))}</span>
           </div>
@@ -90,7 +90,7 @@ export function CotizacionVenta({ config, datos, elementId }: Props) {
 
       <AvisoCotizacion />
 
-      <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px dashed #999' }} />
+      <hr className="separador-punteado" />
       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16 }}>
         <span>TOTAL</span>
         <span>{formatoMoneda(datos.total)}</span>

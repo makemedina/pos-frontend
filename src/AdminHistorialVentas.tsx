@@ -172,12 +172,12 @@ export function AdminHistorialVentas({
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
         {esInicio ? (
           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
             <button className="boton-hamburguesa" onClick={onAbrirMenu} style={{ width: 'auto', padding: '0 14px' }} aria-label="Menú">☰</button>
-            <h2 style={{ margin: 0 }}>Ventas</h2>
+            <h2 className="m-0">Ventas</h2>
             <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
               <button onClick={exportar} style={{ width: 'auto', padding: '0 12px' }} aria-label="Exportar a Excel">
                 <Icono nombre="tabla" size={16} />
@@ -194,9 +194,9 @@ export function AdminHistorialVentas({
             </div>
           </div>
         ) : (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="fila-entre-centro">
             <h2>Historial de ventas</h2>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="fila-gap-8">
               <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>
               <button onClick={onCerrar}>Cerrar</button>
             </div>
@@ -268,8 +268,8 @@ export function AdminHistorialVentas({
 
         {/* Filtros */}
         <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, display: 'grid', gap: '0.75rem' }}>
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <label style={{ display: 'grid', gap: '0.25rem' }}>
+          <div className="fila-gap-075-wrap">
+            <label className="grid-gap-025">
               <span>Periodo</span>
               <select value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
                 <option value="dia">Hoy</option>
@@ -287,18 +287,18 @@ export function AdminHistorialVentas({
 
             {periodo === 'rango' && (
               <>
-                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                <label className="grid-gap-025">
                   <span>Desde</span>
                   <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
                 </label>
-                <label style={{ display: 'grid', gap: '0.25rem' }}>
+                <label className="grid-gap-025">
                   <span>Hasta</span>
                   <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
                 </label>
               </>
             )}
 
-            <label style={{ display: 'grid', gap: '0.25rem' }}>
+            <label className="grid-gap-025">
               <span>Metodo de pago</span>
               <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)}>
                 <option value="">Todos</option>
@@ -332,7 +332,7 @@ export function AdminHistorialVentas({
             )}
           </div>
 
-          <label className="fila-switch" style={{ marginTop: 8 }}>
+          <label className="fila-switch mt-8">
             <span>Mostrar ventas canceladas</span>
             <button
               type="button"
@@ -346,7 +346,7 @@ export function AdminHistorialVentas({
 
         {/* Resumen del periodo filtrado */}
         {!cargando && (
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <div className="fila-gap-075-wrap">
             <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
               <strong>{ventas.length}</strong> venta{ventas.length !== 1 ? 's' : ''}
             </div>
@@ -362,29 +362,29 @@ export function AdminHistorialVentas({
         {cargando ? (
           <p>Cargando...</p>
         ) : ventas.length === 0 ? (
-          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay ventas con esos filtros.</p>
+          <p className="t-tenue">No hay ventas con esos filtros.</p>
         ) : (
-          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="lista-tarjetas grid-gap-075">
             {ventas.map((v) => (
               <div
                 key={v.id}
-                style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                className="tarjeta-click"
                 onClick={() => setNotaAbierta(v.id)}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <strong>Venta #{v.folio}</strong>
-                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+                    <div className="t-tenue-13">
                       {formatoFechaHora(new Date(v.fecha))}
                     </div>
-                    <div style={{ fontSize: 13 }}>
+                    <div className="fs-13">
                       <span style={{ fontSize: 16, fontWeight: 700 }}>{v.cliente.nombre}</span> · {v.cliente.telefono}
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                    <div className="t-tenue-12">
                       Vendio: {v.vendedor.nombre} · {v.metodosPago.map(etiquetaMetodoPago).join(', ') || 'sin pago registrado'}
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div className="t-der">
                     <div><strong>{formatoMoneda(v.total)}</strong></div>
                     {v.cancelada ? (
                       <div style={{ fontSize: 12, color: 'var(--peligro)', fontWeight: 700 }}>❌ Cancelada</div>
@@ -398,7 +398,7 @@ export function AdminHistorialVentas({
 
                 <div style={{ marginTop: 8, fontSize: 13, color: 'var(--texto-fuerte)' }}>
                   {v.items.map((it, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div key={idx} className="fila-entre">
                       <span>{it.producto} {it.marca} · {it.cantidad} kg</span>
                       <span>{formatoMoneda((it.cantidad * it.precioUnitario))}</span>
                     </div>

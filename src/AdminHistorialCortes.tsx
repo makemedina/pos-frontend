@@ -72,9 +72,9 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>Histórico de cortes</h2>
           <button onClick={onCerrar}>Volver</button>
         </div>
@@ -84,15 +84,15 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
         {cargando ? (
           <p>Cargando...</p>
         ) : cortes.length === 0 ? (
-          <p style={{ color: 'var(--ios-secondary-label)' }}>Aún no hay cortes registrados.</p>
+          <p className="t-tenue">Aún no hay cortes registrados.</p>
         ) : (
-          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="lista-tarjetas grid-gap-075">
             {cortes.map((c) => (
-              <div key={c.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+              <div key={c.id} className="tarjeta-sombra">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <strong>{formatoFecha(new Date(c.fecha))}</strong>
-                    <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Registró: {c.registradoPor}</div>
+                    <div className="t-tenue-13">Registró: {c.registradoPor}</div>
                     <div>Efectivo: {formatoMoneda(c.efectivoContado)}</div>
                     <div>Banco: {formatoMoneda(c.saldoBancoContado)}</div>
                     {c.utilidadDia !== undefined && (
@@ -130,17 +130,17 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                 </div>
 
                 {confirmandoEliminarId === c.id && (
-                  <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
-                    <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                  <div className="bloque-autorizacion mt-8">
+                    <p className="texto-alerta fw-600">
                       ¿Seguro que quieres eliminar el corte del {formatoFecha(new Date(c.fecha))}?
                       Esto puede afectar el cuadre del corte del día siguiente que ya se guardó (se
                       comparará contra el corte anterior a este). No se puede deshacer.
                     </p>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                      <button onClick={() => confirmarEliminar(c.id, c.fecha)} disabled={eliminando} style={{ flex: 1 }}>
+                    <div className="fila-gap-8-mt-8">
+                      <button onClick={() => confirmarEliminar(c.id, c.fecha)} disabled={eliminando} className="flex-1">
                         {eliminando ? 'Eliminando...' : 'Sí, eliminar'}
                       </button>
-                      <button onClick={() => setConfirmandoEliminarId(null)} style={{ flex: 1 }}>
+                      <button onClick={() => setConfirmandoEliminarId(null)} className="flex-1">
                         No, regresar
                       </button>
                     </div>
@@ -152,9 +152,9 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
         )}
 
         {editando && (
-          <form onSubmit={guardarEdicion} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+          <form onSubmit={guardarEdicion} className="tarjeta-grid-075">
             <h3>Corregir corte del {formatoFecha(new Date(editando.fecha))}</h3>
-            <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+            <p className="t-tenue-13-m0">
               Solo se pueden corregir los montos contados. La utilidad y la balanza de ese día no se recalculan.
             </p>
             <label>
@@ -175,7 +175,7 @@ export function AdminHistorialCortes({ onCerrar }: Props) {
                 style={{ width: '100%', resize: 'vertical' }}
               />
             </label>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="fila-gap-8">
               <button type="submit">Guardar corrección</button>
               <button type="button" onClick={() => setEditando(null)}>Cancelar</button>
             </div>

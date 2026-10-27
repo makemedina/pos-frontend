@@ -138,9 +138,9 @@ export function AdminAjusteInventario({ onCerrar, varianteInicial }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+    <div className="pantalla-centrada pantalla-arriba">
       <div style={{ width: '100%', maxWidth: 480, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="fila-entre-centro">
           <h2>Ajuste de inventario</h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
@@ -172,7 +172,7 @@ export function AdminAjusteInventario({ onCerrar, varianteInicial }: Props) {
         {varianteElegida && (
           <>
             <label className="etiqueta">Lote</label>
-            {lotes.length === 0 && <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Este producto no tiene lotes registrados.</p>}
+            {lotes.length === 0 && <p className="t-tenue-13">Este producto no tiene lotes registrados.</p>}
             <div className="lista-items-compra">
               {lotes.map((l) => (
                 <div

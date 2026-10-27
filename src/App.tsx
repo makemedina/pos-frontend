@@ -1203,7 +1203,7 @@ export default function App() {
           >
             <div style={{ display: 'flex', flexDirection: 'column', marginBottom: 8 }}>
               <strong>{usuario.nombre}</strong>
-              <small style={{ color: 'var(--ios-secondary-label)' }}>{usuario.rolBase}</small>
+              <small className="t-tenue">{usuario.rolBase}</small>
             </div>
 
             {OPCIONES_MENU.filter((o) => puedeVer(o.pantalla, usuario)).map((o) => (
@@ -1225,12 +1225,12 @@ export default function App() {
                 <Icono nombre={o.icono} />
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{o.titulo}</div>
-                  <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{o.descripcion}</div>
+                  <div className="t-tenue-12">{o.descripcion}</div>
                 </div>
               </div>
             ))}
 
-            <div style={{ flex: 1 }} />
+            <div className="flex-1" />
             <button
               className="boton-secundario"
               onClick={() => {

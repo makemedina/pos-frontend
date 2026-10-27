@@ -1142,3 +1142,39 @@ textarea:focus {
     align-items: start;
   }
 }
+
+/* ===========================================================
+   Utilidades. Reemplazan estilos en linea que se repetian por todo
+   el codigo. Llevan para pesar igual que style={{}}:
+   migrarlas no cambia nada de lo que se ve.
+   =========================================================== */
+.t-tenue { color: var(--ios-secondary-label); }
+.t-tenue-13 { font-size: 13px; color: var(--ios-secondary-label); }
+.flex-1 { flex: 1; }
+.fila-entre-centro { display: flex; justify-content: space-between; align-items: center; }
+.grid-gap-05 { display: grid; gap: 0.5rem; }
+.pantalla-arriba { align-items: flex-start; padding: 1rem; }
+.fila-entre { display: flex; justify-content: space-between; }
+.t-tenue-12 { font-size: 12px; color: var(--ios-secondary-label); }
+.fila-gap-8 { display: flex; gap: 8px; }
+.grid-gap-025 { display: grid; gap: 0.25rem; }
+.contenido-760 { width: 100%; max-width: 760px; display: grid; gap: 1rem; }
+.fs-13 { font-size: 13px; }
+.t-centro-tenue { text-align: center; color: var(--ios-secondary-label); }
+.t-tenue-13-m0 { font-size: 13px; color: var(--ios-secondary-label); margin: 0; }
+.grid-gap-075 { display: grid; gap: 0.75rem; }
+.tarjeta-grid-075 { display: grid; gap: 0.75rem; border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04); padding: 1rem; border-radius: 14px; }
+.tarjeta-sombra { border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04); padding: 0.75rem; border-radius: 14px; }
+.t-der { text-align: right; }
+.tarjeta-click { border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04); padding: 0.75rem; border-radius: 14px; cursor: pointer; }
+.fw-600 { font-weight: 600; }
+.fila-gap-8-mt-8 { display: flex; gap: 8px; margin-top: 8px; }
+.mt-8 { margin-top: 8px; }
+.mt-6 { margin-top: 6px; }
+.fila-gap-075-wrap { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.separador-punteado { margin: 10px 0; border: none; border-top: 1px dashed #999; }
+.m-0 { margin: 0; }
+.grid-gap-8 { display: grid; gap: 8px; }
+.tarjeta-grid-05 { display: grid; gap: 0.5rem; border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04); padding: 1rem; border-radius: 14px; }
+.w-100-mt-0 { width: 100%; margin-top: 0; }
+.justify-start { justify-self: start; }

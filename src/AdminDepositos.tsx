@@ -171,17 +171,17 @@ export function AdminDepositos({ onCerrar }: Props) {
   });
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>Depósitos a banco</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             {pestana === 'historico' && <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>}
             <button onClick={onCerrar}>Cerrar</button>
           </div>
         </div>
 
-        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+        <p className="t-tenue-13-m0">
           Úsalo cuando deposites al banco el efectivo de las ventas (por ejemplo, para pagarle a un
           proveedor por transferencia). Es un traspaso interno: baja de efectivo y sube en banco, no
           afecta ventas, gastos ni la utilidad.
@@ -209,7 +209,7 @@ export function AdminDepositos({ onCerrar }: Props) {
         </div>
 
         {pestana === 'registrar' && (
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+          <form onSubmit={handleSubmit} className="tarjeta-grid-075">
             <h3>Registrar depósito</h3>
             <input value={monto} onChange={(e) => setMonto(e.target.value)} type="number" step="0.01" placeholder="Monto depositado" required />
             <input value={notas} onChange={(e) => setNotas(e.target.value)} placeholder="Notas (opcional, ej. para qué proveedor)" />
@@ -262,17 +262,17 @@ export function AdminDepositos({ onCerrar }: Props) {
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
-            <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
-              {depositosFiltrados.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay depósitos que coincidan.</p>}
+            <div className="lista-tarjetas grid-gap-075">
+              {depositosFiltrados.length === 0 && <p className="t-tenue">No hay depósitos que coincidan.</p>}
               {depositosFiltrados.map((deposito) => (
-                <div key={deposito.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div key={deposito.id} className="tarjeta-sombra">
+                  <div className="fila-entre">
                     <div>
                       <strong>{formatoMoneda(Number(deposito.monto))}</strong>
-                      {deposito.notas && <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{deposito.notas}</div>}
-                      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoFechaHora(new Date(deposito.fecha))}</div>
+                      {deposito.notas && <div className="t-tenue-13">{deposito.notas}</div>}
+                      <div className="t-tenue-12">{formatoFechaHora(new Date(deposito.fecha))}</div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    <div className="t-der">
                       <small>{deposito.registradoPor.nombre}</small>
                     </div>
                   </div>
@@ -289,12 +289,12 @@ export function AdminDepositos({ onCerrar }: Props) {
                   )}
 
                   {deposito.cancelado ? (
-                    <div className="aviso-alerta" style={{ marginTop: 8 }}>
+                    <div className="aviso-alerta mt-8">
                       ❌ Cancelado{deposito.canceladoEn ? ` el ${formatoFechaHora(new Date(deposito.canceladoEn))}` : ''}
                     </div>
                   ) : confirmandoId === deposito.id ? (
-                    <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
-                      <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                    <div className="bloque-autorizacion mt-8">
+                      <p className="texto-alerta fw-600">
                         ¿Seguro que quieres cancelar este depósito? No se puede deshacer.
                       </p>
                       {necesitaAutorizacion && (
@@ -312,11 +312,11 @@ export function AdminDepositos({ onCerrar }: Props) {
                           />
                         </>
                       )}
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                        <button onClick={() => confirmarCancelacion(deposito.id)} disabled={cancelando} style={{ flex: 1 }}>
+                      <div className="fila-gap-8-mt-8">
+                        <button onClick={() => confirmarCancelacion(deposito.id)} disabled={cancelando} className="flex-1">
                           {cancelando ? 'Cancelando...' : 'Sí, cancelar'}
                         </button>
-                        <button onClick={() => { setConfirmandoId(null); setNecesitaAutorizacion(false); }} style={{ flex: 1 }}>
+                        <button onClick={() => { setConfirmandoId(null); setNecesitaAutorizacion(false); }} className="flex-1">
                           No, regresar
                         </button>
                       </div>

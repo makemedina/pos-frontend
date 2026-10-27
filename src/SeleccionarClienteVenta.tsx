@@ -61,7 +61,7 @@ export function SeleccionarClienteVenta({ onSeleccionar, onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+    <div className="pantalla-centrada pantalla-arriba">
       <div style={{ width: '100%', maxWidth: 480, display: 'grid', gap: '0.75rem' }}>
         <header className="encabezado">
           <button
@@ -73,8 +73,8 @@ export function SeleccionarClienteVenta({ onSeleccionar, onCerrar }: Props) {
           </button>
         </header>
 
-        <h2 style={{ margin: 0 }}>¿A quién le vendes?</h2>
-        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+        <h2 className="m-0">¿A quién le vendes?</h2>
+        <p className="t-tenue-13-m0">
           Elige o crea el cliente antes de armar la nota, para poder sugerirte el último precio que
           le diste a cada producto.
         </p>
@@ -119,11 +119,11 @@ export function SeleccionarClienteVenta({ onSeleccionar, onCerrar }: Props) {
                 <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
               ))}
             </select>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="boton-primario" onClick={guardarClienteNuevo} style={{ flex: 1 }}>
+            <div className="fila-gap-8">
+              <button className="boton-primario flex-1" onClick={guardarClienteNuevo}>
                 Guardar cliente
               </button>
-              <button className="boton-secundario" onClick={() => setMostrarAltaRapida(false)} style={{ flex: 1 }}>
+              <button className="boton-secundario flex-1" onClick={() => setMostrarAltaRapida(false)}>
                 Cancelar
               </button>
             </div>

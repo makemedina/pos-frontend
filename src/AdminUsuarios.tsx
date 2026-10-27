@@ -138,16 +138,16 @@ export function AdminUsuarios({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>Usuarios</h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
 
         {mensaje && <div className="banner-mensaje">{mensaje}</div>}
 
-        <form onSubmit={crearUsuario} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+        <form onSubmit={crearUsuario} className="tarjeta-grid-075">
           <h3>Agregar usuario</h3>
           <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre" required />
           <input value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="Teléfono" required />
@@ -157,10 +157,10 @@ export function AdminUsuarios({ onCerrar }: Props) {
 
         {cargando ? <p>Cargando...</p> : null}
 
-        <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
+        <div className="lista-tarjetas grid-gap-075">
           {usuarios.map((usuario) => (
-            <div key={usuario.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div key={usuario.id} className="tarjeta-sombra">
+              <div className="fila-entre-centro">
                 <div>
                   <strong>{usuario.nombre}</strong>
                   <div>{usuario.telefono}</div>
@@ -187,23 +187,23 @@ export function AdminUsuarios({ onCerrar }: Props) {
 
         {usuarioSeleccionado && (
           <div style={{ display: 'grid', gap: '1rem' }}>
-            <form onSubmit={guardarDatos} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+            <form onSubmit={guardarDatos} className="tarjeta-grid-075">
               <h3>Datos de {usuarioSeleccionado.nombre}</h3>
               <input value={nombreEdicion} onChange={(e) => setNombreEdicion(e.target.value)} placeholder="Nombre" required />
               <input value={telefonoEdicion} onChange={(e) => setTelefonoEdicion(e.target.value)} placeholder="Teléfono" required />
               <button type="submit">Guardar datos</button>
             </form>
 
-            <form onSubmit={cambiarPin} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+            <form onSubmit={cambiarPin} className="tarjeta-grid-075">
               <h3>Cambiar PIN de {usuarioSeleccionado.nombre}</h3>
               <input value={pinUsuario} onChange={(e) => setPinUsuario(e.target.value)} placeholder="Nuevo PIN" required />
               <button type="submit">Actualizar PIN</button>
             </form>
 
-            <form onSubmit={guardarPermisos} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+            <form onSubmit={guardarPermisos} className="tarjeta-grid-075">
               <h3>Permisos</h3>
               {Object.entries(permisos).map(([key, value]) => (
-                <label key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label key={key} className="fila-entre-centro">
                   <span>{key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())}</span>
                   <input
                     type="checkbox"

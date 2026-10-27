@@ -63,11 +63,11 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>Facturas pendientes</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             <button onClick={exportar}><Icono nombre="tabla" size={16} /> Exportar Excel</button>
             <button onClick={onCerrar}>Cerrar</button>
           </div>
@@ -85,23 +85,23 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
         {cargando ? (
           <p>Cargando...</p>
         ) : facturasFiltradas.length === 0 ? (
-          <p style={{ color: 'var(--ios-secondary-label)' }}>No hay facturas pendientes que coincidan.</p>
+          <p className="t-tenue">No hay facturas pendientes que coincidan.</p>
         ) : (
           <>
-            <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
+            <div className="lista-tarjetas grid-gap-075">
               {facturasFiltradas.map((f) => (
-                <div key={f.id} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <div key={f.id} className="tarjeta-sombra">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <strong>{f.proveedor.nombre}</strong>
-                      <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{f.proveedor.telefono || ''}</div>
-                      <div style={{ fontSize: 13 }}>Factura: {f.numeroFactura || 'Sin factura'}</div>
-                      <div style={{ fontSize: 13 }}>Compra: {formatoFecha(new Date(f.fecha))}</div>
-                      <div style={{ fontSize: 13 }}>
+                      <div className="t-tenue-13">{f.proveedor.telefono || ''}</div>
+                      <div className="fs-13">Factura: {f.numeroFactura || 'Sin factura'}</div>
+                      <div className="fs-13">Compra: {formatoFecha(new Date(f.fecha))}</div>
+                      <div className="fs-13">
                         Vence: {f.fechaVencimiento ? formatoFecha(new Date(f.fechaVencimiento)) : 'Sin fecha'}
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    <div className="t-der">
                       <div>Total: {formatoMoneda(f.total)}</div>
                       <div style={{ fontWeight: 700, color: 'var(--peligro)' }}>Saldo: {formatoMoneda(f.saldoPendiente)}</div>
                     </div>

@@ -114,14 +114,14 @@ export function CotizacionModal({ datos, onCerrar }: Props) {
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         {cargando || !config ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando cotización...</p>
+          <p className="t-centro-tenue">Cargando cotización...</p>
         ) : (
           <>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, border: '1px solid var(--borde-suave)', borderRadius: 12, overflow: 'hidden' }}>
               <CotizacionVenta config={config} datos={datos} elementId={ELEMENT_ID} />
             </div>
 
-            <div style={{ display: 'grid', gap: 8 }}>
+            <div className="grid-gap-8">
               {!imagenBlob ? (
                 <button className="boton-primario" disabled={!!ocupado} onClick={generarImagen}>
                   {ocupado === 'imagen' ? 'Generando...' : <><Icono nombre="imagen" size={16} /> Generar imagen (WhatsApp)</>}
@@ -133,16 +133,16 @@ export function CotizacionModal({ datos, onCerrar }: Props) {
               )}
 
               {!pdfBlob ? (
-                <button className="boton-secundario" disabled={!!ocupado} onClick={generarPdf} style={{ width: '100%', marginTop: 0 }}>
+                <button className="boton-secundario w-100-mt-0" disabled={!!ocupado} onClick={generarPdf}>
                   {ocupado === 'pdf' ? 'Generando...' : <><Icono nombre="documento" size={16} /> Generar PDF</>}
                 </button>
               ) : (
-                <button className="boton-secundario" onClick={compartirPdfListo} style={{ width: '100%', marginTop: 0 }}>
+                <button className="boton-secundario w-100-mt-0" onClick={compartirPdfListo}>
                   <Icono nombre="compartir" size={16} /> Compartir PDF
                 </button>
               )}
 
-              <button className="boton-secundario" disabled={!!ocupado} onClick={imprimir} style={{ width: '100%', marginTop: 0 }}>
+              <button className="boton-secundario w-100-mt-0" disabled={!!ocupado} onClick={imprimir}>
                 {ocupado === 'imprimir'
                   ? 'Imprimiendo...'
                   : impresoraConectada()

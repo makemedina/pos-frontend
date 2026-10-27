@@ -107,9 +107,9 @@ export function AdminTransacciones({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <div>
             <h2>Transacciones</h2>
             <small>Ventas y compras registradas</small>
@@ -119,7 +119,7 @@ export function AdminTransacciones({ onCerrar }: Props) {
 
         {mensaje && <div className="banner-mensaje">{mensaje}</div>}
 
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div className="fila-gap-075-wrap">
           <button
             type="button"
             onClick={() => setFiltroTipo('todo')}
@@ -146,9 +146,9 @@ export function AdminTransacciones({ onCerrar }: Props) {
         {cargando ? (
           <p>Cargando transacciones...</p>
         ) : transaccionesFiltradas.length === 0 ? (
-          <p style={{ color: 'var(--ios-secondary-label)' }}>No se encontraron transacciones.</p>
+          <p className="t-tenue">No se encontraron transacciones.</p>
         ) : (
-          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
+          <div className="lista-tarjetas grid-gap-075">
             {transaccionesFiltradas.map((transaccion) => (
               <div key={`${transaccion.tipo}-${transaccion.id}`} style={{ border: '1px solid #ddd', padding: '0.75rem', borderRadius: 8, background: 'white' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -157,10 +157,10 @@ export function AdminTransacciones({ onCerrar }: Props) {
                     <div>{transaccion.referencia}</div>
                     <div style={{ color: 'var(--ios-secondary-label)', fontSize: 12 }}>{transaccion.contrapartida}</div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div className="t-der">
                     <div style={{ fontWeight: 700 }}>${transaccion.monto.toFixed(2)}</div>
                     <div style={{ color: 'var(--ios-secondary-label)', fontSize: 12 }}>{formatearFecha(transaccion.fecha)}</div>
-                    {transaccion.metodoPago ? <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{transaccion.metodoPago}</div> : null}
+                    {transaccion.metodoPago ? <div className="t-tenue-12">{transaccion.metodoPago}</div> : null}
                   </div>
                 </div>
               </div>

@@ -733,16 +733,16 @@ export function AdminCartera({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>
             {nivel === 'clientes' && 'Cartera'}
             {nivel === 'notas' && `Notas de ${clienteElegido?.nombre}`}
             {nivel === 'pagos' && `Venta #${notaElegida?.folio}`}
             {nivel === 'historialPagos' && `Pagos de ${clienteElegido?.nombre}`}
           </h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             {nivel === 'clientes' && clientesFiltrados.length > 0 && (
               <>
                 <button onClick={exportar} disabled={exportando}>
@@ -817,20 +817,20 @@ export function AdminCartera({ onCerrar }: Props) {
               Ocultar clientes sin saldo en cartera
             </label>
             <div id={ELEMENT_ID_REPORTE_CARTERA} style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
-              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
-                {clientesFiltrados.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay clientes que coincidan.</p>}
+              <div className="lista-tarjetas grid-gap-075">
+                {clientesFiltrados.length === 0 && <p className="t-tenue">No hay clientes que coincidan.</p>}
                 {clientesFiltrados.map((c) => (
                   <div
                     key={c.id}
-                    style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                    className="tarjeta-click"
                     onClick={() => abrirCliente(c)}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="fila-entre-centro">
                       <div>
                         <strong>{c.nombre}</strong>
-                        <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{c.telefono}</div>
+                        <div className="t-tenue-13">{c.telefono}</div>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
+                      <div className="t-der">
                         <div style={{ fontWeight: 700, color: c.saldoTotal > 0 ? 'var(--peligro)' : 'var(--exito)' }}>
                           {formatoMoneda(Math.abs(c.saldoTotal))}
                         </div>
@@ -867,15 +867,15 @@ export function AdminCartera({ onCerrar }: Props) {
         {/* ---------- NIVEL 2: NOTAS DE UN CLIENTE ---------- */}
         {!cargando && nivel === 'notas' && (
           <>
-            <button onClick={volverAClientes} style={{ justifySelf: 'start' }}>← Todos los clientes</button>
+            <button onClick={volverAClientes} className="justify-start">← Todos los clientes</button>
 
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="fila-gap-8">
               {!mostrarPagoMultiple && notasPendientesPago.length > 0 && (
-                <button onClick={abrirPagoMultiple} style={{ justifySelf: 'start' }}>
+                <button onClick={abrirPagoMultiple} className="justify-start">
                   + Agregar pago
                 </button>
               )}
-              <button onClick={abrirHistorialPagos} className="boton-secundario" style={{ justifySelf: 'start' }}>
+              <button onClick={abrirHistorialPagos} className="boton-secundario justify-start">
                 <Icono nombre="pendientes" size={16} /> Ver todos los pagos
               </button>
             </div>
@@ -883,14 +883,14 @@ export function AdminCartera({ onCerrar }: Props) {
             {mostrarPagoMultiple && (
               <form
                 onSubmit={handlePagoMultiple}
-                style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}
+                className="tarjeta-grid-075"
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3 style={{ margin: 0 }}>Agregar pago de {clienteElegido?.nombre}</h3>
+                <div className="fila-entre-centro">
+                  <h3 className="m-0">Agregar pago de {clienteElegido?.nombre}</h3>
                   <button type="button" onClick={cerrarPagoMultiple}>Cancelar</button>
                 </div>
 
-                <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+                <p className="t-tenue-13-m0">
                   Importe del pago recibido — se puede repartir entre efectivo y transferencia si el cliente paga con ambos.
                 </p>
 
@@ -935,11 +935,11 @@ export function AdminCartera({ onCerrar }: Props) {
                   </label>
                 )}
 
-                <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+                <p className="t-tenue-13-m0">
                   Marca las notas que se pagan con este importe — cada una se rellena con su saldo, pero puedes cambiarlo.
                 </p>
 
-                <div style={{ display: 'grid', gap: '0.5rem' }}>
+                <div className="grid-gap-05">
                   {notasPendientesPago.map((n) => {
                     const seleccionada = n.id in asignacionesPago;
                     return (
@@ -954,7 +954,7 @@ export function AdminCartera({ onCerrar }: Props) {
                         />
                         <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => toggleNotaPago(n)}>
                           <strong>Venta #{n.folio}</strong>
-                          <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+                          <div className="t-tenue-12">
                             Saldo: {formatoMoneda(n.saldoPendiente)}
                           </div>
                         </div>
@@ -1023,25 +1023,25 @@ export function AdminCartera({ onCerrar }: Props) {
             </p>
 
             <div id={ELEMENT_ID_REPORTE_NOTAS_CLIENTE} style={{ display: 'grid', gap: '0.75rem', background: 'white' }}>
-              <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+              <div className="tarjeta-sombra">
                 <strong>{clienteElegido?.nombre}</strong>
-                <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{clienteElegido?.telefono}</div>
+                <div className="t-tenue-13">{clienteElegido?.telefono}</div>
               </div>
 
-              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
-                {notas.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>No hay notas para mostrar.</p>}
+              <div className="lista-tarjetas grid-gap-075">
+                {notas.length === 0 && <p className="t-tenue">No hay notas para mostrar.</p>}
                 {notas.map((n) => (
                   <div
                     key={n.id}
-                    style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                    className="tarjeta-click"
                     onClick={() => abrirNota(n)}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="fila-entre-centro">
                       <div>
                         <strong>Venta #{n.folio}</strong>
-                        <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{formatoFecha(new Date(n.fecha))}</div>
+                        <div className="t-tenue-13">{formatoFecha(new Date(n.fecha))}</div>
                       </div>
-                      <div style={{ textAlign: 'right' }}>
+                      <div className="t-der">
                         <div>Total: {formatoMoneda(n.total)}</div>
                         <div style={{ fontSize: 12, color: n.estadoPago === 'pagada' ? 'var(--exito)' : 'var(--peligro)' }}>
                           {n.estadoPago === 'pagada'
@@ -1062,14 +1062,14 @@ export function AdminCartera({ onCerrar }: Props) {
         {/* ---------- NIVEL 3: PAGOS DE UNA NOTA ---------- */}
         {!cargando && nivel === 'pagos' && notaElegida && (
           <>
-            <button onClick={volverANotas} style={{ justifySelf: 'start' }}>← Notas de {clienteElegido?.nombre}</button>
+            <button onClick={volverANotas} className="justify-start">← Notas de {clienteElegido?.nombre}</button>
 
-            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div className="tarjeta-sombra">
+              <div className="fila-entre">
                 <span>Total de la nota</span>
                 <strong>{formatoMoneda(notaElegida.total)}</strong>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div className="fila-entre">
                 <span>Saldo pendiente</span>
                 <strong className={notaElegida.saldoPendiente > 0 ? 'texto-alerta' : ''}>
                   {formatoMoneda(notaElegida.saldoPendiente)}
@@ -1078,15 +1078,15 @@ export function AdminCartera({ onCerrar }: Props) {
             </div>
 
             <h3>Historial de pagos</h3>
-            <div style={{ display: 'grid', gap: '0.5rem' }}>
-              {pagos.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Aun no se ha registrado ningun pago.</p>}
+            <div className="grid-gap-05">
+              {pagos.length === 0 && <p className="t-tenue">Aun no se ha registrado ningun pago.</p>}
               {pagos.map((p) => (
                 <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div className="fila-entre">
                     <span>
                       {formatoFechaHora(new Date(p.fecha))} · {etiquetaMetodoPago(p.metodoPago)}
                       <br />
-                      <small style={{ color: 'var(--ios-secondary-label)' }}>Registro: {p.registradoPor.nombre}</small>
+                      <small className="t-tenue">Registro: {p.registradoPor.nombre}</small>
                     </span>
                     <strong style={p.cancelado ? { textDecoration: 'line-through', color: 'var(--texto-tenue)' } : undefined}>
                       {formatoMoneda(p.monto)}
@@ -1094,7 +1094,7 @@ export function AdminCartera({ onCerrar }: Props) {
                   </div>
 
                   {p.cancelado ? (
-                    <div className="aviso-alerta" style={{ marginTop: 6 }}>
+                    <div className="aviso-alerta mt-6">
                       ❌ Cancelado{p.canceladoEn ? ` el ${formatoFechaHora(new Date(p.canceladoEn))}` : ''}
                     </div>
                   ) : (
@@ -1121,8 +1121,8 @@ export function AdminCartera({ onCerrar }: Props) {
 
                   {!p.cancelado &&
                     (confirmandoCancelarPagoId === p.id ? (
-                      <div className="bloque-autorizacion" style={{ marginTop: 6 }}>
-                        <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                      <div className="bloque-autorizacion mt-6">
+                        <p className="texto-alerta fw-600">
                           ¿Seguro que quieres cancelar este pago? No se puede deshacer.
                         </p>
                         {necesitaAutorizacionPago && (
@@ -1140,11 +1140,11 @@ export function AdminCartera({ onCerrar }: Props) {
                             />
                           </>
                         )}
-                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                          <button onClick={() => confirmarCancelarPago(p.id)} disabled={cancelandoPago} style={{ flex: 1 }}>
+                        <div className="fila-gap-8-mt-8">
+                          <button onClick={() => confirmarCancelarPago(p.id)} disabled={cancelandoPago} className="flex-1">
                             {cancelandoPago ? 'Cancelando...' : 'Sí, cancelar'}
                           </button>
-                          <button onClick={() => setConfirmandoCancelarPagoId(null)} style={{ flex: 1 }}>
+                          <button onClick={() => setConfirmandoCancelarPagoId(null)} className="flex-1">
                             No, regresar
                           </button>
                         </div>
@@ -1163,9 +1163,9 @@ export function AdminCartera({ onCerrar }: Props) {
             </div>
 
             {notaElegida.saldoPendiente > 0 && (
-              <form onSubmit={handlePago} style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
+              <form onSubmit={handlePago} className="tarjeta-grid-075">
                 <h3>Registrar nuevo abono</h3>
-                <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+                <p className="t-tenue-13-m0">
                   Saldo pendiente: {formatoMoneda(notaElegida.saldoPendiente)}. Se puede repartir entre efectivo
                   y transferencia si el cliente paga con ambos.
                 </p>
@@ -1233,22 +1233,22 @@ export function AdminCartera({ onCerrar }: Props) {
         {/* ---------- HISTORIAL DE PAGOS DEL CLIENTE (todas las notas) ---------- */}
         {!cargando && nivel === 'historialPagos' && clienteElegido && (
           <>
-            <button onClick={volverANotasDesdeHistorial} style={{ justifySelf: 'start' }}>← Notas de {clienteElegido.nombre}</button>
+            <button onClick={volverANotasDesdeHistorial} className="justify-start">← Notas de {clienteElegido.nombre}</button>
 
-            <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+            <p className="t-tenue-13-m0">
               Todos los pagos que {clienteElegido.nombre} ha entregado, aunque hayan cubierto varias notas a la
               vez. Cancelar uno revierte TODAS las notas que cubrió.
             </p>
 
-            <div style={{ display: 'grid', gap: '0.5rem' }}>
-              {gruposPago.length === 0 && <p style={{ color: 'var(--ios-secondary-label)' }}>Este cliente aún no ha hecho ningún pago.</p>}
+            <div className="grid-gap-05">
+              {gruposPago.length === 0 && <p className="t-tenue">Este cliente aún no ha hecho ningún pago.</p>}
               {gruposPago.map((g) => (
                 <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div className="fila-entre">
                     <span>
                       {formatoFechaHora(new Date(g.fecha))} · {g.metodosPago.map(etiquetaMetodoPago).join(' + ') || '—'}
                       <br />
-                      <small style={{ color: 'var(--ios-secondary-label)' }}>Registró: {g.registradoPor}</small>
+                      <small className="t-tenue">Registró: {g.registradoPor}</small>
                     </span>
                     <strong style={g.cancelado ? { textDecoration: 'line-through', color: 'var(--texto-tenue)' } : undefined}>
                       {formatoMoneda(g.montoTotal)}
@@ -1265,15 +1265,15 @@ export function AdminCartera({ onCerrar }: Props) {
                   </div>
 
                   {g.cancelado && (
-                    <div className="aviso-alerta" style={{ marginTop: 6 }}>
+                    <div className="aviso-alerta mt-6">
                       ❌ Cancelado
                     </div>
                   )}
 
                   {!g.cancelado &&
                     (confirmandoCancelarGrupoKey === g.grupoKey ? (
-                      <div className="bloque-autorizacion" style={{ marginTop: 6 }}>
-                        <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                      <div className="bloque-autorizacion mt-6">
+                        <p className="texto-alerta fw-600">
                           ¿Seguro que quieres cancelar este pago? Se revertirán TODAS las notas que cubrió.
                           No se puede deshacer.
                         </p>
@@ -1292,11 +1292,11 @@ export function AdminCartera({ onCerrar }: Props) {
                             />
                           </>
                         )}
-                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                          <button onClick={() => confirmarCancelarGrupo(g.grupoKey)} disabled={cancelandoGrupo} style={{ flex: 1 }}>
+                        <div className="fila-gap-8-mt-8">
+                          <button onClick={() => confirmarCancelarGrupo(g.grupoKey)} disabled={cancelandoGrupo} className="flex-1">
                             {cancelandoGrupo ? 'Cancelando...' : 'Sí, cancelar'}
                           </button>
-                          <button onClick={() => setConfirmandoCancelarGrupoKey(null)} style={{ flex: 1 }}>
+                          <button onClick={() => setConfirmandoCancelarGrupoKey(null)} className="flex-1">
                             No, regresar
                           </button>
                         </div>

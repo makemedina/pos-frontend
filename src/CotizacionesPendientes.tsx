@@ -181,9 +181,9 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
   const saldoPendiente = detalle ? Math.max(detalle.total - montoPagadoTotal, 0) : 0;
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>{detalle ? `Cotización #${detalle.folio}` : 'Cotizaciones pendientes'}</h2>
           <button onClick={detalle ? volverALista : onCerrar}>{detalle ? '← Pendientes' : 'Cerrar'}</button>
         </div>
@@ -195,19 +195,19 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
             {cargando ? (
               <p>Cargando...</p>
             ) : cotizaciones.length === 0 ? (
-              <p style={{ color: 'var(--ios-secondary-label)' }}>No hay cotizaciones pendientes.</p>
+              <p className="t-tenue">No hay cotizaciones pendientes.</p>
             ) : (
-              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.75rem' }}>
+              <div className="lista-tarjetas grid-gap-075">
                 {cotizaciones.map((c) => (
                   <div
                     key={c.id}
-                    style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14, cursor: 'pointer' }}
+                    className="tarjeta-click"
                     onClick={() => abrirDetalle(c.id)}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div className="fila-entre">
                       <div>
                         <strong>Cotización #{c.folio}</strong>
-                        <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{c.cliente.nombre}</div>
+                        <div className="t-tenue-13">{c.cliente.nombre}</div>
                         <div style={{ fontSize: 12, color: 'var(--texto-tenue)' }}>
                           {formatoFechaHora(new Date(c.fecha))} · {c.vendedor.nombre}
                         </div>
@@ -225,9 +225,9 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
 
         {detalle && !cargandoDetalle && (
           <>
-            <div style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+            <div className="tarjeta-sombra">
               <div>Cliente: <strong>{detalle.cliente.nombre}</strong></div>
-              <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>{detalle.cliente.telefono}</div>
+              <div className="t-tenue-13">{detalle.cliente.telefono}</div>
               <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px solid var(--ios-separator)' }} />
               {detalle.items.map((i) => (
                 <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, marginBottom: 4 }}>
@@ -241,11 +241,11 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
               </div>
             </div>
 
-            <div style={{ display: 'grid', gap: '0.75rem', border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '1rem', borderRadius: 14 }}>
-              <h3 style={{ margin: 0 }}>Confirmar como venta</h3>
+            <div className="tarjeta-grid-075">
+              <h3 className="m-0">Confirmar como venta</h3>
 
               <label className="etiqueta">Pago (efectivo y/o transferencia)</label>
-              <label style={{ fontSize: 13 }}>
+              <label className="fs-13">
                 Efectivo
                 <div className="campo-precio">
                   <span>$</span>
@@ -260,7 +260,7 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
                   />
                 </div>
               </label>
-              <label style={{ fontSize: 13 }}>
+              <label className="fs-13">
                 Transferencia
                 <div className="campo-precio">
                   <span>$</span>
@@ -337,10 +337,10 @@ export function CotizacionesPendientes({ vendedorNombre, onCerrar, onCambio, onV
                 </button>
               ) : (
                 <div className="bloque-autorizacion">
-                  <p className="texto-alerta" style={{ fontWeight: 600 }}>¿Seguro que quieres cancelar esta cotización?</p>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={cancelar} style={{ flex: 1 }}>Sí, cancelar</button>
-                    <button onClick={() => setConfirmandoCancelar(false)} style={{ flex: 1 }}>No, regresar</button>
+                  <p className="texto-alerta fw-600">¿Seguro que quieres cancelar esta cotización?</p>
+                  <div className="fila-gap-8">
+                    <button onClick={cancelar} className="flex-1">Sí, cancelar</button>
+                    <button onClick={() => setConfirmandoCancelar(false)} className="flex-1">No, regresar</button>
                   </div>
                 </div>
               )}

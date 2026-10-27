@@ -126,11 +126,11 @@ export function AdminBackups({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
-      <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 760, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pantalla-centrada pantalla-arriba">
+      <div className="contenido-pantalla contenido-760">
+        <div className="fila-entre-centro">
           <h2>Respaldos</h2>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="fila-gap-8">
             <button onClick={hacerBackupAhora} disabled={creando || !!noConfigurado}>
               {creando ? 'Creando...' : <><Icono nombre="respaldo" size={16} /> Hacer backup ahora</>}
             </button>
@@ -138,7 +138,7 @@ export function AdminBackups({ onCerrar }: Props) {
           </div>
         </div>
 
-        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+        <p className="t-tenue-13-m0">
           Respaldo completo de toda la base de datos (ventas, compras, clientes, proveedores,
           inventario, todo). Se guarda fuera del sistema, en Cloudflare. Además del botón manual,
           todos los días a medianoche se hace uno automático.
@@ -153,20 +153,20 @@ export function AdminBackups({ onCerrar }: Props) {
         )}
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
+          <p className="t-centro-tenue">Cargando...</p>
         ) : !noConfigurado && backups.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Todavía no hay ningún respaldo.</p>
+          <p className="t-centro-tenue">Todavía no hay ningún respaldo.</p>
         ) : (
-          <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
+          <div className="lista-tarjetas grid-gap-05">
             {backups.map((b) => {
               const etiqueta = etiquetaTipo(b.tipo);
               return (
-                <div key={b.key} style={{ border: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.04)', padding: '0.75rem', borderRadius: 14 }}>
+                <div key={b.key} className="tarjeta-sombra">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <strong>{formatoFechaHora(new Date(b.fecha))}</strong>
                       <div style={{ fontSize: 12, color: etiqueta.color, fontWeight: 600 }}>{etiqueta.texto}</div>
-                      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{formatoTamano(b.tamano)}</div>
+                      <div className="t-tenue-12">{formatoTamano(b.tamano)}</div>
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       <button onClick={() => descargar(b.key)} disabled={ocupadoKey === b.key}>
@@ -188,15 +188,15 @@ export function AdminBackups({ onCerrar }: Props) {
                   </div>
 
                   {confirmandoEliminarKey === b.key && (
-                    <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
-                      <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                    <div className="bloque-autorizacion mt-8">
+                      <p className="texto-alerta fw-600">
                         ¿Eliminar este respaldo? No se puede deshacer.
                       </p>
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                        <button onClick={() => confirmarEliminar(b.key)} disabled={ocupadoKey === b.key} style={{ flex: 1 }}>
+                      <div className="fila-gap-8-mt-8">
+                        <button onClick={() => confirmarEliminar(b.key)} disabled={ocupadoKey === b.key} className="flex-1">
                           {ocupadoKey === b.key ? 'Eliminando...' : 'Sí, eliminar'}
                         </button>
-                        <button onClick={() => setConfirmandoEliminarKey(null)} style={{ flex: 1 }}>
+                        <button onClick={() => setConfirmandoEliminarKey(null)} className="flex-1">
                           No, regresar
                         </button>
                       </div>
@@ -204,15 +204,15 @@ export function AdminBackups({ onCerrar }: Props) {
                   )}
 
                   {confirmandoRestaurarKey === b.key && (
-                    <div className="bloque-autorizacion" style={{ marginTop: 8 }}>
-                      <p className="texto-alerta" style={{ fontWeight: 600 }}>
+                    <div className="bloque-autorizacion mt-8">
+                      <p className="texto-alerta fw-600">
                         Esto va a BORRAR todo lo que hay ahorita en el sistema y lo va a reemplazar
                         con lo que había en este respaldo ({formatoFechaHora(new Date(b.fecha))}).
                         Antes de empezar se guarda automáticamente un respaldo de cómo está todo
                         justo ahora, por si te equivocas de respaldo. Esto no se puede deshacer de
                         otra forma.
                       </p>
-                      <label style={{ fontSize: 13 }}>
+                      <label className="fs-13">
                         Escribe <strong>RESTAURAR</strong> para confirmar:
                       </label>
                       <input
@@ -220,7 +220,7 @@ export function AdminBackups({ onCerrar }: Props) {
                         onChange={(e) => setTextoConfirmacion(e.target.value)}
                         placeholder="RESTAURAR"
                       />
-                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <div className="fila-gap-8-mt-8">
                         <button
                           onClick={confirmarRestaurar}
                           disabled={textoConfirmacion !== 'RESTAURAR' || restaurando}
@@ -230,7 +230,7 @@ export function AdminBackups({ onCerrar }: Props) {
                         </button>
                         <button
                           onClick={() => { setConfirmandoRestaurarKey(null); setTextoConfirmacion(''); }}
-                          style={{ flex: 1 }}
+                          className="flex-1"
                           disabled={restaurando}
                         >
                           Cancelar

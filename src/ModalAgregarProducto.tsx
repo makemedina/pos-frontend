@@ -53,7 +53,7 @@ export function ModalAgregarProducto({ variante, cantidadYaEnCarrito, ultimoPrec
           <button className="boton-cerrar" onClick={onCerrar}>✕</button>
         </div>
 
-        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
+        <p className="t-tenue-13">
           Disponible: <strong>{formatoKg(disponibleReal)} kg</strong>
           {cantidadYaEnCarrito > 0 && ` (ya tienes ${formatoKg(cantidadYaEnCarrito)} kg de este producto en la nota)`}
         </p>

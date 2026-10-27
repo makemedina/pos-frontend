@@ -107,12 +107,12 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
             />
             <span>
               <strong style={{ textDecoration: c.hecha ? 'line-through' : 'none' }}>{c.nombre}</strong>
-              {c.notasCliente && <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)' }}>{c.notasCliente}</div>}
+              {c.notasCliente && <div className="t-tenue-12">{c.notasCliente}</div>}
             </span>
           </label>
         </div>
 
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="fila-gap-8">
           <a
             href={`tel:${c.telefono}`}
             style={{ flex: 1, textAlign: 'center', padding: '8px 0', borderRadius: 10, background: 'var(--fondo-gris)', color: '#111', textDecoration: 'none', fontSize: 14 }}
@@ -153,14 +153,14 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
   }
 
   return (
-    <div className="pantalla-centrada" style={{ alignItems: 'flex-start', padding: '1rem' }}>
+    <div className="pantalla-centrada pantalla-arriba">
       <div className="contenido-pantalla" style={{ width: '100%', maxWidth: 620, display: 'grid', gap: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="fila-entre-centro">
           <h2 style={{ margin: 0, textTransform: 'capitalize' }}>Llamadas de hoy ({hoyNombre})</h2>
           <button onClick={onCerrar}>Cerrar</button>
         </div>
 
-        <p style={{ fontSize: 13, color: 'var(--ios-secondary-label)', margin: 0 }}>
+        <p className="t-tenue-13-m0">
           Clientes y prospectos configurados para que se les hable hoy. Márcalos conforme les hables — el
           checklist se reinicia solo cada día.
         </p>
@@ -168,8 +168,8 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
         {!cargando && pendientesHoy.length > 0 && (
-          <div style={{ display: 'grid', gap: '0.5rem' }}>
-            <strong style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Pendientes de hoy ({pendientesHoy.length})</strong>
+          <div className="grid-gap-05">
+            <strong className="t-tenue-13">Pendientes de hoy ({pendientesHoy.length})</strong>
             {pendientesHoy.map((p) => (
               <div
                 key={p.id}
@@ -201,24 +201,24 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
         )}
 
         {cargando ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>Cargando...</p>
+          <p className="t-centro-tenue">Cargando...</p>
         ) : llamadas.length === 0 && pendientesHoy.length === 0 ? (
-          <p style={{ textAlign: 'center', color: 'var(--ios-secondary-label)' }}>
+          <p className="t-centro-tenue">
             Nadie tiene hoy configurado como día de llamada. Puedes elegir los días de cada cliente en su
             ficha, dentro de Clientes.
           </p>
         ) : (
           <>
             {pendientes.length > 0 && (
-              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                <strong style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Por llamar ({pendientes.length})</strong>
+              <div className="lista-tarjetas grid-gap-05">
+                <strong className="t-tenue-13">Por llamar ({pendientes.length})</strong>
                 {pendientes.map(tarjeta)}
               </div>
             )}
 
             {hechas.length > 0 && (
-              <div className="lista-tarjetas" style={{ display: 'grid', gap: '0.5rem' }}>
-                <strong style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>Ya llamados ({hechas.length})</strong>
+              <div className="lista-tarjetas grid-gap-05">
+                <strong className="t-tenue-13">Ya llamados ({hechas.length})</strong>
                 {hechas.map(tarjeta)}
               </div>
             )}
