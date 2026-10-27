@@ -296,6 +296,12 @@ export const ORIGENES_CLIENTE = [
   { valor: 'otro', etiqueta: 'Otro' },
 ] as const;
 
+export const TIPOS_CLIENTE = [
+  { valor: 'recurrente', etiqueta: 'Recurrente' },
+  { valor: 'ocasional', etiqueta: 'Ocasional' },
+  { valor: 'cerrado', etiqueta: 'Cerró su negocio' },
+] as const;
+
 export async function crearClienteRapido(nombre: string, telefono: string, origen?: string): Promise<Cliente> {
   const res = await fetch(`${API_URL}/clientes`, {
     method: 'POST',
@@ -323,6 +329,8 @@ export interface ClienteConSaldo extends DireccionCampos {
   nombreContacto: string | null;
   telefono: string;
   origen?: string | null;
+  // recurrente | ocasional | cerrado; null = sin clasificar.
+  tipo?: string | null;
   // Adonde se le entrega la mercancia -- si esta vacia, se asume que es
   // la misma que la de arriba (algunos clientes reciben en su negocio).
   calleEntrega: string | null;
@@ -569,6 +577,7 @@ export async function actualizarCliente(
     nombreContacto?: string;
     telefono?: string;
     origen?: string;
+    tipo?: string | null;
     permiteVentaCredito?: boolean;
   } & DireccionInput
 ): Promise<ClienteConSaldo> {
@@ -1878,6 +1887,32 @@ export async function obtenerClientesEnRiesgo(): Promise<ClienteEnRiesgo[]> {
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || 'No se pudo cargar la analítica de ventas');
+  }
+  return res.json();
+}
+
+export interface ClienteParaClasificar {
+  id: string;
+  nombre: string;
+  telefono: string;
+  tipo: string | null;
+  sugerencia: 'recurrente' | 'ocasional' | null;
+  compras: number;
+  intervaloPromedioDias: number | null;
+  diasSinComprar: number;
+  posibleCerrado: boolean;
+}
+
+export interface ClasificacionClientes {
+  resumen: { recurrente: number; ocasional: number; cerrado: number; sinClasificar: number };
+  porRevisar: ClienteParaClasificar[];
+}
+
+export async function obtenerClasificacionClientes(): Promise<ClasificacionClientes> {
+  const res = await fetch(`${API_URL}/analitica/clasificacion-clientes`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo cargar la clasificación de clientes');
   }
   return res.json();
 }

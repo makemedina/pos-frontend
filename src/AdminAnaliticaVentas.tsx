@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { obtenerClientesEnRiesgo, type ClienteEnRiesgo } from './api';
+import {
+  actualizarCliente,
+  obtenerClasificacionClientes,
+  obtenerClientesEnRiesgo,
+  TIPOS_CLIENTE,
+  type ClasificacionClientes,
+  type ClienteEnRiesgo,
+  type ClienteParaClasificar,
+} from './api';
 
 interface Props {
   onCerrar: () => void;
@@ -13,8 +21,22 @@ function etiquetaMotivo(motivo: ClienteEnRiesgo['motivo']): string {
   return 'Comprando menos';
 }
 
+function etiquetaTipo(tipo: string | null): string {
+  return TIPOS_CLIENTE.find((t) => t.valor === tipo)?.etiqueta ?? 'Sin clasificar';
+}
+
+function detalleCompras(c: ClienteParaClasificar): string {
+  const partes = [`${c.compras} compra${c.compras !== 1 ? 's' : ''}`];
+  if (c.intervaloPromedioDias !== null) partes.push(`cada ${c.intervaloPromedioDias} días`);
+  partes.push(`${c.diasSinComprar} día${c.diasSinComprar !== 1 ? 's' : ''} sin comprar`);
+  return partes.join(' · ');
+}
+
 export function AdminAnaliticaVentas({ onCerrar }: Props) {
+  const [pestana, setPestana] = useState<'riesgo' | 'clasificar'>('riesgo');
   const [clientes, setClientes] = useState<ClienteEnRiesgo[]>([]);
+  const [clasificacion, setClasificacion] = useState<ClasificacionClientes | null>(null);
+  const [guardandoId, setGuardandoId] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
@@ -25,13 +47,34 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
   async function cargar() {
     setCargando(true);
     try {
-      setClientes(await obtenerClientesEnRiesgo());
+      const [riesgo, clasif] = await Promise.all([obtenerClientesEnRiesgo(), obtenerClasificacionClientes()]);
+      setClientes(riesgo);
+      setClasificacion(clasif);
     } catch {
       setMensaje('No se pudo cargar la analítica de ventas.');
     } finally {
       setCargando(false);
     }
   }
+
+  async function clasificar(c: ClienteParaClasificar, tipo: string) {
+    setGuardandoId(c.id);
+    try {
+      await actualizarCliente(c.id, { tipo });
+      // Se recarga todo: al cambiar el tipo, el cliente puede salir (u
+      // ocupar otro lugar) tanto en la lista de riesgo como en esta.
+      const [riesgo, clasif] = await Promise.all([obtenerClientesEnRiesgo(), obtenerClasificacionClientes()]);
+      setClientes(riesgo);
+      setClasificacion(clasif);
+    } catch {
+      setMensaje('No se pudo guardar el tipo de cliente.');
+    } finally {
+      setGuardandoId(null);
+    }
+  }
+
+  const posiblesCerrados = clasificacion?.porRevisar.filter((c) => c.posibleCerrado) ?? [];
+  const sinClasificar = clasificacion?.porRevisar.filter((c) => !c.posibleCerrado) ?? [];
 
   return (
     <div className="pantalla-centrada pantalla-arriba">
@@ -43,6 +86,66 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            className={pestana === 'riesgo' ? 'boton-primario' : 'boton-secundario'}
+            style={{ flex: 1, marginTop: 0 }}
+            onClick={() => setPestana('riesgo')}
+          >
+            En riesgo
+          </button>
+          <button
+            className={pestana === 'clasificar' ? 'boton-primario' : 'boton-secundario'}
+            style={{ flex: 1, marginTop: 0 }}
+            onClick={() => setPestana('clasificar')}
+          >
+            Clasificar{clasificacion && clasificacion.porRevisar.length > 0 ? ` (${clasificacion.porRevisar.length})` : ''}
+          </button>
+        </div>
+
+        {pestana === 'clasificar' ? (
+          cargando || !clasificacion ? (
+            <p>Cargando...</p>
+          ) : (
+            <>
+              <p className="t-tenue-13-m0">
+                Marca a cada cliente como recurrente (negocio que te compra seguido), ocasional (compañeros,
+                conocidos, compras de vez en cuando) o cerrado. Solo los recurrentes y los sin clasificar
+                aparecen en "En riesgo" y en las llamadas de hoy. La sugerencia sale de su historial de compras.
+              </p>
+              <div className="tarjeta-sombra fs-13" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <span>Recurrentes: <strong>{clasificacion.resumen.recurrente}</strong></span>
+                <span>Ocasionales: <strong>{clasificacion.resumen.ocasional}</strong></span>
+                <span>Cerrados: <strong>{clasificacion.resumen.cerrado}</strong></span>
+                <span>Sin clasificar: <strong>{clasificacion.resumen.sinClasificar}</strong></span>
+              </div>
+
+              {clasificacion.porRevisar.length === 0 && (
+                <p className="t-tenue">No hay clientes por revisar.</p>
+              )}
+
+              {posiblesCerrados.length > 0 && <h3 style={{ marginBottom: 0 }}>¿Cerraron?</h3>}
+              {posiblesCerrados.length > 0 && (
+                <p className="t-tenue-13-m0">
+                  Compraban seguido y llevan mucho más de lo normal sin comprar. Confirma si cerraron.
+                </p>
+              )}
+              <div className="lista-tarjetas grid-gap-075">
+                {posiblesCerrados.map((c) => (
+                  <TarjetaClasificar key={c.id} c={c} guardando={guardandoId === c.id} onClasificar={clasificar} />
+                ))}
+              </div>
+
+              {sinClasificar.length > 0 && <h3 style={{ marginBottom: 0 }}>Sin clasificar</h3>}
+              <div className="lista-tarjetas grid-gap-075">
+                {sinClasificar.map((c) => (
+                  <TarjetaClasificar key={c.id} c={c} guardando={guardandoId === c.id} onClasificar={clasificar} />
+                ))}
+              </div>
+            </>
+          )
+        ) : (
+        <>
         {!cargando && (
           <p className="t-tenue-13-m0">
             Compara a cada cliente contra su propio historial (no contra un promedio general). Se
@@ -96,6 +199,50 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
             ))}
           </div>
         )}
+        </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TarjetaClasificar({
+  c,
+  guardando,
+  onClasificar,
+}: {
+  c: ClienteParaClasificar;
+  guardando: boolean;
+  onClasificar: (c: ClienteParaClasificar, tipo: string) => void;
+}) {
+  // En los "¿cerro?" la opcion destacada es cerrado; en los demas, la sugerencia.
+  const destacado = c.posibleCerrado ? 'cerrado' : c.sugerencia;
+  return (
+    <div className="tarjeta-sombra">
+      <div className="fila-entre-centro" style={{ alignItems: 'flex-start' }}>
+        <div>
+          <strong>{c.nombre}</strong>
+          <div className="fs-13">
+            <a href={`tel:${c.telefono}`} style={{ color: 'var(--acento)' }}>{c.telefono}</a>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right', fontSize: 12, color: 'var(--ios-secondary-label)' }}>
+          {c.tipo ? `Hoy: ${etiquetaTipo(c.tipo)}` : c.sugerencia ? `Sugerido: ${etiquetaTipo(c.sugerencia)}` : 'Muy nuevo para sugerir'}
+        </div>
+      </div>
+      <div style={{ fontSize: 12, color: 'var(--ios-secondary-label)', marginTop: 4 }}>{detalleCompras(c)}</div>
+      <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+        {TIPOS_CLIENTE.map((t) => (
+          <button
+            key={t.valor}
+            disabled={guardando || c.tipo === t.valor}
+            className={destacado === t.valor ? 'boton-primario' : 'boton-secundario'}
+            style={{ flex: 1, marginTop: 0, padding: '6px 4px', fontSize: 13 }}
+            onClick={() => onClasificar(c, t.valor)}
+          >
+            {t.valor === 'cerrado' ? 'Cerró' : t.etiqueta}
+          </button>
+        ))}
       </div>
     </div>
   );

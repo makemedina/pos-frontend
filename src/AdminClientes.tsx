@@ -15,6 +15,7 @@ import {
   type VentaDeCliente,
   type MovimientoCliente,
   ORIGENES_CLIENTE,
+  TIPOS_CLIENTE,
 } from './api';
 import { VentaDetalleModal } from './VentaDetalleModal';
 import { exportarAExcel } from './exportarExcel';
@@ -166,6 +167,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [editNombreContacto, setEditNombreContacto] = useState('');
   const [editTelefono, setEditTelefono] = useState('');
   const [editOrigen, setEditOrigen] = useState('');
+  const [editTipo, setEditTipo] = useState('');
   const [editDireccionNegocio, setEditDireccionNegocio] = useState<CamposDireccion>(DIRECCION_VACIA);
   const [editDireccionEntrega, setEditDireccionEntrega] = useState<CamposDireccion>(DIRECCION_VACIA);
   const [editGoogleMapsUrl, setEditGoogleMapsUrl] = useState('');
@@ -288,6 +290,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
       setEditNombreContacto(data.nombreContacto || '');
       setEditTelefono(data.telefono);
       setEditOrigen(data.origen || '');
+      setEditTipo(data.tipo || '');
       setEditDireccionNegocio(direccionNegocioDe(data));
       const entregaCargada = direccionEntregaDe(data);
       setEditDireccionEntrega(entregaCargada);
@@ -306,6 +309,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         setEditNombreContacto(enLista.nombreContacto || '');
         setEditTelefono(enLista.telefono);
         setEditOrigen(enLista.origen || '');
+        setEditTipo(enLista.tipo || '');
         setEditDireccionNegocio(direccionNegocioDe(enLista));
         const entregaCache = direccionEntregaDe(enLista);
         setEditDireccionEntrega(entregaCache);
@@ -344,6 +348,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
         nombreContacto: editNombreContacto,
         telefono: editTelefono,
         origen: editOrigen || undefined,
+        tipo: editTipo || null,
         calle: editDireccionNegocio.calle,
         colonia: editDireccionNegocio.colonia,
         ciudad: editDireccionNegocio.ciudad,
@@ -662,6 +667,15 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                     <option value="">Sin dato</option>
                     {ORIGENES_CLIENTE.map((o) => (
                       <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Tipo de cliente
+                  <select value={editTipo} onChange={(e) => setEditTipo(e.target.value)}>
+                    <option value="">Sin clasificar</option>
+                    {TIPOS_CLIENTE.map((t) => (
+                      <option key={t.valor} value={t.valor}>{t.etiqueta}</option>
                     ))}
                   </select>
                 </label>
