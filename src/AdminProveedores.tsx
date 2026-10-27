@@ -175,7 +175,7 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
                       <strong>{p.nombre}</strong>
                       <div style={{ fontSize: 13, color: 'var(--ios-secondary-label)' }}>
                         {p.telefono || 'Sin teléfono'}
-                        {puedeVerCostos && <span style={{ color: 'var(--ios-blue)' }}> · Ver compras ›</span>}
+                        {puedeVerCostos && <span style={{ color: 'var(--acento)' }}> · Ver compras ›</span>}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>

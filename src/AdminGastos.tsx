@@ -421,9 +421,9 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                 background: 'none',
                 border: 'none',
                 padding: '8px 4px',
-                borderBottom: pestana === p ? '2px solid var(--ios-blue)' : '2px solid transparent',
+                borderBottom: pestana === p ? '2px solid var(--acento)' : '2px solid transparent',
                 fontWeight: pestana === p ? 700 : 400,
-                color: pestana === p ? 'var(--ios-blue)' : 'var(--texto-fuerte)',
+                color: pestana === p ? 'var(--acento)' : 'var(--texto-fuerte)',
               }}
             >
               {p === 'registrar' ? 'Registrar' : 'Histórico'}
@@ -529,7 +529,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                 borderRadius: 12,
                 padding: '1.25rem',
                 cursor: 'pointer',
-                color: 'var(--ios-blue)',
+                color: 'var(--acento)',
                 fontWeight: 600,
                 textAlign: 'center',
               }}

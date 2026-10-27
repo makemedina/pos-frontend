@@ -758,9 +758,9 @@ export function AdminDashboard({ onCerrar }: Props) {
                     border: 'none',
                     padding: '8px 4px',
                     borderRadius: 0,
-                    borderBottom: detalleClientePestana === p ? '2px solid var(--ios-blue)' : '2px solid transparent',
+                    borderBottom: detalleClientePestana === p ? '2px solid var(--acento)' : '2px solid transparent',
                     fontWeight: detalleClientePestana === p ? 700 : 400,
-                    color: detalleClientePestana === p ? 'var(--ios-blue)' : 'var(--texto-fuerte)',
+                    color: detalleClientePestana === p ? 'var(--acento)' : 'var(--texto-fuerte)',
                   }}
                 >
                   {p === 'valor' ? 'Por valor' : 'Por volumen'}

@@ -208,53 +208,58 @@ export function AdminHistorialVentas({
           </div>
         )}
 
-        {esInicio && ventasPendientesCount > 0 && (
-          <div
-            className="banner-mensaje"
-            onClick={onVerSinSincronizar}
-            style={{ background: '#fff7e6', color: '#92400e', cursor: 'pointer' }}
-          >
-            📴 Tienes {ventasPendientesCount} venta{ventasPendientesCount !== 1 ? 's' : ''} sin sincronizar — toca para verlas
-          </div>
-        )}
-
-        {esInicio && lotesAntiguosCount > 0 && (
-          <div
-            className="banner-mensaje"
-            onClick={onVerAntiguedadStock}
-            style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)', cursor: 'pointer' }}
-          >
-            ⏳ Tienes {lotesAntiguosCount} lote{lotesAntiguosCount !== 1 ? 's' : ''} con más de 15 días en stock — toca para verlos
-          </div>
-        )}
-
-        {esInicio && clientesEnRiesgoCount > 0 && (
-          <div
-            className="banner-mensaje"
-            onClick={onVerAnaliticaVentas}
-            style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)', cursor: 'pointer' }}
-          >
-            🎯 Tienes {clientesEnRiesgoCount} cliente{clientesEnRiesgoCount !== 1 ? 's' : ''} en riesgo — toca para ver a quién llamarle
-          </div>
-        )}
-
-        {esInicio && llamadasPendientesHoyCount > 0 && (
-          <div
-            className="banner-mensaje"
-            onClick={onVerLlamadasHoy}
-            style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)', cursor: 'pointer' }}
-          >
-            📞 Tienes {llamadasPendientesHoyCount} llamada{llamadasPendientesHoyCount !== 1 ? 's' : ''} pendiente{llamadasPendientesHoyCount !== 1 ? 's' : ''} hoy — toca para ver
-          </div>
-        )}
-
-        {esInicio && notasAntiguasCount > 0 && (
-          <div
-            className="banner-mensaje"
-            onClick={onVerNotasAntiguas}
-            style={{ background: 'var(--peligro-fondo)', color: 'var(--peligro)', cursor: 'pointer' }}
-          >
-            📆 Tienes {notasAntiguasCount} nota{notasAntiguasCount !== 1 ? 's' : ''} con más de 7 días sin liquidarse — toca para ver
+        {esInicio && (ventasPendientesCount > 0 || lotesAntiguosCount > 0 || clientesEnRiesgoCount > 0 || llamadasPendientesHoyCount > 0 || notasAntiguasCount > 0) && (
+          <div className="avisos">
+            {ventasPendientesCount > 0 && (
+              <button
+                type="button"
+                className="aviso aviso-advertencia"
+                onClick={onVerSinSincronizar}
+                title={`Tienes ${ventasPendientesCount} venta${ventasPendientesCount !== 1 ? 's' : ''} sin sincronizar — toca para verlas`}
+              >
+                📴 {ventasPendientesCount} sin sincronizar
+              </button>
+            )}
+            {lotesAntiguosCount > 0 && (
+              <button
+                type="button"
+                className="aviso"
+                onClick={onVerAntiguedadStock}
+                title={`Tienes ${lotesAntiguosCount} lote${lotesAntiguosCount !== 1 ? 's' : ''} con más de 15 días en stock — toca para verlos`}
+              >
+                ⏳ {lotesAntiguosCount} lote{lotesAntiguosCount !== 1 ? 's' : ''} +15 días
+              </button>
+            )}
+            {clientesEnRiesgoCount > 0 && (
+              <button
+                type="button"
+                className="aviso"
+                onClick={onVerAnaliticaVentas}
+                title={`Tienes ${clientesEnRiesgoCount} cliente${clientesEnRiesgoCount !== 1 ? 's' : ''} en riesgo — toca para ver a quién llamarle`}
+              >
+                🎯 {clientesEnRiesgoCount} cliente{clientesEnRiesgoCount !== 1 ? 's' : ''} en riesgo
+              </button>
+            )}
+            {llamadasPendientesHoyCount > 0 && (
+              <button
+                type="button"
+                className="aviso"
+                onClick={onVerLlamadasHoy}
+                title={`Tienes ${llamadasPendientesHoyCount} llamada${llamadasPendientesHoyCount !== 1 ? 's' : ''} pendiente${llamadasPendientesHoyCount !== 1 ? 's' : ''} hoy — toca para ver`}
+              >
+                📞 {llamadasPendientesHoyCount} llamada{llamadasPendientesHoyCount !== 1 ? 's' : ''} hoy
+              </button>
+            )}
+            {notasAntiguasCount > 0 && (
+              <button
+                type="button"
+                className="aviso"
+                onClick={onVerNotasAntiguas}
+                title={`Tienes ${notasAntiguasCount} nota${notasAntiguasCount !== 1 ? 's' : ''} con más de 7 días sin liquidarse — toca para ver`}
+              >
+                📆 {notasAntiguasCount} nota{notasAntiguasCount !== 1 ? 's' : ''} +7 días
+              </button>
+            )}
           </div>
         )}
 

@@ -84,7 +84,7 @@ function CampoConLista({
             </div>
           ))}
           {esNuevo && (
-            <div onClick={() => setAbierto(false)} style={{ ...estiloOpcion, color: 'var(--ios-blue)', fontWeight: 500 }}>
+            <div onClick={() => setAbierto(false)} style={{ ...estiloOpcion, color: 'var(--acento)', fontWeight: 500 }}>
               + Agregar “{valor.trim()}” como nuevo
             </div>
           )}

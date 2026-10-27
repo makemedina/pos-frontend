@@ -180,7 +180,7 @@ export function AdminAjusteInventario({ onCerrar, varianteInicial }: Props) {
                   className="item-compra"
                   style={{
                     cursor: 'pointer',
-                    background: loteElegido?.id === l.id ? '#f0f7ff' : undefined,
+                    background: loteElegido?.id === l.id ? 'var(--acento-fondo)' : undefined,
                     borderRadius: 14,
                   }}
                   onClick={() => setLoteElegido(l)}

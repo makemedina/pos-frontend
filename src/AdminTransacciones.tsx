@@ -123,21 +123,21 @@ export function AdminTransacciones({ onCerrar }: Props) {
           <button
             type="button"
             onClick={() => setFiltroTipo('todo')}
-            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'todo' ? '2px solid var(--ios-blue)' : '1px solid var(--borde-suave)', background: filtroTipo === 'todo' ? '#eff6ff' : 'var(--fondo-suave)' }}
+            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'todo' ? '2px solid var(--acento)' : '1px solid var(--borde-suave)', background: filtroTipo === 'todo' ? 'var(--acento-fondo)' : 'var(--fondo-suave)' }}
           >
             Todas
           </button>
           <button
             type="button"
             onClick={() => setFiltroTipo('Venta')}
-            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'Venta' ? '2px solid var(--ios-blue)' : '1px solid var(--borde-suave)', background: filtroTipo === 'Venta' ? '#eff6ff' : 'var(--fondo-suave)' }}
+            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'Venta' ? '2px solid var(--acento)' : '1px solid var(--borde-suave)', background: filtroTipo === 'Venta' ? 'var(--acento-fondo)' : 'var(--fondo-suave)' }}
           >
             Ventas
           </button>
           <button
             type="button"
             onClick={() => setFiltroTipo('Compra')}
-            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'Compra' ? '2px solid var(--ios-blue)' : '1px solid var(--borde-suave)', background: filtroTipo === 'Compra' ? '#eff6ff' : 'var(--fondo-suave)' }}
+            style={{ padding: '10px', borderRadius: 12, border: filtroTipo === 'Compra' ? '2px solid var(--acento)' : '1px solid var(--borde-suave)', background: filtroTipo === 'Compra' ? 'var(--acento-fondo)' : 'var(--fondo-suave)' }}
           >
             Compras
           </button>

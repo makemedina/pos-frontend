@@ -341,7 +341,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                         <div style={{ fontWeight: 700, color: m.cantidad >= 0 ? 'var(--exito)' : 'var(--peligro)' }}>
                           {m.cantidad >= 0 ? '+' : ''}{formatoKg(m.cantidad)} kg
                         </div>
-                        {clickeable && <div style={{ fontSize: 11, color: 'var(--ios-blue)' }}>Ver detalle →</div>}
+                        {clickeable && <div style={{ fontSize: 11, color: 'var(--acento)' }}>Ver detalle →</div>}
                       </div>
                     </div>
                   );

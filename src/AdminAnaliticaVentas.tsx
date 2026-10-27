@@ -72,7 +72,7 @@ export function AdminAnaliticaVentas({ onCerrar }: Props) {
                   <div>
                     <strong>{c.nombre}</strong>
                     <div style={{ fontSize: 13 }}>
-                      <a href={`tel:${c.telefono}`} style={{ color: 'var(--ios-blue)' }}>{c.telefono}</a>
+                      <a href={`tel:${c.telefono}`} style={{ color: 'var(--acento)' }}>{c.telefono}</a>
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--peligro)', fontWeight: 600, marginTop: 2 }}>
                       {etiquetaMotivo(c.motivo)}

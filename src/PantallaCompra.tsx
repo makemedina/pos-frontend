@@ -287,7 +287,7 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
             borderRadius: 12,
             padding: '1.25rem',
             cursor: 'pointer',
-            color: 'var(--ios-blue)',
+            color: 'var(--acento)',
             fontWeight: 600,
             textAlign: 'center',
           }}

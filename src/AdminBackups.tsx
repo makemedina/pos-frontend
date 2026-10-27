@@ -20,7 +20,7 @@ function formatoTamano(bytes: number): string {
 }
 
 function etiquetaTipo(tipo: BackupInfo['tipo']): { texto: string; color: string } {
-  if (tipo === 'automatico') return { texto: 'Automático (medianoche)', color: 'var(--ios-blue)' };
+  if (tipo === 'automatico') return { texto: 'Automático (medianoche)', color: 'var(--acento)' };
   if (tipo === 'pre-restauracion') return { texto: 'Antes de una restauración', color: '#b45309' };
   return { texto: 'Manual', color: 'var(--exito)' };
 }
