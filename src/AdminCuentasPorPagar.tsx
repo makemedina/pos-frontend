@@ -16,8 +16,8 @@ import {
 } from './api';
 import { ComprobantePagoModal, type DatosComprobantePago } from './ComprobantePagoModal';
 
-// Campo de foto del comprobante de pago (obligatorio en todo pago a
-// proveedor). Mismo estilo que el de Gastos: el <input type="file"> queda
+// Campo de foto del comprobante de pago (obligatorio en los pagos a
+// proveedor que no son en efectivo). Mismo estilo que el de Gastos: el <input type="file"> queda
 // oculto y se dispara desde un recuadro grande facil de tocar; sin
 // "capture", para que en celular se pueda elegir camara o galeria.
 function CampoFotoComprobante({ id, archivo, onCambio }: { id: string; archivo: File | null; onCambio: (archivo: File | null) => void }) {
@@ -254,14 +254,19 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
       setMensaje('Asigna un monto mayor a cero a al menos una factura.');
       return;
     }
-    if (!fotoPagoMultiple) {
+    if (metodoPagoMultiple !== 'efectivo' && !fotoPagoMultiple) {
       setMensaje('Sube la foto del comprobante del pago antes de registrarlo.');
       return;
     }
 
     setGuardandoPagoMultiple(true);
     try {
-      const resultado = await registrarPagoMultiCompra(proveedorElegido.id, asignaciones, metodoPagoMultiple, fotoPagoMultiple);
+      const resultado = await registrarPagoMultiCompra(
+        proveedorElegido.id,
+        asignaciones,
+        metodoPagoMultiple,
+        metodoPagoMultiple === 'efectivo' ? null : fotoPagoMultiple
+      );
       setMensaje(`Pago registrado para ${proveedorElegido.nombre}`);
       cerrarPagoMultiple();
       const facturasData = await cargar();
@@ -383,7 +388,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     e.preventDefault();
     if (!facturaElegida || guardandoPago) return;
 
-    if (!fotoPago) {
+    if (metodoPago !== 'efectivo' && !fotoPago) {
       setMensaje('Sube la foto del comprobante del pago antes de guardarlo.');
       return;
     }
@@ -391,7 +396,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     const montoPagado = Number(monto);
     setGuardandoPago(true);
     try {
-      await registrarPagoCompra(facturaElegida.id, montoPagado, metodoPago, fotoPago);
+      await registrarPagoCompra(facturaElegida.id, montoPagado, metodoPago, metodoPago === 'efectivo' ? null : fotoPago);
       setMensaje(`Pago registrado para ${facturaElegida.proveedor.nombre}`);
       setMonto('');
       setFotoPago(null);
@@ -663,7 +668,9 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                   <span>{formatoMoneda(totalAsignadoPago)}</span>
                 </div>
 
-                <CampoFotoComprobante id="foto-comprobante-pago-multiple" archivo={fotoPagoMultiple} onCambio={setFotoPagoMultiple} />
+                {metodoPagoMultiple !== 'efectivo' && (
+                  <CampoFotoComprobante id="foto-comprobante-pago-multiple" archivo={fotoPagoMultiple} onCambio={setFotoPagoMultiple} />
+                )}
 
                 <button type="submit" disabled={totalAsignadoPago <= 0 || guardandoPagoMultiple}>
                   {guardandoPagoMultiple ? 'Guardando...' : 'Registrar pago'}
@@ -812,7 +819,9 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     <option value="transferencia">Transferencia</option>
                   </select>
                 </label>
-                <CampoFotoComprobante id="foto-comprobante-pago" archivo={fotoPago} onCambio={setFotoPago} />
+                {metodoPago !== 'efectivo' && (
+                  <CampoFotoComprobante id="foto-comprobante-pago" archivo={fotoPago} onCambio={setFotoPago} />
+                )}
                 <button type="submit" disabled={guardandoPago}>
                   {guardandoPago ? 'Guardando...' : 'Guardar pago'}
                 </button>

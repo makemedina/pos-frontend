@@ -369,6 +369,44 @@ export async function obtenerClienteDetalle(id: string): Promise<ClienteConSaldo
   return res.json();
 }
 
+export interface NotaCliente {
+  id: string;
+  texto: string;
+  creadoEn: string;
+  autorId: string;
+  autorNombre: string;
+}
+
+export async function obtenerBitacoraCliente(clienteId: string): Promise<NotaCliente[]> {
+  const res = await fetch(`${API_URL}/clientes/${clienteId}/notas`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar las notas');
+  }
+  return res.json();
+}
+
+export async function agregarNotaBitacora(clienteId: string, texto: string): Promise<NotaCliente> {
+  const res = await fetch(`${API_URL}/clientes/${clienteId}/notas`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ texto }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo guardar la nota');
+  }
+  return res.json();
+}
+
+export async function eliminarNotaBitacora(notaId: string): Promise<void> {
+  const res = await fetch(`${API_URL}/clientes/notas/${notaId}`, { method: 'DELETE', headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudo borrar la nota');
+  }
+}
+
 export async function actualizarDiasLlamadaCliente(id: string, dias: number[]): Promise<number[]> {
   const res = await fetch(`${API_URL}/clientes/${id}/dias-llamada`, {
     method: 'PUT',
@@ -952,11 +990,11 @@ export async function registrarCompra(payload: CrearCompraPayload, fotoFactura: 
 
 // La foto del comprobante del pago es obligatoria en todos los pagos a
 // proveedor (el backend regresa FOTO_REQUERIDA si falta).
-export async function registrarPagoCompra(compraId: string, monto: number, metodoPago: string, fotoComprobante: File) {
+export async function registrarPagoCompra(compraId: string, monto: number, metodoPago: string, fotoComprobante: File | null) {
   const cuerpo = new FormData();
   cuerpo.append('monto', String(monto));
   cuerpo.append('metodoPago', metodoPago);
-  cuerpo.append('foto', fotoComprobante);
+  if (fotoComprobante) cuerpo.append('foto', fotoComprobante);
   const res = await fetch(`${API_URL}/compras/${compraId}/pagos`, {
     method: 'POST',
     headers: headerAuth(),
@@ -988,12 +1026,12 @@ export async function registrarPagoMultiCompra(
   proveedorId: string,
   asignaciones: AsignacionPagoMultipleCompra[],
   metodoPago: string,
-  fotoComprobante: File
+  fotoComprobante: File | null
 ): Promise<ResultadoPagoMultiCompra> {
   const cuerpo = new FormData();
   cuerpo.append('asignaciones', JSON.stringify(asignaciones));
   cuerpo.append('metodoPago', metodoPago);
-  cuerpo.append('foto', fotoComprobante);
+  if (fotoComprobante) cuerpo.append('foto', fotoComprobante);
   const res = await fetch(`${API_URL}/proveedores/${proveedorId}/pagos`, {
     method: 'POST',
     headers: headerAuth(),

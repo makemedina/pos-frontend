@@ -11,6 +11,10 @@ import {
   obtenerVentasDeCliente,
   obtenerMovimientosDeCliente,
   actualizarDiasLlamadaCliente,
+  obtenerBitacoraCliente,
+  agregarNotaBitacora,
+  eliminarNotaBitacora,
+  type NotaCliente,
   type ClienteConSaldo,
   type VentaDeCliente,
   type MovimientoCliente,
@@ -24,6 +28,7 @@ import { obtenerClientesCache } from './offline';
 interface Props {
   onCerrar: () => void;
   esAdmin: boolean;
+  usuarioId: string;
 }
 
 // No hay forma de "autocompletar" o validar la direccion contra Maps sin
@@ -123,7 +128,7 @@ function FormularioDireccion({
 
 type Filtro = 'todos' | 'conDeuda' | 'sinDeuda';
 type Orden = 'monto' | 'ultimaCompra' | 'nombre';
-type Pestana = 'datos' | 'transacciones' | 'movimientos';
+type Pestana = 'datos' | 'notas' | 'transacciones' | 'movimientos';
 
 // valor = lo que regresa Date.getDay() (0=domingo...6=sabado), mismo
 // que usa el backend -- el orden de despliegue aqui es lunes a domingo.
@@ -137,7 +142,7 @@ const DIAS_SEMANA = [
   { valor: 0, etiqueta: 'Dom' },
 ];
 
-export function AdminClientes({ onCerrar, esAdmin }: Props) {
+export function AdminClientes({ onCerrar, esAdmin, usuarioId }: Props) {
   const [filtro, setFiltro] = useState<Filtro>('todos');
   const [busquedaCliente, setBusquedaCliente] = useState('');
   // Switch entre clientes activos (compraron en el ultimo mes) e inactivos.
@@ -161,6 +166,11 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   const [clienteId, setClienteId] = useState<string | null>(null);
   const [cliente, setCliente] = useState<ClienteConSaldo | null>(null);
   const [pestana, setPestana] = useState<Pestana>('datos');
+
+  // Bitacora de notas (pestana "Notas")
+  const [notasBitacora, setNotasBitacora] = useState<NotaCliente[] | null>(null);
+  const [textoNotaNueva, setTextoNotaNueva] = useState('');
+  const [guardandoNota, setGuardandoNota] = useState(false);
 
   // Edicion de datos generales
   const [editNombre, setEditNombre] = useState('');
@@ -280,6 +290,8 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   async function abrirCliente(id: string) {
     setClienteId(id);
     setPestana('datos');
+    setNotasBitacora(null);
+    setTextoNotaNueva('');
     setVentas([]);
     setMovimientos([]);
     setConfirmandoEliminar(false);
@@ -328,6 +340,31 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
     setClienteId(null);
     setCliente(null);
     cargarLista();
+  }
+
+  async function guardarNotaNueva(e: React.FormEvent) {
+    e.preventDefault();
+    if (!clienteId || !textoNotaNueva.trim() || guardandoNota) return;
+    setGuardandoNota(true);
+    try {
+      const nota = await agregarNotaBitacora(clienteId, textoNotaNueva.trim());
+      setNotasBitacora((prev) => [nota, ...(prev ?? [])]);
+      setTextoNotaNueva('');
+    } catch {
+      setMensaje('No se pudo guardar la nota.');
+    } finally {
+      setGuardandoNota(false);
+    }
+  }
+
+  async function borrarNota(nota: NotaCliente) {
+    if (!window.confirm('¿Borrar esta nota?')) return;
+    try {
+      await eliminarNotaBitacora(nota.id);
+      setNotasBitacora((prev) => (prev ?? []).filter((n) => n.id !== nota.id));
+    } catch {
+      setMensaje('No se pudo borrar la nota.');
+    }
   }
 
   function toggleDiaLlamada(dia: number) {
@@ -395,6 +432,14 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
   async function irAPestana(p: Pestana) {
     setPestana(p);
     if (!clienteId) return;
+    if (p === 'notas' && notasBitacora === null) {
+      try {
+        setNotasBitacora(await obtenerBitacoraCliente(clienteId));
+      } catch {
+        setNotasBitacora([]);
+        setMensaje('No se pudieron cargar las notas.');
+      }
+    }
     if (p === 'transacciones' && ventas.length === 0) {
       setCargandoVentas(true);
       try {
@@ -629,7 +674,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
             </div>
 
             <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--borde-suave)' }}>
-              {(['datos', 'transacciones', 'movimientos'] as Pestana[]).map((p) => (
+              {(['datos', 'notas', 'transacciones', 'movimientos'] as Pestana[]).map((p) => (
                 <button
                   key={p}
                   onClick={() => irAPestana(p)}
@@ -642,7 +687,7 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                     color: pestana === p ? 'var(--acento)' : 'var(--texto-fuerte)',
                   }}
                 >
-                  {p === 'datos' ? 'Datos generales' : p === 'transacciones' ? 'Transacciones' : 'Movimientos'}
+                  {p === 'datos' ? 'Datos generales' : p === 'notas' ? 'Notas' : p === 'transacciones' ? 'Transacciones' : 'Movimientos'}
                 </button>
               ))}
             </div>
@@ -830,6 +875,46 @@ export function AdminClientes({ onCerrar, esAdmin }: Props) {
                             {v.estadoPago === 'pagada' ? 'Pagada' : `Saldo: ${formatoMoneda(v.saldoPendiente)}`}
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {pestana === 'notas' && (
+              <div className="grid-gap-075">
+                <form onSubmit={guardarNotaNueva} className="grid-gap-05">
+                  <textarea
+                    rows={3}
+                    placeholder="Escribe una nota (ej. le interesa la pierna, pidió precio de costilla, paga los viernes...)"
+                    value={textoNotaNueva}
+                    onChange={(e) => setTextoNotaNueva(e.target.value)}
+                  />
+                  <button type="submit" className="boton-primario" disabled={guardandoNota || !textoNotaNueva.trim()}>
+                    {guardandoNota ? 'Guardando...' : 'Agregar nota'}
+                  </button>
+                </form>
+                {notasBitacora === null ? (
+                  <p>Cargando...</p>
+                ) : notasBitacora.length === 0 ? (
+                  <p className="t-tenue">Todavía no hay notas de este cliente.</p>
+                ) : (
+                  notasBitacora.map((n) => (
+                    <div key={n.id} className="tarjeta-sombra">
+                      <div style={{ whiteSpace: 'pre-wrap', fontSize: 14 }}>{n.texto}</div>
+                      <div className="fila-entre-centro" style={{ marginTop: 6 }}>
+                        <small className="t-tenue">
+                          {formatoFechaHora(new Date(n.creadoEn))} · {n.autorNombre}
+                        </small>
+                        {(n.autorId === usuarioId || esAdmin) && (
+                          <button
+                            onClick={() => borrarNota(n)}
+                            style={{ background: 'none', border: 'none', color: 'var(--peligro)', fontSize: 13, padding: 0, cursor: 'pointer' }}
+                          >
+                            Borrar
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))

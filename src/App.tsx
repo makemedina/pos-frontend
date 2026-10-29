@@ -928,7 +928,7 @@ export default function App() {
       );
     }
     if (pantallaActiva === 'clientes') {
-      return <AdminClientes onCerrar={() => abrirPantalla('inicio')} esAdmin={usuario.rolBase === 'administrador'} />;
+      return <AdminClientes onCerrar={() => abrirPantalla('inicio')} esAdmin={usuario.rolBase === 'administrador'} usuarioId={usuario.id} />;
     }
     if (pantallaActiva === 'llamadasHoy') {
       return <AdminLlamadasHoy onCerrar={() => abrirPantalla('clientesMenu')} />;
