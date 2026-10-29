@@ -5,12 +5,15 @@ import {
   actualizarLlamadaCliente,
   obtenerPendientesDeHoy,
   actualizarPendiente,
+  obtenerProspectosDeHoy,
   type LlamadaHoy,
   type Pendiente,
+  type ProspectoResumen,
 } from './api';
 
 interface Props {
   onCerrar: () => void;
+  onAbrirProspecto?: (id: string) => void;
 }
 
 const DIAS_NOMBRE = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
@@ -26,9 +29,10 @@ function linkWhatsapp(telefono: string, mensaje: string) {
   return `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
 }
 
-export function AdminLlamadasHoy({ onCerrar }: Props) {
+export function AdminLlamadasHoy({ onCerrar, onAbrirProspecto }: Props) {
   const [llamadas, setLlamadas] = useState<LlamadaHoy[]>([]);
   const [pendientesHoy, setPendientesHoy] = useState<Pendiente[]>([]);
+  const [prospectosHoy, setProspectosHoy] = useState<ProspectoResumen[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [guardandoId, setGuardandoId] = useState<string | null>(null);
@@ -40,9 +44,14 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
   async function cargar() {
     setCargando(true);
     try {
-      const [llamadasHoy, pendientes] = await Promise.all([obtenerLlamadasDeHoy(), obtenerPendientesDeHoy()]);
+      const [llamadasHoy, pendientes, prospectos] = await Promise.all([
+        obtenerLlamadasDeHoy(),
+        obtenerPendientesDeHoy(),
+        obtenerProspectosDeHoy().catch(() => []),
+      ]);
       setLlamadas(llamadasHoy);
       setPendientesHoy(pendientes);
+      setProspectosHoy(prospectos);
     } catch {
       setMensaje('No se pudieron cargar las llamadas de hoy.');
     } finally {
@@ -200,9 +209,33 @@ export function AdminLlamadasHoy({ onCerrar }: Props) {
           </div>
         )}
 
+        {!cargando && prospectosHoy.length > 0 && (
+          <div className="grid-gap-05">
+            <strong className="t-tenue-13">Prospectos por contactar ({prospectosHoy.length})</strong>
+            {prospectosHoy.map((p) => {
+              const vencido = p.proximoContacto && new Date(p.proximoContacto).getTime() < new Date(new Date().toDateString()).getTime();
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => onAbrirProspecto?.(p.id)}
+                  style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, cursor: onAbrirProspecto ? 'pointer' : undefined }}
+                >
+                  <div className="fila-entre-centro" style={{ alignItems: 'flex-start', gap: 8 }}>
+                    <strong><Icono nombre="objetivo" size={16} /> {p.nombre}</strong>
+                    {vencido && <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--peligro)', whiteSpace: 'nowrap' }}>Atrasado</span>}
+                  </div>
+                  {p.motivoContacto && <div style={{ fontSize: 13, color: 'var(--texto-fuerte)' }}>→ {p.motivoContacto}</div>}
+                  {p.ultimoContacto && <div className="t-tenue-12">Última nota: {p.ultimoContacto.texto.slice(0, 90)}</div>}
+                  <div className="t-tenue-12">Toca para abrir su ficha, registrar el contacto y reagendar.</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {cargando ? (
           <p className="t-centro-tenue">Cargando...</p>
-        ) : llamadas.length === 0 && pendientesHoy.length === 0 ? (
+        ) : llamadas.length === 0 && pendientesHoy.length === 0 && prospectosHoy.length === 0 ? (
           <p className="t-centro-tenue">
             Nadie tiene hoy configurado como día de llamada. Puedes elegir los días de cada cliente en su
             ficha, dentro de Clientes.

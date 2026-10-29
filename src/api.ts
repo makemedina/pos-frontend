@@ -2352,3 +2352,145 @@ export async function desuscribirsePush(endpoint: string): Promise<void> {
     body: JSON.stringify({ endpoint }),
   });
 }
+
+// ---------- PROSPECTOS ----------
+
+export const ORIGENES_PROSPECTO = [
+  { valor: 'visita', etiqueta: 'Visita en persona' },
+  { valor: 'anuncio', etiqueta: 'Anuncio (Facebook / Instagram)' },
+  { valor: 'redes', etiqueta: 'Redes / WhatsApp (sin anuncio)' },
+  { valor: 'recomendacion', etiqueta: 'Recomendación' },
+  { valor: 'otro', etiqueta: 'Otro' },
+] as const;
+
+export const NIVELES_INTERES = [
+  { valor: 'alto', etiqueta: 'Alto' },
+  { valor: 'medio', etiqueta: 'Medio' },
+  { valor: 'bajo', etiqueta: 'Bajo' },
+] as const;
+
+export const TIPOS_NOTA_PROSPECTO = [
+  { valor: 'visita', etiqueta: 'Visita' },
+  { valor: 'llamada', etiqueta: 'Llamada' },
+  { valor: 'whatsapp', etiqueta: 'WhatsApp' },
+  { valor: 'redes', etiqueta: 'Redes' },
+  { valor: 'nota', etiqueta: 'Nota' },
+] as const;
+
+export type EstadoProspecto = 'activo' | 'convertido' | 'descartado';
+
+interface ProspectoBase {
+  id: string;
+  nombre: string;
+  nombreContacto: string | null;
+  telefono: string | null;
+  colonia: string | null;
+  ciudad: string | null;
+  googleMapsUrl: string | null;
+  origen: string;
+  interes: string | null;
+  nivelInteres: string;
+  estado: EstadoProspecto;
+  // ISO a medianoche local del dia agendado; null = sin seguimiento.
+  proximoContacto: string | null;
+  motivoContacto: string | null;
+  motivoDescarte: string | null;
+  clienteId: string | null;
+  cliente: { id: string; nombre: string } | null;
+  convertidoEn: string | null;
+  registradoPorNombre: string;
+  creadoEn: string;
+  actualizadoEn: string;
+}
+
+export interface ProspectoResumen extends ProspectoBase {
+  ultimoContacto: { tipo: string; texto: string; creadoEn: string } | null;
+  totalNotas: number;
+}
+
+export interface NotaProspecto {
+  id: string;
+  tipo: string;
+  texto: string;
+  creadoEn: string;
+  autorId: string;
+  autorNombre: string;
+}
+
+export interface ProspectoDetalle extends ProspectoBase {
+  notas: NotaProspecto[];
+}
+
+// Lo que manda el formulario: proximoContacto como "YYYY-MM-DD" o null.
+export interface DatosProspectoForm {
+  nombre?: string;
+  nombreContacto?: string | null;
+  telefono?: string | null;
+  colonia?: string | null;
+  ciudad?: string | null;
+  googleMapsUrl?: string | null;
+  origen?: string;
+  interes?: string | null;
+  nivelInteres?: string;
+  estado?: EstadoProspecto;
+  proximoContacto?: string | null;
+  motivoContacto?: string | null;
+  motivoDescarte?: string | null;
+}
+
+async function pedirProspectos<T>(ruta: string, mensajeError: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_URL}${ruta}`, {
+    ...init,
+    headers: { 'Content-Type': 'application/json', ...headerAuth(), ...(init?.headers ?? {}) },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || mensajeError);
+  }
+  return res.status === 204 ? (undefined as T) : res.json();
+}
+
+export function obtenerProspectos(estado: EstadoProspecto | 'todos' = 'activo'): Promise<ProspectoResumen[]> {
+  return pedirProspectos(`/prospectos?estado=${estado}`, 'No se pudieron cargar los prospectos');
+}
+
+export function obtenerProspectosDeHoy(): Promise<ProspectoResumen[]> {
+  return pedirProspectos('/prospectos/hoy', 'No se pudieron cargar los seguimientos de hoy');
+}
+
+export function obtenerProspecto(id: string): Promise<ProspectoDetalle> {
+  return pedirProspectos(`/prospectos/${id}`, 'No se pudo cargar el prospecto');
+}
+
+export function crearProspecto(datos: DatosProspectoForm & { notaInicial?: string }): Promise<ProspectoDetalle> {
+  return pedirProspectos('/prospectos', 'No se pudo guardar el prospecto', { method: 'POST', body: JSON.stringify(datos) });
+}
+
+export function actualizarProspecto(id: string, datos: DatosProspectoForm): Promise<ProspectoDetalle> {
+  return pedirProspectos(`/prospectos/${id}`, 'No se pudo actualizar el prospecto', { method: 'PUT', body: JSON.stringify(datos) });
+}
+
+export function agregarNotaProspecto(
+  id: string,
+  datos: { tipo: string; texto: string; proximoContacto?: string | null; motivoContacto?: string | null }
+): Promise<ProspectoDetalle> {
+  return pedirProspectos(`/prospectos/${id}/notas`, 'No se pudo guardar la nota', { method: 'POST', body: JSON.stringify(datos) });
+}
+
+export function eliminarNotaProspecto(notaId: string): Promise<void> {
+  return pedirProspectos(`/prospectos/notas/${notaId}`, 'No se pudo borrar la nota', { method: 'DELETE' });
+}
+
+export function convertirProspectoEnCliente(
+  id: string,
+  telefono?: string
+): Promise<{ clienteId: string; clienteNombre: string; yaExistia: boolean }> {
+  return pedirProspectos(`/prospectos/${id}/convertir`, 'No se pudo convertir en cliente', {
+    method: 'POST',
+    body: JSON.stringify({ telefono }),
+  });
+}
+
+export function eliminarProspecto(id: string): Promise<void> {
+  return pedirProspectos(`/prospectos/${id}`, 'No se pudo eliminar el prospecto', { method: 'DELETE' });
+}

@@ -13,6 +13,7 @@ import {
   obtenerClientesEnRiesgo,
   obtenerNotasAntiguas,
   obtenerLlamadasDeHoy,
+  obtenerProspectosDeHoy,
   obtenerSesionActual,
   hayTokenGuardado,
   type VarianteCatalogo,
@@ -55,6 +56,7 @@ import { AdminHistorialVentas } from './AdminHistorialVentas';
 import { AdminHistorialCortes } from './AdminHistorialCortes';
 import { AdminConfiguracion } from './AdminConfiguracion';
 import { AdminProspeccion } from './AdminProspeccion';
+import { AdminProspectos } from './AdminProspectos';
 import { ConfiguracionRecibo } from './ConfiguracionRecibo';
 import { ConfiguracionImpresora } from './ConfiguracionImpresora';
 import { ReciboModal } from './ReciboModal';
@@ -109,7 +111,8 @@ type Pantalla =
   | 'configuracionMenu'
   | 'herramientas'
   | 'respaldos'
-  | 'prospeccion';
+  | 'prospeccion'
+  | 'prospectos';
 
 interface OpcionMenu {
   pantalla: Pantalla;
@@ -125,12 +128,13 @@ interface OpcionMenu {
 const OPCIONES_MENU: OpcionMenu[] = [
   { pantalla: 'inicio', icono: 'ventas', titulo: 'Ventas', descripcion: 'Pantalla principal: ventas y nueva venta', clase: '' },
   { pantalla: 'clientes', icono: 'clientes', titulo: 'Clientes', descripcion: 'Lista de clientes: alta, edición y datos', clase: 'boton-flotante-cartera' },
+  { pantalla: 'prospectos', icono: 'objetivo', titulo: 'Prospectos', descripcion: 'Posibles clientes: bitácora y seguimientos', clase: 'boton-flotante-cartera' },
   { pantalla: 'clientesMenu', icono: 'cobranza', titulo: 'Cobranza', descripcion: 'Cartera, notas antiguas, llamadas y pendientes', clase: 'boton-flotante-cartera' },
   { pantalla: 'proveedoresMenu', icono: 'proveedores', titulo: 'Proveedores', descripcion: 'Compras, facturas y cuentas por pagar', clase: 'boton-flotante-cuentas' },
   { pantalla: 'inventarioMenu', icono: 'inventario', titulo: 'Inventario', descripcion: 'Productos, stock y movimientos', clase: 'boton-flotante-ajuste' },
   { pantalla: 'finanzasMenu', icono: 'finanzas', titulo: 'Finanzas', descripcion: 'Corte, gastos y estadísticas', clase: 'boton-flotante-gastos' },
   { pantalla: 'configuracionMenu', icono: 'configuracion', titulo: 'Configuración', descripcion: 'Negocio, usuarios y herramientas', clase: 'boton-flotante-ajuste' },
-  { pantalla: 'prospeccion', icono: 'prospeccion', titulo: 'Prospección', descripcion: 'Ruta de prospección y ventas en campo', clase: '' },
+  { pantalla: 'prospeccion', icono: 'prospeccion', titulo: 'Ruta de prospección', descripcion: 'Ruta de prospección y ventas en campo', clase: '' },
 ];
 
 // A que seccion de OPCIONES_MENU pertenece cada pantalla de detalle -- solo
@@ -205,6 +209,8 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
       return true; // cualquiera puede ver clientes; el switch de credito se oculta si no es admin
     case 'llamadasHoy':
       return true; // cualquiera puede ver a quien llamarle hoy
+    case 'prospectos':
+      return true; // cualquiera puede registrar y dar seguimiento a prospectos
     case 'pendientes':
       return true; // cualquiera puede ver y agregar recordatorios
     case 'movimientosInventario':
@@ -303,6 +309,12 @@ export default function App() {
   // Clientes/prospectos configurados para que se les hable HOY que
   // todavia no se marcan como llamados -- checklist diario.
   const [llamadasPendientesHoyCount, setLlamadasPendientesHoyCount] = useState(0);
+
+  // Prospecto a abrir directo al entrar a Prospectos (desde Llamadas de hoy).
+  const [prospectoAbrirId, setProspectoAbrirId] = useState<string | null>(null);
+  useEffect(() => {
+    if (pantallaActiva !== 'prospectos') setProspectoAbrirId(null);
+  }, [pantallaActiva]);
 
   // Notas a credito con saldo pendiente que llevan mas de una semana sin
   // liquidarse -- se avisa apenas se entra, igual que clientes en riesgo.
@@ -439,8 +451,9 @@ export default function App() {
 
   async function cargarLlamadasPendientesHoyCount() {
     try {
-      const llamadas = await obtenerLlamadasDeHoy();
-      setLlamadasPendientesHoyCount(llamadas.filter((l) => !l.hecha).length);
+      // Cuenta tambien los prospectos con seguimiento para hoy o vencido.
+      const [llamadas, prospectos] = await Promise.all([obtenerLlamadasDeHoy(), obtenerProspectosDeHoy().catch(() => [])]);
+      setLlamadasPendientesHoyCount(llamadas.filter((l) => !l.hecha).length + prospectos.length);
     } catch {
       // Sin conexion: se deja el contador como estaba.
     }
@@ -931,7 +944,29 @@ export default function App() {
       return <AdminClientes onCerrar={() => abrirPantalla('inicio')} esAdmin={usuario.rolBase === 'administrador'} usuarioId={usuario.id} />;
     }
     if (pantallaActiva === 'llamadasHoy') {
-      return <AdminLlamadasHoy onCerrar={() => abrirPantalla('clientesMenu')} />;
+      return (
+        <AdminLlamadasHoy
+          onCerrar={() => abrirPantalla('clientesMenu')}
+          onAbrirProspecto={(id) => {
+            setProspectoAbrirId(id);
+            abrirPantalla('prospectos');
+          }}
+        />
+      );
+    }
+    if (pantallaActiva === 'prospectos') {
+      return (
+        <AdminProspectos
+          key={prospectoAbrirId ?? 'lista'}
+          onCerrar={() => {
+            setProspectoAbrirId(null);
+            volverAlInicio();
+          }}
+          esAdmin={usuario.rolBase === 'administrador'}
+          usuarioId={usuario.id}
+          prospectoInicialId={prospectoAbrirId}
+        />
+      );
     }
     if (pantallaActiva === 'pendientes') {
       return <AdminPendientes onCerrar={() => abrirPantalla('clientesMenu')} />;
