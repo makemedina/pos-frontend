@@ -2494,3 +2494,45 @@ export function convertirProspectoEnCliente(
 export function eliminarProspecto(id: string): Promise<void> {
   return pedirProspectos(`/prospectos/${id}`, 'No se pudo eliminar el prospecto', { method: 'DELETE' });
 }
+
+// ---------- CONEXION DE WHATSAPP (solo administradores) ----------
+
+export interface ConexionWhatsapp {
+  wabaId: string;
+  phoneNumberId: string;
+  datasetId: string | null;
+  conectadoEn: string;
+  sincronizadoEn: string | null;
+  ultimoError: string | null;
+}
+
+export interface EstadoWhatsapp {
+  // null = falta configurar la app de Meta en el servidor.
+  configurado: { appId: string; configId: string; apiVersion: string } | null;
+  conexion: ConexionWhatsapp | null;
+}
+
+export async function obtenerEstadoWhatsapp(): Promise<EstadoWhatsapp> {
+  const res = await fetch(`${API_URL}/admin/whatsapp`, { headers: headerAuth() });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}
+
+export async function conectarWhatsapp(codigo: string, wabaId: string, phoneNumberId: string): Promise<ConexionWhatsapp> {
+  const res = await fetch(`${API_URL}/admin/whatsapp/conectar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ codigo, wabaId, phoneNumberId }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}
+
+export async function completarConexionWhatsapp(): Promise<ConexionWhatsapp> {
+  const res = await fetch(`${API_URL}/admin/whatsapp/completar`, { method: 'POST', headers: headerAuth() });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw { ...data, status: res.status };
+  return data;
+}

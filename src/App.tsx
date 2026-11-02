@@ -37,6 +37,7 @@ import { AdminHistorialCompras } from './AdminHistorialCompras';
 import { AdminUsuarios } from './AdminUsuarios';
 import { AdminHerramientas } from './AdminHerramientas';
 import { AdminBackups } from './AdminBackups';
+import { AdminWhatsapp } from './AdminWhatsapp';
 import { AdminGastos } from './AdminGastos';
 import { AdminDepositos } from './AdminDepositos';
 import { AdminCorteCaja } from './AdminCorteCaja';
@@ -111,6 +112,7 @@ type Pantalla =
   | 'configuracionMenu'
   | 'herramientas'
   | 'respaldos'
+  | 'whatsapp'
   | 'prospeccion'
   | 'prospectos';
 
@@ -168,6 +170,7 @@ const SECCION_DE_PANTALLA: Partial<Record<Pantalla, Pantalla>> = {
   usuarios: 'configuracionMenu',
   herramientas: 'configuracionMenu',
   respaldos: 'configuracionMenu',
+  whatsapp: 'configuracionMenu',
 };
 
 function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
@@ -824,7 +827,10 @@ export default function App() {
         { pantalla: 'usuarios', icono: 'usuario', titulo: 'Usuarios', descripcion: 'Altas, PIN y permisos', clase: 'boton-flotante-usuarios' },
         { pantalla: 'herramientas', icono: 'herramientas', titulo: 'Herramientas', descripcion: 'Carga inicial y reinicio de datos', clase: 'boton-flotante-ajuste' },
         ...(usuario.rolBase === 'administrador'
-          ? [{ pantalla: 'respaldos' as Pantalla, icono: 'respaldo' as NombreIcono, titulo: 'Respaldos', descripcion: 'Crear, descargar y restaurar respaldos', clase: 'boton-flotante-ajuste' }]
+          ? [
+              { pantalla: 'respaldos' as Pantalla, icono: 'respaldo' as NombreIcono, titulo: 'Respaldos', descripcion: 'Crear, descargar y restaurar respaldos', clase: 'boton-flotante-ajuste' },
+              { pantalla: 'whatsapp' as Pantalla, icono: 'telefono' as NombreIcono, titulo: 'Conectar WhatsApp', descripcion: 'Saber qué anuncio trajo cada venta', clase: 'boton-flotante-ajuste' },
+            ]
           : []),
       ]);
     }
@@ -878,6 +884,9 @@ export default function App() {
     }
     if (pantallaActiva === 'respaldos') {
       return <AdminBackups onCerrar={() => abrirPantalla('configuracionMenu')} />;
+    }
+    if (pantallaActiva === 'whatsapp') {
+      return <AdminWhatsapp onCerrar={() => abrirPantalla('configuracionMenu')} />;
     }
     if (pantallaActiva === 'prospeccion') {
       return <AdminProspeccion onCerrar={volverAlInicio} />;
