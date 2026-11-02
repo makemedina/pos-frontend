@@ -6,8 +6,10 @@ import { VentaDetalleModal } from './VentaDetalleModal';
 import {
   obtenerHistorialVentas,
   buscarClientes,
+  buscarProductos,
   type VentaHistorial,
   type Cliente,
+  type Producto,
 } from './api';
 
 interface Props {
@@ -82,6 +84,10 @@ export function AdminHistorialVentas({
   const [resultadosCliente, setResultadosCliente] = useState<Cliente[]>([]);
   const [clienteElegido, setClienteElegido] = useState<Cliente | null>(null);
 
+  const [busquedaProducto, setBusquedaProducto] = useState('');
+  const [resultadosProducto, setResultadosProducto] = useState<Producto[]>([]);
+  const [productoElegido, setProductoElegido] = useState<Producto | null>(null);
+
   const [ventas, setVentas] = useState<VentaHistorial[]>([]);
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -92,7 +98,7 @@ export function AdminHistorialVentas({
   useEffect(() => {
     cargar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [periodo, desde, hasta, metodoPago, clienteElegido, verCanceladas]);
+  }, [periodo, desde, hasta, metodoPago, clienteElegido, productoElegido, verCanceladas]);
 
   async function cargar() {
     setCargando(true);
@@ -102,6 +108,7 @@ export function AdminHistorialVentas({
         desde: periodo === 'rango' ? desde : undefined,
         hasta: periodo === 'rango' ? hasta : undefined,
         clienteId: clienteElegido?.id,
+        productoId: productoElegido?.id,
         metodoPago: metodoPago || undefined,
         incluirCanceladas: verCanceladas,
       });
@@ -133,8 +140,31 @@ export function AdminHistorialVentas({
     setClienteElegido(null);
   }
 
+  async function buscarProducto(valor: string) {
+    setBusquedaProducto(valor);
+    if (valor.length < 2) {
+      setResultadosProducto([]);
+      return;
+    }
+    setResultadosProducto(await buscarProductos(valor));
+  }
+
+  function elegirProducto(p: Producto) {
+    setProductoElegido(p);
+    setResultadosProducto([]);
+    setBusquedaProducto('');
+  }
+
   const totalPeriodo = ventas.filter((v) => !v.cancelada).reduce((acc, v) => acc + v.total, 0);
   const cobradoPeriodo = ventas.filter((v) => !v.cancelada).reduce((acc, v) => acc + (v.total - v.saldoPendiente), 0);
+
+  // Con filtro de producto, cuanto de ESE producto se vendio (las notas
+  // pueden traer otros productos, asi que el total de arriba no basta).
+  const itemsDelProducto = productoElegido
+    ? ventas.filter((v) => !v.cancelada).flatMap((v) => v.items.filter((it) => it.productoId === productoElegido.id))
+    : [];
+  const kgProducto = itemsDelProducto.reduce((acc, it) => acc + it.cantidad, 0);
+  const importeProducto = itemsDelProducto.reduce((acc, it) => acc + it.cantidad * it.precioUnitario, 0);
 
   async function exportar() {
     try {
@@ -332,6 +362,30 @@ export function AdminHistorialVentas({
             )}
           </div>
 
+          <div>
+            <span style={{ display: 'block', marginBottom: 4 }}>Producto</span>
+            {productoElegido ? (
+              <div className="cliente-chip">
+                <span>{productoElegido.nombre}</span>
+                <button onClick={() => setProductoElegido(null)}>Quitar filtro</button>
+              </div>
+            ) : (
+              <>
+                <input
+                  className="buscador"
+                  placeholder="Buscar producto por nombre"
+                  value={busquedaProducto}
+                  onChange={(e) => buscarProducto(e.target.value)}
+                />
+                {resultadosProducto.map((p) => (
+                  <div key={p.id} className="resultado-cliente" onClick={() => elegirProducto(p)}>
+                    {p.nombre}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+
           <label className="fila-switch mt-8">
             <span>Mostrar ventas canceladas</span>
             <button
@@ -356,6 +410,11 @@ export function AdminHistorialVentas({
             <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
               Cobrado: <strong>{formatoMoneda(cobradoPeriodo)}</strong>
             </div>
+            {productoElegido && (
+              <div style={{ border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14, flex: 1 }}>
+                {productoElegido.nombre}: <strong>{kgProducto.toLocaleString('es-MX', { maximumFractionDigits: 3 })} kg</strong> · {formatoMoneda(importeProducto)}
+              </div>
+            )}
           </div>
         )}
 

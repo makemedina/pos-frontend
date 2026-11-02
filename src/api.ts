@@ -1990,6 +1990,7 @@ export async function obtenerClasificacionClientes(): Promise<ClasificacionClien
 // ---------- HISTORIAL DE VENTAS ----------
 
 export interface ItemVentaHistorial {
+  productoId: string;
   producto: string;
   marca: string;
   cantidad: number;
@@ -2020,6 +2021,7 @@ export interface FiltrosHistorial {
   desde?: string;
   hasta?: string;
   clienteId?: string;
+  productoId?: string;
   metodoPago?: string;
   incluirCanceladas?: boolean;
 }
@@ -2030,6 +2032,7 @@ export async function obtenerHistorialVentas(filtros: FiltrosHistorial): Promise
   if (filtros.desde) params.set('desde', filtros.desde);
   if (filtros.hasta) params.set('hasta', filtros.hasta);
   if (filtros.clienteId) params.set('clienteId', filtros.clienteId);
+  if (filtros.productoId) params.set('productoId', filtros.productoId);
   if (filtros.metodoPago) params.set('metodoPago', filtros.metodoPago);
   if (filtros.incluirCanceladas) params.set('incluirCanceladas', 'true');
 
