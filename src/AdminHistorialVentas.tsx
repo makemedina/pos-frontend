@@ -437,7 +437,7 @@ export function AdminHistorialVentas({
                       {formatoFechaHora(new Date(v.fecha))}
                     </div>
                     <div className="fs-13">
-                      <span style={{ fontSize: 16, fontWeight: 700 }}>{v.cliente.nombre}</span> · {v.cliente.telefono}
+                      <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--acento)' }}>{v.cliente.nombre}</span> · {v.cliente.telefono}
                     </div>
                     <div className="t-tenue-12">
                       Vendio: {v.vendedor.nombre} · {v.metodosPago.map(etiquetaMetodoPago).join(', ') || 'sin pago registrado'}
