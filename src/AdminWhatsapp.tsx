@@ -47,8 +47,9 @@ export function AdminWhatsapp({ onCerrar }: Props) {
   const [mensaje, setMensaje] = useState<string | null>(null);
 
   // El Embedded Signup entrega por separado el codigo (callback de
-  // FB.login) y los ids de la cuenta (mensaje de la ventana de Meta); se
-  // manda al servidor cuando ya estan los dos.
+  // FB.login) y los ids de la cuenta (mensaje de la ventana de Meta). En
+  // coexistencia el mensaje a veces no llega: con el codigo se espera un
+  // momento y se manda sin ids (el servidor los saca del token).
   const codigo = useRef<string | null>(null);
   const cuenta = useRef<{ wabaId: string; phoneNumberId: string } | null>(null);
 
@@ -66,6 +67,7 @@ export function AdminWhatsapp({ onCerrar }: Props) {
         return;
       }
       if (datos?.type !== 'WA_EMBEDDED_SIGNUP') return;
+      console.info('[whatsapp] Embedded Signup', datos.event, datos.data);
       if (datos.event === 'CANCEL') {
         setOcupado(false);
         setMensaje(datos.data?.error_message || 'Se canceló la conexión. Tu número no se modificó.');
@@ -91,9 +93,22 @@ export function AdminWhatsapp({ onCerrar }: Props) {
     }
   }
 
-  async function terminarSiListo() {
-    if (!codigo.current || !cuenta.current) return;
-    const { wabaId, phoneNumberId } = cuenta.current;
+  const esperaCuenta = useRef<number | null>(null);
+
+  async function terminarSiListo(sinEsperar = false) {
+    if (!codigo.current) return;
+    if (!cuenta.current && !sinEsperar) {
+      if (esperaCuenta.current === null) {
+        esperaCuenta.current = window.setTimeout(() => terminarSiListo(true), 3000);
+      }
+      return;
+    }
+    if (esperaCuenta.current !== null) {
+      window.clearTimeout(esperaCuenta.current);
+      esperaCuenta.current = null;
+    }
+    const wabaId = cuenta.current?.wabaId ?? '';
+    const phoneNumberId = cuenta.current?.phoneNumberId ?? '';
     const codigoActual = codigo.current;
     codigo.current = null;
     cuenta.current = null;
@@ -211,6 +226,12 @@ export function AdminWhatsapp({ onCerrar }: Props) {
                 <button onClick={conectar} disabled={ocupado}>
                   {ocupado ? 'Conectando...' : 'Conectar mi WhatsApp'}
                 </button>
+                {/* Si la ventana de Meta se cierra sin avisar, el boton no se queda trabado. */}
+                {ocupado && (
+                  <button onClick={() => { setOcupado(false); cargar(); }} style={{ marginLeft: 8 }}>
+                    Cancelar
+                  </button>
+                )}
               </>
             )}
           </div>
