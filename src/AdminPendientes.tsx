@@ -24,6 +24,13 @@ function formatDateInput(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+// El backend guarda el dia del pendiente como medianoche UTC; se toma solo
+// la parte YYYY-MM-DD para no recorrerlo un dia por la zona horaria.
+function diaDelPendiente(fecha: string) {
+  const [anio, mes, dia] = fecha.slice(0, 10).split('-').map(Number);
+  return new Date(anio, mes - 1, dia);
+}
+
 function esMismoDia(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
@@ -117,7 +124,7 @@ export function AdminPendientes({ onCerrar }: Props) {
   function empezarEdicion(p: Pendiente) {
     setEditandoId(p.id);
     setConcepto(p.concepto);
-    setFecha(formatDateInput(new Date(p.fecha)));
+    setFecha(formatDateInput(diaDelPendiente(p.fecha)));
     setNotas(p.notas ?? '');
     setClienteElegido(p.cliente ? { id: p.cliente.id, nombre: p.cliente.nombre } : null);
     setBusquedaCliente('');
@@ -186,9 +193,9 @@ export function AdminPendientes({ onCerrar }: Props) {
 
   const activos = pendientes.filter((p) => !p.hecho);
   const completados = pendientes.filter((p) => p.hecho);
-  const vencidos = activos.filter((p) => new Date(p.fecha) < hoy);
-  const deHoy = activos.filter((p) => esMismoDia(new Date(p.fecha), hoy));
-  const proximos = activos.filter((p) => new Date(p.fecha) > hoy && !esMismoDia(new Date(p.fecha), hoy));
+  const vencidos = activos.filter((p) => diaDelPendiente(p.fecha) < hoy);
+  const deHoy = activos.filter((p) => esMismoDia(diaDelPendiente(p.fecha), hoy));
+  const proximos = activos.filter((p) => diaDelPendiente(p.fecha) > hoy && !esMismoDia(diaDelPendiente(p.fecha), hoy));
 
   function tarjeta(p: Pendiente, vencido = false) {
     return (
@@ -205,7 +212,7 @@ export function AdminPendientes({ onCerrar }: Props) {
             <span>
               <strong style={{ textDecoration: p.hecho ? 'line-through' : 'none' }}>{p.concepto}</strong>
               <div style={{ fontSize: 12, color: vencido ? 'var(--peligro)' : 'var(--ios-secondary-label)', fontWeight: vencido ? 700 : 400 }}>
-                {new Date(p.fecha).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
+                {diaDelPendiente(p.fecha).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
                 {vencido && ' · Vencido'}
               </div>
               {p.cliente && (

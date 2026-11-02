@@ -476,7 +476,9 @@ export async function obtenerPendientes(incluirHechos = false): Promise<Pendient
 }
 
 export async function obtenerPendientesDeHoy(): Promise<Pendiente[]> {
-  const res = await fetch(`${API_URL}/pendientes/hoy`, { headers: headerAuth() });
+  const ahora = new Date();
+  const hoy = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
+  const res = await fetch(`${API_URL}/pendientes/hoy?fecha=${hoy}`, { headers: headerAuth() });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.error || 'No se pudieron cargar los pendientes de hoy');
