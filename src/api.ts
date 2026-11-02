@@ -1024,6 +1024,8 @@ export interface ResultadoPagoMultiCompra {
   totalPagado: number;
   // Sobrante del importe entregado que quedo como saldo a favor del proveedor.
   saldoAFavorGenerado: number;
+  // Cuanto del saldo a favor que ya se tenia se uso en este pago.
+  saldoAFavorUsado: number;
 }
 
 export async function registrarPagoMultiCompra(
@@ -1031,12 +1033,14 @@ export async function registrarPagoMultiCompra(
   asignaciones: AsignacionPagoMultipleCompra[],
   metodoPago: string,
   fotoComprobante: File | null,
-  montoEntregado?: number
+  montoEntregado?: number,
+  usarSaldoAFavor = false
 ): Promise<ResultadoPagoMultiCompra> {
   const cuerpo = new FormData();
   cuerpo.append('asignaciones', JSON.stringify(asignaciones));
   cuerpo.append('metodoPago', metodoPago);
   if (montoEntregado !== undefined) cuerpo.append('montoEntregado', String(montoEntregado));
+  if (usarSaldoAFavor) cuerpo.append('usarSaldoAFavor', 'true');
   if (fotoComprobante) cuerpo.append('foto', fotoComprobante);
   const res = await fetch(`${API_URL}/proveedores/${proveedorId}/pagos`, {
     method: 'POST',

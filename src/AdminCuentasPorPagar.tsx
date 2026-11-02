@@ -94,7 +94,9 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
   const [asignacionesPago, setAsignacionesPago] = useState<Record<string, string>>({});
   const [guardandoPagoMultiple, setGuardandoPagoMultiple] = useState(false);
   const [fotoPagoMultiple, setFotoPagoMultiple] = useState<File | null>(null);
+  const [usarFavorMultiple, setUsarFavorMultiple] = useState(false);
   const [fotoPago, setFotoPago] = useState<File | null>(null);
+  const [usarFavorAbono, setUsarFavorAbono] = useState(false);
   // URL (blob) de la foto de comprobante que se esta viendo, o null.
   const [fotoComprobanteAbierta, setFotoComprobanteAbierta] = useState<string | null>(null);
   const [cargandoFotoComprobante, setCargandoFotoComprobante] = useState(false);
@@ -219,6 +221,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     setAsignacionesPago({});
     setMetodoPagoMultiple('efectivo');
     setMontoPagoMultiple('');
+    setUsarFavorMultiple(false);
     setMostrarPagoMultiple(true);
   }
 
@@ -267,14 +270,20 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     (acc, f) => acc + (Number(asignacionesPago[f.id]) || 0),
     0
   );
-  const restantePorDistribuir = Number(montoPagoMultiple || 0) - totalAsignadoPago;
-  // Lo que se entrego de mas queda como saldo a favor del proveedor (no
-  // aplica pagando con saldo a favor: ahi no se entrega dinero).
-  const sobranteAFavor =
-    metodoPagoMultiple !== 'saldo_favor' && totalAsignadoPago > 0 && restantePorDistribuir > 0.005
-      ? restantePorDistribuir
-      : 0;
-  const saldoAFavorInsuficiente = metodoPagoMultiple === 'saldo_favor' && totalAsignadoPago > saldoAFavorElegido + 0.005;
+  // Con "usar saldo a favor", primero se cubre con ese saldo y solo lo
+  // que falte se paga con efectivo/transferencia (el importe entregado).
+  const favorAUsarMultiple = usarFavorMultiple ? Math.min(saldoAFavorElegido, totalAsignadoPago) : 0;
+  const totalEnDineroMultiple = totalAsignadoPago - favorAUsarMultiple;
+  const restantePorDistribuir = Number(montoPagoMultiple || 0) - totalEnDineroMultiple;
+  // Lo que se entrego de mas queda como saldo a favor del proveedor.
+  const sobranteAFavor = totalAsignadoPago > 0 && restantePorDistribuir > 0.005 ? restantePorDistribuir : 0;
+  const pagaConDineroMultiple = totalEnDineroMultiple + sobranteAFavor > 0.005;
+
+  // Texto del metodo para el comprobante cuando se combino con saldo a favor.
+  function metodoParaComprobante(metodo: string, favorUsado: number, enDinero: number) {
+    if (favorUsado <= 0) return metodo;
+    return enDinero > 0.005 ? `saldo a favor + ${metodo}` : 'saldo a favor';
+  }
 
   async function handlePagoMultiple(e: React.FormEvent) {
     e.preventDefault();
@@ -288,7 +297,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
       setMensaje('Asigna un monto mayor a cero a al menos una factura.');
       return;
     }
-    if (metodoPagoMultiple === 'transferencia' && !fotoPagoMultiple) {
+    if (metodoPagoMultiple === 'transferencia' && pagaConDineroMultiple && !fotoPagoMultiple) {
       setMensaje('Sube la foto del comprobante del pago antes de registrarlo.');
       return;
     }
@@ -299,14 +308,14 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         proveedorElegido.id,
         asignaciones,
         metodoPagoMultiple,
-        metodoPagoMultiple === 'transferencia' ? fotoPagoMultiple : null,
-        sobranteAFavor > 0 ? Number(montoPagoMultiple) : undefined
+        metodoPagoMultiple === 'transferencia' && pagaConDineroMultiple ? fotoPagoMultiple : null,
+        sobranteAFavor > 0 ? Number(montoPagoMultiple) : undefined,
+        usarFavorMultiple
       );
-      setMensaje(
-        resultado.saldoAFavorGenerado > 0
-          ? `Pago registrado para ${proveedorElegido.nombre}. Quedan ${formatoMoneda(resultado.saldoAFavorGenerado)} a tu favor.`
-          : `Pago registrado para ${proveedorElegido.nombre}`
-      );
+      const partesMensaje = [`Pago registrado para ${proveedorElegido.nombre}.`];
+      if (resultado.saldoAFavorUsado > 0) partesMensaje.push(`Se usaron ${formatoMoneda(resultado.saldoAFavorUsado)} de saldo a favor.`);
+      if (resultado.saldoAFavorGenerado > 0) partesMensaje.push(`Quedan ${formatoMoneda(resultado.saldoAFavorGenerado)} a tu favor.`);
+      setMensaje(partesMensaje.join(' '));
       cerrarPagoMultiple();
       const facturasData = await cargar();
       const saldoTotalProveedor = (facturasData ?? facturas)
@@ -317,7 +326,11 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         clienteNombre: proveedorElegido.nombre,
         clienteTelefono: proveedorElegido.telefono ?? undefined,
         monto: resultado.totalPagado,
-        metodoPago: metodoPagoMultiple,
+        metodoPago: metodoParaComprobante(
+          metodoPagoMultiple,
+          resultado.saldoAFavorUsado,
+          resultado.totalPagado - resultado.saldoAFavorUsado
+        ),
         fecha: formatoFechaHora(new Date()),
         saldoNotaRestante: 0,
         saldoTotalCliente: saldoTotalProveedor,
@@ -343,6 +356,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
 
   async function abrirFactura(f: FacturaPendiente) {
     setFacturaElegida(f);
+    setUsarFavorAbono(false);
     setMonto('');
     setCargando(true);
     try {
@@ -427,27 +441,50 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     }
   }
 
+  const favorDisponibleAbono = facturaElegida ? saldoAFavorDe(facturaElegida.proveedor.id) : 0;
+  const favorAbono =
+    usarFavorAbono && facturaElegida ? Math.min(favorDisponibleAbono, facturaElegida.saldoPendiente) : 0;
+
   async function handlePago(e: React.FormEvent) {
     e.preventDefault();
     if (!facturaElegida || guardandoPago) return;
 
-    if (metodoPago === 'transferencia' && !fotoPago) {
+    const enDinero = Number(monto) || 0;
+    if (favorAbono + enDinero <= 0) {
+      setMensaje('Captura un monto mayor a cero.');
+      return;
+    }
+    if (metodoPago === 'transferencia' && enDinero > 0 && !fotoPago) {
       setMensaje('Sube la foto del comprobante del pago antes de guardarlo.');
       return;
     }
 
-    const montoPagado = Number(monto);
+    const montoPagado = favorAbono + enDinero;
     setGuardandoPago(true);
     try {
-      await registrarPagoCompra(facturaElegida.id, montoPagado, metodoPago, metodoPago === 'transferencia' ? fotoPago : null);
+      const foto = metodoPago === 'transferencia' && enDinero > 0 ? fotoPago : null;
+      if (favorAbono > 0) {
+        // Mismo endpoint que el pago repartido, con una sola factura: aplica
+        // el saldo a favor y el resto con el metodo, en un solo registro.
+        await registrarPagoMultiCompra(
+          facturaElegida.proveedor.id,
+          [{ compraId: facturaElegida.id, monto: montoPagado }],
+          metodoPago,
+          foto,
+          undefined,
+          true
+        );
+      } else {
+        await registrarPagoCompra(facturaElegida.id, montoPagado, metodoPago, foto);
+      }
       const excedente = montoPagado - facturaElegida.saldoPendiente;
-      setMensaje(
-        excedente > 0.005
-          ? `Pago registrado para ${facturaElegida.proveedor.nombre}. Quedan ${formatoMoneda(excedente)} a tu favor.`
-          : `Pago registrado para ${facturaElegida.proveedor.nombre}`
-      );
+      const partesMensaje = [`Pago registrado para ${facturaElegida.proveedor.nombre}.`];
+      if (favorAbono > 0) partesMensaje.push(`Se usaron ${formatoMoneda(favorAbono)} de saldo a favor.`);
+      if (excedente > 0.005) partesMensaje.push(`Quedan ${formatoMoneda(excedente)} a tu favor.`);
+      setMensaje(partesMensaje.join(' '));
       setMonto('');
       setFotoPago(null);
+      setUsarFavorAbono(false);
       // Refresca el saldo de la factura y su historial de pagos
       refrescarSaldosAFavor();
       const [facturasData, pagosData] = await Promise.all([
@@ -467,7 +504,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         clienteNombre: facturaElegida.proveedor.nombre,
         clienteTelefono: facturaElegida.proveedor.telefono ?? undefined,
         monto: montoPagado,
-        metodoPago,
+        metodoPago: metodoParaComprobante(metodoPago, favorAbono, enDinero),
         fecha: formatoFechaHora(new Date()),
         saldoNotaRestante: facturaActualizada?.saldoPendiente ?? 0,
         saldoTotalCliente: saldoTotalProveedor,
@@ -656,14 +693,22 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                   <select value={metodoPagoMultiple} onChange={(e) => setMetodoPagoMultiple(e.target.value)}>
                     <option value="efectivo">Efectivo</option>
                     <option value="transferencia">Transferencia</option>
-                    {saldoAFavorElegido > 0 && (
-                      <option value="saldo_favor">Saldo a favor ({formatoMoneda(saldoAFavorElegido)})</option>
-                    )}
                   </select>
                 </label>
 
+                {saldoAFavorElegido > 0 && (
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={usarFavorMultiple}
+                      onChange={(e) => setUsarFavorMultiple(e.target.checked)}
+                    />
+                    Usar saldo a favor (tienes {formatoMoneda(saldoAFavorElegido)})
+                  </label>
+                )}
+
                 <label>
-                  Importe del pago entregado
+                  {usarFavorMultiple ? 'Importe entregado en dinero (lo que falte)' : 'Importe del pago entregado'}
                   <input
                     value={montoPagoMultiple}
                     onChange={(e) => setMontoPagoMultiple(e.target.value)}
@@ -738,10 +783,11 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     Los {formatoMoneda(sobranteAFavor)} que sobran quedan como saldo a tu favor con {proveedorElegido?.nombre}.
                   </p>
                 )}
-                {saldoAFavorInsuficiente && (
-                  <p style={{ fontSize: 12, color: 'var(--peligro)', margin: 0 }}>
-                    Solo tienes {formatoMoneda(saldoAFavorElegido)} de saldo a favor con este proveedor.
-                  </p>
+                {favorAUsarMultiple > 0 && (
+                  <div className="t-tenue-13">
+                    Con saldo a favor: {formatoMoneda(favorAUsarMultiple)} · Con {metodoPagoMultiple}:{' '}
+                    {formatoMoneda(totalEnDineroMultiple + sobranteAFavor)}
+                  </div>
                 )}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, paddingTop: 4 }}>
@@ -749,11 +795,11 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                   <span>{formatoMoneda(totalAsignadoPago + sobranteAFavor)}</span>
                 </div>
 
-                {metodoPagoMultiple === 'transferencia' && (
+                {metodoPagoMultiple === 'transferencia' && pagaConDineroMultiple && (
                   <CampoFotoComprobante id="foto-comprobante-pago-multiple" archivo={fotoPagoMultiple} onCambio={setFotoPagoMultiple} />
                 )}
 
-                <button type="submit" disabled={totalAsignadoPago <= 0 || saldoAFavorInsuficiente || guardandoPagoMultiple}>
+                <button type="submit" disabled={totalAsignadoPago <= 0 || guardandoPagoMultiple}>
                   {guardandoPagoMultiple ? 'Guardando...' : 'Registrar pago'}
                 </button>
               </form>
@@ -883,25 +929,40 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
             {facturaElegida.saldoPendiente > 0 && (
               <form onSubmit={handlePago} className="tarjeta-grid-075">
                 <h3>Registrar nuevo abono</h3>
+                {favorDisponibleAbono > 0 && (
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={usarFavorAbono}
+                      onChange={(e) => setUsarFavorAbono(e.target.checked)}
+                    />
+                    Usar saldo a favor (tienes {formatoMoneda(favorDisponibleAbono)})
+                  </label>
+                )}
+                {favorAbono > 0 && (
+                  <div className="t-tenue-13">
+                    Se cubren {formatoMoneda(favorAbono)} con saldo a favor
+                    {favorAbono < facturaElegida.saldoPendiente
+                      ? `; faltan ${formatoMoneda(facturaElegida.saldoPendiente - favorAbono)}.`
+                      : ' y la factura queda pagada.'}
+                  </div>
+                )}
                 <label>
-                  Monto (saldo pendiente: {formatoMoneda(facturaElegida.saldoPendiente)})
+                  {favorAbono > 0
+                    ? 'Monto con efectivo o transferencia (opcional)'
+                    : `Monto (saldo pendiente: ${formatoMoneda(facturaElegida.saldoPendiente)})`}
                   <input
                     value={monto}
                     onChange={(e) => setMonto(e.target.value)}
                     type="number"
                     step="0.01"
-                    max={
-                      metodoPago === 'saldo_favor'
-                        ? Math.min(facturaElegida.saldoPendiente, saldoAFavorDe(facturaElegida.proveedor.id))
-                        : undefined
-                    }
-                    required
+                    required={favorAbono <= 0}
                   />
                 </label>
-                {metodoPago !== 'saldo_favor' && Number(monto) > facturaElegida.saldoPendiente + 0.005 && (
+                {favorAbono + (Number(monto) || 0) > facturaElegida.saldoPendiente + 0.005 && (Number(monto) || 0) > 0 && (
                   <p style={{ fontSize: 12, color: 'var(--exito)', margin: 0 }}>
-                    Los {formatoMoneda(Number(monto) - facturaElegida.saldoPendiente)} de más quedan como saldo a tu favor con{' '}
-                    {facturaElegida.proveedor.nombre}.
+                    Los {formatoMoneda(favorAbono + Number(monto) - facturaElegida.saldoPendiente)} de más quedan como saldo a
+                    tu favor con {facturaElegida.proveedor.nombre}.
                   </p>
                 )}
                 <label>
@@ -909,14 +970,9 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                   <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)}>
                     <option value="efectivo">Efectivo</option>
                     <option value="transferencia">Transferencia</option>
-                    {saldoAFavorDe(facturaElegida.proveedor.id) > 0 && (
-                      <option value="saldo_favor">
-                        Saldo a favor ({formatoMoneda(saldoAFavorDe(facturaElegida.proveedor.id))})
-                      </option>
-                    )}
                   </select>
                 </label>
-                {metodoPago === 'transferencia' && (
+                {metodoPago === 'transferencia' && (Number(monto) || 0) > 0 && (
                   <CampoFotoComprobante id="foto-comprobante-pago" archivo={fotoPago} onCambio={setFotoPago} />
                 )}
                 <button type="submit" disabled={guardandoPago}>
