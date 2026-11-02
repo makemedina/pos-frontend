@@ -267,6 +267,12 @@ export function PantallaCompra({ onCompletada, onCerrar }: Props) {
                 Queda pendiente: {formatoMoneda(saldoPendiente)}
               </p>
             )}
+            {Number(proveedorSeleccionado?.saldoAFavor ?? 0) > 0 && (
+              <p style={{ fontSize: 12, color: 'var(--exito)', margin: 0 }}>
+                Tienes {formatoMoneda(Number(proveedorSeleccionado?.saldoAFavor))} a tu favor con este proveedor: se
+                descuenta solo de lo que quede pendiente de esta factura.
+              </p>
+            )}
           </div>
           <strong>{formatoMoneda(total)}</strong>
         </div>

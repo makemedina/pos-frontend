@@ -772,6 +772,8 @@ export interface Proveedor {
   id: string;
   nombre: string;
   telefono: string | null;
+  // Decimal de Prisma: llega como texto. Lo que se le pago de mas.
+  saldoAFavor?: string | number;
 }
 
 export async function buscarProveedores(query: string): Promise<Proveedor[]> {
@@ -1020,17 +1022,21 @@ export interface DetallePagoMultiCompra {
 export interface ResultadoPagoMultiCompra {
   detalle: DetallePagoMultiCompra[];
   totalPagado: number;
+  // Sobrante del importe entregado que quedo como saldo a favor del proveedor.
+  saldoAFavorGenerado: number;
 }
 
 export async function registrarPagoMultiCompra(
   proveedorId: string,
   asignaciones: AsignacionPagoMultipleCompra[],
   metodoPago: string,
-  fotoComprobante: File | null
+  fotoComprobante: File | null,
+  montoEntregado?: number
 ): Promise<ResultadoPagoMultiCompra> {
   const cuerpo = new FormData();
   cuerpo.append('asignaciones', JSON.stringify(asignaciones));
   cuerpo.append('metodoPago', metodoPago);
+  if (montoEntregado !== undefined) cuerpo.append('montoEntregado', String(montoEntregado));
   if (fotoComprobante) cuerpo.append('foto', fotoComprobante);
   const res = await fetch(`${API_URL}/proveedores/${proveedorId}/pagos`, {
     method: 'POST',
@@ -1061,10 +1067,30 @@ export async function obtenerFacturasPendientes(): Promise<FacturaPendiente[]> {
   return res.json();
 }
 
+export interface SaldoAFavorProveedor {
+  id: string;
+  nombre: string;
+  telefono: string | null;
+  saldoAFavor: number;
+}
+
+// Proveedores a los que se les pago de mas -- ese saldo se aplica solo a
+// su siguiente factura.
+export async function obtenerSaldosAFavorProveedores(): Promise<SaldoAFavorProveedor[]> {
+  const res = await fetch(`${API_URL}/proveedores/saldos-a-favor`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los saldos a favor de proveedores');
+  }
+  return res.json();
+}
+
 export interface PagoCompraHistorial {
   id: string;
   monto: number;
   metodoPago: string;
+  // Parte de monto que no cubrio la factura y quedo como saldo a favor.
+  excedenteAFavor: number;
   fecha: string;
   cancelado: boolean;
   canceladoEn: string | null;

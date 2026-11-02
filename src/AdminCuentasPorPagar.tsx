@@ -1,6 +1,6 @@
 import { Icono } from './iconos';
 import { useEffect, useMemo, useState } from 'react';
-import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
+import { formatoMoneda, formatoFecha, formatoFechaHora, etiquetaMetodoPago } from './formato';
 import {
   obtenerFacturasPendientes,
   obtenerPagosDeCompra,
@@ -10,7 +10,9 @@ import {
   obtenerPagosDeProveedor,
   cancelarGrupoPagoCompra,
   obtenerComprobanteFotoPagoCompra,
+  obtenerSaldosAFavorProveedores,
   type FacturaPendiente,
+  type SaldoAFavorProveedor,
   type PagoCompraHistorial,
   type GrupoPagoProveedor,
 } from './api';
@@ -68,11 +70,16 @@ interface ProveedorResumen {
   facturasConSaldo: number;
 }
 
+// Si un error de cancelacion trae su propio texto (ej. saldo a favor ya
+// usado), se muestra tal cual.
+const CODIGOS_CON_MENSAJE_PROPIO = ['SALDO_FAVOR_YA_USADO'];
+
 type Nivel = 'proveedores' | 'facturas' | 'pagos' | 'historialPagos';
 
 export function AdminCuentasPorPagar({ onCerrar }: Props) {
   const [nivel, setNivel] = useState<Nivel>('proveedores');
   const [facturas, setFacturas] = useState<FacturaPendiente[]>([]);
+  const [saldosAFavor, setSaldosAFavor] = useState<SaldoAFavorProveedor[]>([]);
   const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -129,8 +136,12 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
   async function cargar() {
     setCargando(true);
     try {
-      const data = await obtenerFacturasPendientes();
+      const [data, saldos] = await Promise.all([
+        obtenerFacturasPendientes(),
+        obtenerSaldosAFavorProveedores().catch(() => [] as SaldoAFavorProveedor[]),
+      ]);
       setFacturas(data);
+      setSaldosAFavor(saldos);
       return data;
     } catch {
       setMensaje('No se pudieron cargar las cuentas por pagar');
@@ -159,8 +170,24 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         });
       }
     }
+    // Tambien los proveedores sin facturas pendientes pero con saldo a
+    // favor -- si no, ese dinero no se veria en ningun lado.
+    for (const s of saldosAFavor) {
+      if (!mapa.has(s.id)) {
+        mapa.set(s.id, { id: s.id, nombre: s.nombre, telefono: s.telefono, saldoTotal: 0, facturasConSaldo: 0 });
+      }
+    }
     return Array.from(mapa.values()).sort((a, b) => b.saldoTotal - a.saldoTotal);
-  }, [facturas]);
+  }, [facturas, saldosAFavor]);
+
+  function refrescarSaldosAFavor() {
+    obtenerSaldosAFavorProveedores().then(setSaldosAFavor).catch(() => {});
+  }
+
+  function saldoAFavorDe(proveedorId: string | undefined) {
+    return saldosAFavor.find((s) => s.id === proveedorId)?.saldoAFavor ?? 0;
+  }
+  const saldoAFavorElegido = saldoAFavorDe(proveedorElegido?.id);
 
   const proveedoresFiltrados = proveedoresResumen.filter(
     (p) => !busqueda.trim() || p.nombre.toLowerCase().includes(busqueda.trim().toLowerCase())
@@ -241,6 +268,13 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     0
   );
   const restantePorDistribuir = Number(montoPagoMultiple || 0) - totalAsignadoPago;
+  // Lo que se entrego de mas queda como saldo a favor del proveedor (no
+  // aplica pagando con saldo a favor: ahi no se entrega dinero).
+  const sobranteAFavor =
+    metodoPagoMultiple !== 'saldo_favor' && totalAsignadoPago > 0 && restantePorDistribuir > 0.005
+      ? restantePorDistribuir
+      : 0;
+  const saldoAFavorInsuficiente = metodoPagoMultiple === 'saldo_favor' && totalAsignadoPago > saldoAFavorElegido + 0.005;
 
   async function handlePagoMultiple(e: React.FormEvent) {
     e.preventDefault();
@@ -254,7 +288,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
       setMensaje('Asigna un monto mayor a cero a al menos una factura.');
       return;
     }
-    if (metodoPagoMultiple !== 'efectivo' && !fotoPagoMultiple) {
+    if (metodoPagoMultiple === 'transferencia' && !fotoPagoMultiple) {
       setMensaje('Sube la foto del comprobante del pago antes de registrarlo.');
       return;
     }
@@ -265,9 +299,14 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         proveedorElegido.id,
         asignaciones,
         metodoPagoMultiple,
-        metodoPagoMultiple === 'efectivo' ? null : fotoPagoMultiple
+        metodoPagoMultiple === 'transferencia' ? fotoPagoMultiple : null,
+        sobranteAFavor > 0 ? Number(montoPagoMultiple) : undefined
       );
-      setMensaje(`Pago registrado para ${proveedorElegido.nombre}`);
+      setMensaje(
+        resultado.saldoAFavorGenerado > 0
+          ? `Pago registrado para ${proveedorElegido.nombre}. Quedan ${formatoMoneda(resultado.saldoAFavorGenerado)} a tu favor.`
+          : `Pago registrado para ${proveedorElegido.nombre}`
+      );
       cerrarPagoMultiple();
       const facturasData = await cargar();
       const saldoTotalProveedor = (facturasData ?? facturas)
@@ -367,6 +406,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
       setNecesitaAutorizacionGrupo(false);
       setAutorizadoPorTelefonoGrupo('');
       setAutorizadoPinGrupo('');
+      refrescarSaldosAFavor();
       const data = await obtenerPagosDeProveedor(proveedorElegido.id);
       setGruposPago(data);
     } catch (err: any) {
@@ -375,6 +415,9 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         setMensaje('Este pago (o parte de el) es de un día anterior: se necesita el teléfono y PIN de un administrador para cancelarlo.');
       } else if (err.code === 'PAGO_YA_CANCELADO') {
         setMensaje('Este pago ya estaba cancelado.');
+        setConfirmandoCancelarGrupoKey(null);
+      } else if (CODIGOS_CON_MENSAJE_PROPIO.includes(err.code)) {
+        setMensaje(err.error);
         setConfirmandoCancelarGrupoKey(null);
       } else {
         setMensaje('No se pudo cancelar el pago.');
@@ -388,7 +431,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     e.preventDefault();
     if (!facturaElegida || guardandoPago) return;
 
-    if (metodoPago !== 'efectivo' && !fotoPago) {
+    if (metodoPago === 'transferencia' && !fotoPago) {
       setMensaje('Sube la foto del comprobante del pago antes de guardarlo.');
       return;
     }
@@ -396,11 +439,17 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
     const montoPagado = Number(monto);
     setGuardandoPago(true);
     try {
-      await registrarPagoCompra(facturaElegida.id, montoPagado, metodoPago, metodoPago === 'efectivo' ? null : fotoPago);
-      setMensaje(`Pago registrado para ${facturaElegida.proveedor.nombre}`);
+      await registrarPagoCompra(facturaElegida.id, montoPagado, metodoPago, metodoPago === 'transferencia' ? fotoPago : null);
+      const excedente = montoPagado - facturaElegida.saldoPendiente;
+      setMensaje(
+        excedente > 0.005
+          ? `Pago registrado para ${facturaElegida.proveedor.nombre}. Quedan ${formatoMoneda(excedente)} a tu favor.`
+          : `Pago registrado para ${facturaElegida.proveedor.nombre}`
+      );
       setMonto('');
       setFotoPago(null);
       // Refresca el saldo de la factura y su historial de pagos
+      refrescarSaldosAFavor();
       const [facturasData, pagosData] = await Promise.all([
         obtenerFacturasPendientes(),
         obtenerPagosDeCompra(facturaElegida.id),
@@ -466,6 +515,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
       setNecesitaAutorizacionPago(false);
       setAutorizadoPorTelefonoPago('');
       setAutorizadoPinPago('');
+      refrescarSaldosAFavor();
       const [facturasData, pagosData] = await Promise.all([
         obtenerFacturasPendientes(),
         obtenerPagosDeCompra(facturaElegida.id),
@@ -480,6 +530,9 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
         setMensaje('Este pago es de un día anterior: se necesita el teléfono y PIN de un administrador para cancelarlo.');
       } else if (err.code === 'PAGO_YA_CANCELADO') {
         setMensaje('Este pago ya estaba cancelado.');
+        setConfirmandoCancelarPagoId(null);
+      } else if (CODIGOS_CON_MENSAJE_PROPIO.includes(err.code)) {
+        setMensaje(err.error);
         setConfirmandoCancelarPagoId(null);
       } else {
         setMensaje('No se pudo cancelar el pago.');
@@ -533,6 +586,11 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                       <div className="t-tenue-12">
                         {p.facturasConSaldo} factura{p.facturasConSaldo !== 1 ? 's' : ''} pendiente{p.facturasConSaldo !== 1 ? 's' : ''}
                       </div>
+                      {saldoAFavorDe(p.id) > 0 && (
+                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--exito)' }}>
+                          A tu favor: {formatoMoneda(saldoAFavorDe(p.id))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -562,6 +620,16 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
           <>
             <button onClick={volverAProveedores} className="justify-start">← Todos los proveedores</button>
 
+            {saldoAFavorElegido > 0 && (
+              <div className="tarjeta-sombra">
+                <div className="fila-entre">
+                  <span>Saldo a tu favor</span>
+                  <strong style={{ color: 'var(--exito)' }}>{formatoMoneda(saldoAFavorElegido)}</strong>
+                </div>
+                <div className="t-tenue-12">Se aplica solo a la siguiente factura que captures de este proveedor.</div>
+              </div>
+            )}
+
             <div className="fila-gap-8">
               {!mostrarPagoMultiple && facturasDelProveedor.length > 0 && (
                 <button onClick={abrirPagoMultiple} className="justify-start">
@@ -588,6 +656,9 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                   <select value={metodoPagoMultiple} onChange={(e) => setMetodoPagoMultiple(e.target.value)}>
                     <option value="efectivo">Efectivo</option>
                     <option value="transferencia">Transferencia</option>
+                    {saldoAFavorElegido > 0 && (
+                      <option value="saldo_favor">Saldo a favor ({formatoMoneda(saldoAFavorElegido)})</option>
+                    )}
                   </select>
                 </label>
 
@@ -662,17 +733,27 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     Asignaste más de lo que dice el importe del pago entregado.
                   </p>
                 )}
+                {sobranteAFavor > 0 && (
+                  <p style={{ fontSize: 12, color: 'var(--exito)', margin: 0 }}>
+                    Los {formatoMoneda(sobranteAFavor)} que sobran quedan como saldo a tu favor con {proveedorElegido?.nombre}.
+                  </p>
+                )}
+                {saldoAFavorInsuficiente && (
+                  <p style={{ fontSize: 12, color: 'var(--peligro)', margin: 0 }}>
+                    Solo tienes {formatoMoneda(saldoAFavorElegido)} de saldo a favor con este proveedor.
+                  </p>
+                )}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, paddingTop: 4 }}>
                   <span>Total a registrar</span>
-                  <span>{formatoMoneda(totalAsignadoPago)}</span>
+                  <span>{formatoMoneda(totalAsignadoPago + sobranteAFavor)}</span>
                 </div>
 
-                {metodoPagoMultiple !== 'efectivo' && (
+                {metodoPagoMultiple === 'transferencia' && (
                   <CampoFotoComprobante id="foto-comprobante-pago-multiple" archivo={fotoPagoMultiple} onCambio={setFotoPagoMultiple} />
                 )}
 
-                <button type="submit" disabled={totalAsignadoPago <= 0 || guardandoPagoMultiple}>
+                <button type="submit" disabled={totalAsignadoPago <= 0 || saldoAFavorInsuficiente || guardandoPagoMultiple}>
                   {guardandoPagoMultiple ? 'Guardando...' : 'Registrar pago'}
                 </button>
               </form>
@@ -730,7 +811,8 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                 <div key={p.id} style={{ fontSize: 14, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 6 }}>
                   <div className="fila-entre">
                     <span>
-                      {formatoFecha(new Date(p.fecha))} · {new Date(p.fecha).toLocaleTimeString()} · {p.metodoPago}
+                      {formatoFecha(new Date(p.fecha))} · {new Date(p.fecha).toLocaleTimeString()} · {etiquetaMetodoPago(p.metodoPago)}
+                      {p.excedenteAFavor > 0 && <> · {formatoMoneda(p.excedenteAFavor)} quedaron a tu favor</>}
                       <br />
                       <small className="t-tenue">Registró: {p.registradoPor.nombre}</small>
                     </span>
@@ -808,18 +890,33 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                     onChange={(e) => setMonto(e.target.value)}
                     type="number"
                     step="0.01"
-                    max={facturaElegida.saldoPendiente}
+                    max={
+                      metodoPago === 'saldo_favor'
+                        ? Math.min(facturaElegida.saldoPendiente, saldoAFavorDe(facturaElegida.proveedor.id))
+                        : undefined
+                    }
                     required
                   />
                 </label>
+                {metodoPago !== 'saldo_favor' && Number(monto) > facturaElegida.saldoPendiente + 0.005 && (
+                  <p style={{ fontSize: 12, color: 'var(--exito)', margin: 0 }}>
+                    Los {formatoMoneda(Number(monto) - facturaElegida.saldoPendiente)} de más quedan como saldo a tu favor con{' '}
+                    {facturaElegida.proveedor.nombre}.
+                  </p>
+                )}
                 <label>
                   Método de pago
                   <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)}>
                     <option value="efectivo">Efectivo</option>
                     <option value="transferencia">Transferencia</option>
+                    {saldoAFavorDe(facturaElegida.proveedor.id) > 0 && (
+                      <option value="saldo_favor">
+                        Saldo a favor ({formatoMoneda(saldoAFavorDe(facturaElegida.proveedor.id))})
+                      </option>
+                    )}
                   </select>
                 </label>
-                {metodoPago !== 'efectivo' && (
+                {metodoPago === 'transferencia' && (
                   <CampoFotoComprobante id="foto-comprobante-pago" archivo={fotoPago} onCambio={setFotoPago} />
                 )}
                 <button type="submit" disabled={guardandoPago}>
@@ -846,7 +943,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
                 <div key={g.grupoKey} style={{ fontSize: 14, border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14 }}>
                   <div className="fila-entre">
                     <span>
-                      {formatoFechaHora(new Date(g.fecha))} · {g.metodosPago.join(' + ') || '—'}
+                      {formatoFechaHora(new Date(g.fecha))} · {g.metodosPago.map(etiquetaMetodoPago).join(' + ') || '—'}
                       <br />
                       <small className="t-tenue">Registró: {g.registradoPor}</small>
                     </span>

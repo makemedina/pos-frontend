@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
+import { formatoMoneda, formatoFecha, formatoFechaHora, etiquetaMetodoPago } from './formato';
 import { obtenerComprobanteFotoDeposito, type ResumenCorteDia } from './api';
 import { VentaDetalleModal } from './VentaDetalleModal';
 import { CompraDetalleModal } from './CompraDetalleModal';
@@ -423,7 +423,7 @@ export function ReporteCorte({ resumen, elementId, efectivoContadoEnVivo, saldoB
                   style={{ fontSize: 13, borderBottom: '1px solid var(--ios-separator)', paddingBottom: 4, cursor: 'pointer' }}
                 >
                   <div className="fila-entre">
-                    <span>{c.numeroFactura || 'sin factura'} · {c.metodoPago ?? 'crédito'}</span>
+                    <span>{c.numeroFactura || 'sin factura'} · {c.metodoPago ? etiquetaMetodoPago(c.metodoPago) : 'crédito'}</span>
                     <span>
                       {formatoMoneda(c.total)}{' '}
                       <small style={{ color: c.estadoPago === 'pagada' ? 'var(--exito)' : 'var(--peligro)' }}>
