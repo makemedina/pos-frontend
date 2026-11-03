@@ -197,7 +197,22 @@ export function reintentarVenta(id: string) {
  * (ej. el stock ya no alcanza porque cambio mientras estaba offline), esa
  * venta se marca con error para revision manual, y se sigue con las demas.
  */
-export async function sincronizarVentasPendientes(): Promise<{ exitosas: number; conError: number }> {
+// Si ya hay una sincronizacion corriendo (el evento 'online' se dispara
+// varias veces con señal inestable, o el vendedor tambien presiona
+// sincronizar), las demas llamadas esperan esa misma en vez de mandar las
+// mismas ventas en paralelo.
+let sincronizacionEnCurso: Promise<{ exitosas: number; conError: number }> | null = null;
+
+export function sincronizarVentasPendientes(): Promise<{ exitosas: number; conError: number }> {
+  if (!sincronizacionEnCurso) {
+    sincronizacionEnCurso = subirCola().finally(() => {
+      sincronizacionEnCurso = null;
+    });
+  }
+  return sincronizacionEnCurso;
+}
+
+async function subirCola(): Promise<{ exitosas: number; conError: number }> {
   const cola = leerCola();
   let exitosas = 0;
   let conError = 0;
@@ -206,7 +221,9 @@ export async function sincronizarVentasPendientes(): Promise<{ exitosas: number;
     if (venta.estado === 'error') continue; // ya se marco antes, necesita revision manual
 
     try {
-      await registrarVenta(venta.payload);
+      // idLocal: si el servidor ya la habia guardado (se cayo la red antes
+      // de recibir la respuesta), la regresa en vez de crear otra.
+      await registrarVenta({ ...venta.payload, idLocal: venta.id });
       quitarVentaDeCola(venta.id);
       exitosas++;
     } catch (err: any) {

@@ -1244,6 +1244,9 @@ export interface CrearVentaPayload {
   // El pago inicial se puede repartir entre varios metodos (ej. parte en
   // efectivo y parte por transferencia).
   pagos?: PagoInicialPayload[];
+  // Solo para ventas capturadas sin conexion: el id de la cola local. Si
+  // la misma venta se sube dos veces, el servidor regresa la que ya tenia.
+  idLocal?: string;
 }
 
 export async function registrarVenta(payload: CrearVentaPayload) {
