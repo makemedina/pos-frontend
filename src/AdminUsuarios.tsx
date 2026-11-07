@@ -68,14 +68,17 @@ export function AdminUsuarios({ onCerrar }: Props) {
         headers: { 'Content-Type': 'application/json', ...headerAuth() },
         body: JSON.stringify({ nombre, telefono, pin }),
       });
-      if (!res.ok) throw new Error('No se pudo crear');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'No se pudo crear el usuario');
+      }
       setMensaje('Usuario creado correctamente');
       setNombre('');
       setTelefono('');
       setPin('');
       cargar();
-    } catch {
-      setMensaje('No se pudo crear el usuario');
+    } catch (err) {
+      setMensaje((err as Error).message || 'No se pudo crear el usuario');
     }
   }
 
@@ -88,13 +91,39 @@ export function AdminUsuarios({ onCerrar }: Props) {
         headers: { 'Content-Type': 'application/json', ...headerAuth() },
         body: JSON.stringify({ pin: pinUsuario }),
       });
-      if (!res.ok) throw new Error('No se pudo actualizar');
-      setMensaje(`PIN actualizado para ${usuarioSeleccionado.nombre}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'No se pudo actualizar el PIN');
+      }
+      setMensaje(`PIN actualizado para ${usuarioSeleccionado.nombre}. Se cerraron sus otras sesiones.`);
       setPinUsuario('');
       setUsuarioSeleccionado(null);
       cargar();
-    } catch {
-      setMensaje('No se pudo actualizar el PIN');
+    } catch (err) {
+      setMensaje((err as Error).message || 'No se pudo actualizar el PIN');
+    }
+  }
+
+  // Dar de baja a quien ya no trabaja aqui: no puede entrar y sus
+  // sesiones abiertas se cierran al momento. Se puede reactivar despues.
+  async function cambiarActivo(usuario: UsuarioAdmin) {
+    const activar = !usuario.activo;
+    if (!activar && !window.confirm(`¿Dar de baja a ${usuario.nombre}? Ya no podrá entrar y se cerrarán sus sesiones.`)) return;
+    try {
+      const res = await fetch(`${API_URL}/usuarios/${usuario.id}/activo`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...headerAuth() },
+        body: JSON.stringify({ activo: activar }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'No se pudo cambiar el estado');
+      }
+      setMensaje(activar ? `${usuario.nombre} reactivado` : `${usuario.nombre} dado de baja`);
+      setUsuarioSeleccionado(null);
+      cargar();
+    } catch (err) {
+      setMensaje((err as Error).message);
     }
   }
 
@@ -151,7 +180,7 @@ export function AdminUsuarios({ onCerrar }: Props) {
           <h3>Agregar usuario</h3>
           <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre" required />
           <input value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="Teléfono" required />
-          <input value={pin} onChange={(e) => setPin(e.target.value)} placeholder="PIN" required />
+          <input value={pin} onChange={(e) => setPin(e.target.value)} placeholder="PIN (4 a 8 dígitos)" inputMode="numeric" pattern="\d{4,8}" minLength={4} maxLength={8} title="Entre 4 y 8 dígitos" required />
           <button type="submit">Crear usuario</button>
         </form>
 
@@ -164,8 +193,10 @@ export function AdminUsuarios({ onCerrar }: Props) {
                 <div>
                   <strong>{usuario.nombre}</strong>
                   <div>{usuario.telefono}</div>
-                  <div>{usuario.rolBase}</div>
+                  <div>{usuario.rolBase}{usuario.activo ? '' : ' · dado de baja'}</div>
                 </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button onClick={() => cambiarActivo(usuario)}>{usuario.activo ? 'Dar de baja' : 'Reactivar'}</button>
                 <button onClick={() => {
                   setUsuarioSeleccionado(usuario);
                   setNombreEdicion(usuario.nombre);
@@ -180,6 +211,7 @@ export function AdminUsuarios({ onCerrar }: Props) {
                     puedeRegistrarPagos: usuario.permisos?.puedeRegistrarPagos ?? false,
                   });
                 }}>Editar</button>
+                </div>
               </div>
             </div>
           ))}
@@ -196,7 +228,7 @@ export function AdminUsuarios({ onCerrar }: Props) {
 
             <form onSubmit={cambiarPin} className="tarjeta-grid-075">
               <h3>Cambiar PIN de {usuarioSeleccionado.nombre}</h3>
-              <input value={pinUsuario} onChange={(e) => setPinUsuario(e.target.value)} placeholder="Nuevo PIN" required />
+              <input value={pinUsuario} onChange={(e) => setPinUsuario(e.target.value)} placeholder="Nuevo PIN (4 a 8 dígitos)" inputMode="numeric" pattern="\d{4,8}" minLength={4} maxLength={8} title="Entre 4 y 8 dígitos" required />
               <button type="submit">Actualizar PIN</button>
             </form>
 

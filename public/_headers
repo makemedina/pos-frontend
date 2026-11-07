@@ -1,0 +1,9 @@
+# Cabeceras de seguridad para Cloudflare Pages (SOC 2 CC6.6 / ISO 27001 A.8.9).
+# Sin Content-Security-Policy todavia: la app carga el SDK de Meta (Conectar
+# WhatsApp) y fotos de R2; una CSP mal hecha rompe pantallas. Ver SEGURIDAD.md.
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), payment=(), usb=(), camera=(self), bluetooth=(self)
