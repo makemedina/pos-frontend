@@ -35,6 +35,7 @@ import { AdminCuentasPorPagar } from './AdminCuentasPorPagar';
 import { AdminFacturasPendientes } from './AdminFacturasPendientes';
 import { AdminHistorialCompras } from './AdminHistorialCompras';
 import { AdminUsuarios } from './AdminUsuarios';
+import { AdminCategoriasGasto } from './AdminCategoriasGasto';
 import { AdminHerramientas } from './AdminHerramientas';
 import { AdminBackups } from './AdminBackups';
 import { AdminWhatsapp } from './AdminWhatsapp';
@@ -86,6 +87,7 @@ type Pantalla =
   | 'proveedoresMenu'
   | 'usuarios'
   | 'gastos'
+  | 'categoriasGasto'
   | 'depositos'
   | 'corte'
   | 'dashboard'
@@ -172,6 +174,7 @@ const SECCION_DE_PANTALLA: Partial<Record<Pantalla, Pantalla>> = {
   herramientas: 'configuracionMenu',
   respaldos: 'configuracionMenu',
   whatsapp: 'configuracionMenu',
+  categoriasGasto: 'configuracionMenu',
 };
 
 function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
@@ -195,6 +198,7 @@ function puedeVer(pantalla: Pantalla, usuario: UsuarioSesion): boolean {
       return false; // solo administrador
     case 'configuracion':
     case 'herramientas':
+    case 'categoriasGasto':
       return false; // solo administrador
     case 'configuracionRecibo':
     case 'configuracionImpresora':
@@ -831,6 +835,7 @@ export default function App() {
           ? [
               { pantalla: 'respaldos' as Pantalla, icono: 'respaldo' as NombreIcono, titulo: 'Respaldos', descripcion: 'Crear, descargar y restaurar respaldos', clase: 'boton-flotante-ajuste' },
               { pantalla: 'whatsapp' as Pantalla, icono: 'telefono' as NombreIcono, titulo: 'Conectar WhatsApp', descripcion: 'Saber qué anuncio trajo cada venta', clase: 'boton-flotante-ajuste' },
+              { pantalla: 'categoriasGasto' as Pantalla, icono: 'etiqueta' as NombreIcono, titulo: 'Categorías y automóviles', descripcion: 'Subcategorías de gasto y vehículos del negocio', clase: 'boton-flotante-gastos' },
             ]
           : []),
       ]);
@@ -893,7 +898,16 @@ export default function App() {
       return <AdminProspeccion onCerrar={volverAlInicio} />;
     }
     if (pantallaActiva === 'gastos') {
-      return <AdminGastos onCerrar={() => abrirPantalla('finanzasMenu')} esAdmin={usuario.rolBase === 'administrador'} />;
+      return (
+        <AdminGastos
+          onCerrar={() => abrirPantalla('finanzasMenu')}
+          esAdmin={usuario.rolBase === 'administrador'}
+          onAbrirCategorias={() => abrirPantalla('categoriasGasto')}
+        />
+      );
+    }
+    if (pantallaActiva === 'categoriasGasto') {
+      return <AdminCategoriasGasto onCerrar={() => abrirPantalla('configuracionMenu')} />;
     }
     if (pantallaActiva === 'depositos') {
       return <AdminDepositos onCerrar={() => abrirPantalla('finanzasMenu')} />;

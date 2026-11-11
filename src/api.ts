@@ -1764,10 +1764,80 @@ export async function obtenerHistorialCompras(filtros: FiltrosHistorialCompras):
 
 // ---------- GASTOS (reporte) ----------
 
+export type UsoAutomovil = 'no' | 'opcional' | 'obligatorio';
+
 export interface CategoriaGasto {
   id: string;
   nombre: string;
   departamento: string;
+  activa?: boolean;
+  // Si al registrar un gasto en esta subcategoria se pide el automovil.
+  usoAutomovil?: UsoAutomovil;
+  _count?: { gastos: number };
+}
+
+export interface Automovil {
+  id: string;
+  nombre: string;
+  placas: string | null;
+  activo: boolean;
+  _count?: { gastos: number };
+}
+
+export function nombreAutomovil(a: { nombre: string; placas: string | null }) {
+  return a.placas ? `${a.nombre} (${a.placas})` : a.nombre;
+}
+
+export async function listarAutomoviles(): Promise<Automovil[]> {
+  const res = await fetch(`${API_URL}/automoviles`, { headers: headerAuth() });
+  return manejarRespuesta(res);
+}
+
+export async function crearAutomovil(nombre: string, placas: string): Promise<Automovil> {
+  const res = await fetch(`${API_URL}/automoviles`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ nombre, placas }),
+  });
+  return manejarRespuesta(res);
+}
+
+export async function actualizarAutomovil(
+  id: string,
+  cambios: { nombre?: string; placas?: string; activo?: boolean }
+): Promise<Automovil> {
+  const res = await fetch(`${API_URL}/automoviles/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(cambios),
+  });
+  return manejarRespuesta(res);
+}
+
+export async function listarCategoriasGasto(): Promise<CategoriaGasto[]> {
+  const res = await fetch(`${API_URL}/gastos/categorias`, { headers: headerAuth() });
+  return manejarRespuesta(res);
+}
+
+export async function crearCategoriaGasto(nombre: string, departamento: string): Promise<CategoriaGasto> {
+  const res = await fetch(`${API_URL}/gastos/categorias`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify({ nombre, departamento }),
+  });
+  return manejarRespuesta(res);
+}
+
+export async function actualizarCategoriaGasto(
+  id: string,
+  cambios: { nombre?: string; departamento?: string; activa?: boolean; usoAutomovil?: UsoAutomovil }
+): Promise<CategoriaGasto> {
+  const res = await fetch(`${API_URL}/gastos/categorias/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...headerAuth() },
+    body: JSON.stringify(cambios),
+  });
+  return manejarRespuesta(res);
 }
 
 export interface GastoHistorial {
@@ -1778,6 +1848,7 @@ export interface GastoHistorial {
   fecha: string;
   categoria: CategoriaGasto;
   proveedor: { id: string; nombre: string } | null;
+  automovil: { id: string; nombre: string; placas: string | null } | null;
   registradoPor: { nombre: string };
   cancelado: boolean;
   canceladoEn: string | null;
@@ -1791,6 +1862,7 @@ export interface FiltrosHistorialGastos {
   categoriaId?: string;
   proveedorId?: string;
   metodoPago?: string;
+  automovilId?: string;
 }
 
 export async function obtenerGastos(filtros: FiltrosHistorialGastos = {}): Promise<GastoHistorial[]> {
@@ -1801,6 +1873,7 @@ export async function obtenerGastos(filtros: FiltrosHistorialGastos = {}): Promi
   if (filtros.categoriaId) params.set('categoriaId', filtros.categoriaId);
   if (filtros.proveedorId) params.set('proveedorId', filtros.proveedorId);
   if (filtros.metodoPago) params.set('metodoPago', filtros.metodoPago);
+  if (filtros.automovilId) params.set('automovilId', filtros.automovilId);
 
   const res = await fetch(`${API_URL}/gastos?${params.toString()}`, { headers: headerAuth() });
   if (!res.ok) {
@@ -1825,6 +1898,7 @@ export async function editarGasto(
   cambios: {
     categoriaId?: string;
     proveedorId?: string | null;
+    automovilId?: string | null;
     concepto?: string;
     monto?: number;
     metodoPago?: string;

@@ -8,29 +8,23 @@ import {
   crearProveedorRapido,
   obtenerGastos,
   editarGasto,
+  listarAutomoviles,
+  nombreAutomovil,
+  type Automovil,
   type Proveedor,
   type CategoriaGasto,
   type GastoHistorial,
 } from './api';
 import { exportarAExcel, numeroSemana } from './exportarExcel';
+import { DEPARTAMENTOS, ESTILO_DEPARTAMENTO } from './categoriasGasto';
 
 type Gasto = GastoHistorial;
 
 interface Props {
   onCerrar: () => void;
   esAdmin: boolean;
+  onAbrirCategorias?: () => void;
 }
-
-// Categorias principales del gasto (en la base es CategoriaGasto.departamento;
-// la subcategoria es CategoriaGasto.nombre).
-const DEPARTAMENTOS = ['Administrativos', 'Operativos', 'Financieros', 'Recursos Humanos'];
-
-const ESTILO_DEPARTAMENTO: Record<string, { icono: NombreIcono; color: string }> = {
-  Administrativos: { icono: 'documento', color: '#3f6b73' },
-  Operativos: { icono: 'herramientas', color: '#ab6f47' },
-  Financieros: { icono: 'banco', color: '#b8892f' },
-  'Recursos Humanos': { icono: 'usuario', color: '#6b7f4e' },
-};
 
 const METODOS_PAGO: { valor: string; titulo: string; descripcion: string; icono: NombreIcono; color: string }[] = [
   { valor: 'efectivo', titulo: 'Efectivo', descripcion: 'Sale de la caja', icono: 'cartera', color: '#4f7a5f' },
@@ -39,8 +33,9 @@ const METODOS_PAGO: { valor: string; titulo: string; descripcion: string; icono:
 ];
 
 // Pasos del registro de un gasto, en orden.
-type PasoRegistro = 'categoria' | 'subcategoria' | 'importe' | 'concepto' | 'metodo' | 'comprobante';
-const PASOS: PasoRegistro[] = ['categoria', 'subcategoria', 'importe', 'concepto', 'metodo', 'comprobante'];
+// 'automovil' solo aparece si la subcategoria lo pide (ver usoAutomovil).
+type PasoRegistro = 'categoria' | 'subcategoria' | 'automovil' | 'importe' | 'concepto' | 'metodo' | 'comprobante';
+const PASOS: PasoRegistro[] = ['categoria', 'subcategoria', 'automovil', 'importe', 'concepto', 'metodo', 'comprobante'];
 
 function nombreMetodo(valor: string) {
   return METODOS_PAGO.find((m) => m.valor === valor)?.titulo ?? valor;
@@ -68,7 +63,7 @@ function formatDateInput(date: Date) {
 
 const CARD = { border: 'none', boxShadow: 'var(--sombra-tarjeta)', padding: '0.75rem', borderRadius: 14 };
 
-export function AdminGastos({ onCerrar, esAdmin }: Props) {
+export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
   const [categorias, setCategorias] = useState<CategoriaGasto[]>([]);
   const [gastos, setGastos] = useState<Gasto[]>([]);
   const [concepto, setConcepto] = useState('');
@@ -95,6 +90,10 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
   // 'menu' = los dos botones (Registrar / Histórico) al entrar a Gastos.
   const [pestana, setPestana] = useState<'menu' | 'registrar' | 'historico'>('menu');
   const [paso, setPaso] = useState<PasoRegistro>('categoria');
+  const [automoviles, setAutomoviles] = useState<Automovil[]>([]);
+  const [automovilId, setAutomovilId] = useState('');
+  const [automovilFiltro, setAutomovilFiltro] = useState('');
+  const [editAutomovilId, setEditAutomovilId] = useState('');
   const [departamento, setDepartamento] = useState('');
   const [busquedaGasto, setBusquedaGasto] = useState('');
 
@@ -127,12 +126,15 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
 
   useEffect(() => {
     cargarCategorias();
+    listarAutomoviles()
+      .then(setAutomoviles)
+      .catch(() => setMensaje('No se pudo cargar la lista de automóviles.'));
   }, []);
 
   useEffect(() => {
     cargarHistorial();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [periodo, desde, hasta, categoriaFiltro, metodoPagoFiltro, proveedorFiltro]);
+  }, [periodo, desde, hasta, categoriaFiltro, metodoPagoFiltro, proveedorFiltro, automovilFiltro]);
 
   async function cargarCategorias() {
     try {
@@ -154,6 +156,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
         categoriaId: categoriaFiltro || undefined,
         proveedorId: proveedorFiltro?.id,
         metodoPago: metodoPagoFiltro || undefined,
+        automovilId: automovilFiltro || undefined,
       });
       setGastos(data);
     } catch {
@@ -273,6 +276,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
     setEditMonto(String(gasto.monto));
     setEditMetodoPago(gasto.metodoPago);
     setEditCategoriaId(gasto.categoria.id);
+    setEditAutomovilId(gasto.automovil?.id ?? '');
     setEditFecha(formatDateInput(new Date(gasto.fecha)));
   }
 
@@ -288,6 +292,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
         monto: Number(editMonto),
         metodoPago: editMetodoPago,
         categoriaId: editCategoriaId,
+        automovilId: usoAutoEdicion === 'no' ? null : editAutomovilId || null,
         fecha: editFecha,
       });
       setMensaje(`Gasto actualizado.${avisoCortesRecalculados(resultado.cortesRecalculados ?? [])}`);
@@ -324,6 +329,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
       const cuerpo = new FormData();
       cuerpo.append('categoriaId', categoriaId);
       if (proveedorElegido) cuerpo.append('proveedorId', proveedorElegido.id);
+      if (usoAuto !== 'no' && automovilId) cuerpo.append('automovilId', automovilId);
       cuerpo.append('concepto', concepto);
       cuerpo.append('monto', monto);
       cuerpo.append('metodoPago', metodoPago);
@@ -359,6 +365,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
     setPaso('categoria');
     setDepartamento('');
     setCategoriaId('');
+    setAutomovilId('');
     setConcepto('');
     setMonto('');
     setMetodoPago('efectivo');
@@ -377,13 +384,13 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
   }
 
   function pasoAnterior() {
-    const i = PASOS.indexOf(paso);
-    if (i === 0) {
+    const i = pasosActivos.indexOf(paso);
+    if (i <= 0) {
       setPestana('menu');
       return;
     }
     setMostrarNuevaCategoria(false);
-    setPaso(PASOS[i - 1]);
+    setPaso(pasosActivos[i - 1]);
   }
 
   function siguienteDesde(e: React.FormEvent, valido: boolean, mensajeError: string, siguiente: PasoRegistro) {
@@ -426,6 +433,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
           Categoria: g.categoria.nombre,
           Departamento: g.categoria.departamento,
           Proveedor: g.proveedor?.nombre || '',
+          Automovil: g.automovil ? nombreAutomovil(g.automovil) : '',
           Monto: Number(g.monto),
           'Metodo de pago': g.metodoPago,
           'Registrado por': g.registradoPor.nombre,
@@ -440,8 +448,14 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
   }
 
   const categoriaElegida = categorias.find((c) => c.id === categoriaId);
-  const subcategorias = categorias.filter((c) => c.departamento === departamento);
-  const numeroPaso = PASOS.indexOf(paso) + 1;
+  // Las subcategorias ocultas (activa = false) no se ofrecen para gastos nuevos.
+  const subcategorias = categorias.filter((c) => c.departamento === departamento && c.activa !== false);
+  const usoAuto = categoriaElegida?.usoAutomovil ?? 'no';
+  const pasosActivos = PASOS.filter((p) => p !== 'automovil' || usoAuto !== 'no');
+  const numeroPaso = pasosActivos.indexOf(paso) + 1;
+  const automovilesActivos = automoviles.filter((a) => a.activo);
+  const automovilElegido = automoviles.find((a) => a.id === automovilId);
+  const usoAutoEdicion = categorias.find((c) => c.id === editCategoriaId)?.usoAutomovil ?? 'no';
 
   const categoriasPorDepartamento = categorias.reduce<Record<string, CategoriaGasto[]>>((acc, c) => {
     (acc[c.departamento] ??= []).push(c);
@@ -454,7 +468,8 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
     return (
       g.concepto.toLowerCase().includes(q) ||
       g.categoria.nombre.toLowerCase().includes(q) ||
-      (g.proveedor?.nombre || '').toLowerCase().includes(q)
+      (g.proveedor?.nombre || '').toLowerCase().includes(q) ||
+      (g.automovil?.nombre || '').toLowerCase().includes(q)
     );
   });
 
@@ -497,6 +512,15 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                 <p className="descripcion-menu">Ver, filtrar, editar y exportar gastos</p>
               </div>
             </div>
+            {esAdmin && onAbrirCategorias && (
+              <div className="tarjeta-menu" onClick={onAbrirCategorias}>
+                <div className="icono-menu" style={{ background: '#64748b' }}><Icono nombre="etiqueta" size={22} /></div>
+                <div>
+                  <p className="titulo-menu">Categorías y automóviles</p>
+                  <p className="descripcion-menu">Subcategorías de gasto y vehículos del negocio</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -512,13 +536,14 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
               <button type="button" className="boton-secundario" onClick={pasoAnterior} style={{ width: 'auto', marginTop: 0 }}>
                 ← Atrás
               </button>
-              <small className="t-tenue">Paso {numeroPaso} de {PASOS.length}</small>
+              <small className="t-tenue">Paso {numeroPaso} de {pasosActivos.length}</small>
             </div>
 
             {/* Lo que ya se eligio, para no perder de vista el gasto */}
             {paso !== 'categoria' && (
               <div className="t-tenue-12" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
                 <span><strong>{departamento}</strong>{categoriaElegida && paso !== 'subcategoria' ? ` › ${categoriaElegida.nombre}` : ''}</span>
+                {automovilElegido && PASOS.indexOf(paso) > PASOS.indexOf('automovil') && <span>{nombreAutomovil(automovilElegido)}</span>}
                 {monto && PASOS.indexOf(paso) > PASOS.indexOf('importe') && <span>{formatoMoneda(Number(monto))}</span>}
                 {concepto && PASOS.indexOf(paso) > PASOS.indexOf('concepto') && <span>{concepto}</span>}
                 {paso === 'comprobante' && <span>{nombreMetodo(metodoPago)}</span>}
@@ -563,7 +588,8 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                           className="resultado-cliente"
                           onClick={() => {
                             setCategoriaId(c.id);
-                            setPaso('importe');
+                            setAutomovilId('');
+                            setPaso((c.usoAutomovil ?? 'no') === 'no' ? 'importe' : 'automovil');
                           }}
                         >
                           {c.nombre}
@@ -588,6 +614,50 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                       <button type="button" onClick={() => setMostrarNuevaCategoria(false)}>Cancelar</button>
                     </div>
                   </div>
+                )}
+              </>
+            )}
+
+            {paso === 'automovil' && (
+              <>
+                <h3>{categoriaElegida?.nombre === 'Mantenimiento y reparaciones' ? '¿A qué vehículo se le hizo?' : '¿De qué automóvil es el gasto?'}</h3>
+                <div role="listbox" aria-label="Automóviles" className="grid-gap-8">
+                  {automovilesActivos.map((a) => (
+                    <div
+                      key={a.id}
+                      role="option"
+                      aria-selected={a.id === automovilId}
+                      className="resultado-cliente"
+                      onClick={() => {
+                        setAutomovilId(a.id);
+                        setPaso('importe');
+                      }}
+                    >
+                      <strong>{a.nombre}</strong>
+                      {a.placas && <span className="t-tenue"> · {a.placas}</span>}
+                    </div>
+                  ))}
+                  {usoAuto === 'opcional' && (
+                    <div
+                      role="option"
+                      aria-selected={false}
+                      className="resultado-cliente"
+                      onClick={() => {
+                        setAutomovilId('');
+                        setPaso('importe');
+                      }}
+                    >
+                      <span className="t-tenue">No es de un vehículo</span>
+                    </div>
+                  )}
+                </div>
+                {automovilesActivos.length === 0 && (
+                  <p className="t-tenue">
+                    No hay automóviles dados de alta.{' '}
+                    {esAdmin
+                      ? 'Agrégalos en Configuración → Categorías y automóviles.'
+                      : 'Pídele al administrador que los agregue.'}
+                  </p>
                 )}
               </>
             )}
@@ -775,6 +845,18 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                     <option value="tarjeta">Tarjeta</option>
                   </select>
                 </label>
+
+                {automoviles.length > 0 && (
+                  <label className="grid-gap-025">
+                    <span>Automóvil</span>
+                    <select value={automovilFiltro} onChange={(e) => setAutomovilFiltro(e.target.value)}>
+                      <option value="">Todos</option>
+                      {automoviles.map((a) => (
+                        <option key={a.id} value={a.id}>{nombreAutomovil(a)}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
               </div>
 
               <div>
@@ -862,6 +944,19 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                           </optgroup>
                         ))}
                       </select>
+                      {usoAutoEdicion !== 'no' && (
+                        <>
+                          <label className="etiqueta">Automóvil</label>
+                          <select value={editAutomovilId} onChange={(e) => setEditAutomovilId(e.target.value)}>
+                            <option value="">{usoAutoEdicion === 'opcional' ? 'No es de un vehículo' : 'Elige un automóvil'}</option>
+                            {automoviles
+                              .filter((a) => a.activo || a.id === editAutomovilId)
+                              .map((a) => (
+                                <option key={a.id} value={a.id}>{nombreAutomovil(a)}</option>
+                              ))}
+                          </select>
+                        </>
+                      )}
                       <label className="etiqueta">Día en que se aplica el gasto</label>
                       <input type="date" value={editFecha} onChange={(e) => setEditFecha(e.target.value)} />
                       <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
@@ -880,6 +975,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                           <strong>{gasto.concepto}</strong>
                           <div>{gasto.categoria.nombre}</div>
                           {gasto.proveedor && <div className="t-tenue-12">Proveedor: {gasto.proveedor.nombre}</div>}
+                          {gasto.automovil && <div className="t-tenue-12">Automóvil: {nombreAutomovil(gasto.automovil)}</div>}
                           <div className="t-tenue-12">{formatoFecha(new Date(gasto.fecha))}</div>
                         </div>
                         <div className="t-der">
