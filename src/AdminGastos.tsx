@@ -1,4 +1,4 @@
-import { Icono } from './iconos';
+import { Icono, type NombreIcono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import {
@@ -21,7 +21,30 @@ interface Props {
   esAdmin: boolean;
 }
 
-const DEPARTAMENTOS = ['Operativos', 'Administrativos', 'Recursos Humanos', 'Financieros'];
+// Categorias principales del gasto (en la base es CategoriaGasto.departamento;
+// la subcategoria es CategoriaGasto.nombre).
+const DEPARTAMENTOS = ['Administrativos', 'Operativos', 'Financieros', 'Recursos Humanos'];
+
+const ESTILO_DEPARTAMENTO: Record<string, { icono: NombreIcono; color: string }> = {
+  Administrativos: { icono: 'documento', color: '#3f6b73' },
+  Operativos: { icono: 'herramientas', color: '#ab6f47' },
+  Financieros: { icono: 'banco', color: '#b8892f' },
+  'Recursos Humanos': { icono: 'usuario', color: '#6b7f4e' },
+};
+
+const METODOS_PAGO: { valor: string; titulo: string; descripcion: string; icono: NombreIcono; color: string }[] = [
+  { valor: 'efectivo', titulo: 'Efectivo', descripcion: 'Sale de la caja', icono: 'cartera', color: '#4f7a5f' },
+  { valor: 'transferencia', titulo: 'Transferencia', descripcion: 'Sale del banco', icono: 'banco', color: '#3f6b73' },
+  { valor: 'tarjeta', titulo: 'Tarjeta', descripcion: 'Sale del banco', icono: 'tarjeta', color: '#5b6b9a' },
+];
+
+// Pasos del registro de un gasto, en orden.
+type PasoRegistro = 'categoria' | 'subcategoria' | 'importe' | 'concepto' | 'metodo' | 'comprobante';
+const PASOS: PasoRegistro[] = ['categoria', 'subcategoria', 'importe', 'concepto', 'metodo', 'comprobante'];
+
+function nombreMetodo(valor: string) {
+  return METODOS_PAGO.find((m) => m.valor === valor)?.titulo ?? valor;
+}
 
 type Periodo =
   | 'dia'
@@ -68,9 +91,11 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
 
   const [mostrarNuevaCategoria, setMostrarNuevaCategoria] = useState(false);
   const [nombreCategoriaNueva, setNombreCategoriaNueva] = useState('');
-  const [departamentoNuevo, setDepartamentoNuevo] = useState(DEPARTAMENTOS[0]);
 
-  const [pestana, setPestana] = useState<'registrar' | 'historico'>('registrar');
+  // 'menu' = los dos botones (Registrar / Histórico) al entrar a Gastos.
+  const [pestana, setPestana] = useState<'menu' | 'registrar' | 'historico'>('menu');
+  const [paso, setPaso] = useState<PasoRegistro>('categoria');
+  const [departamento, setDepartamento] = useState('');
   const [busquedaGasto, setBusquedaGasto] = useState('');
 
   // Reporte de gastos (pestaña Histórico): mismo patrón de filtros que
@@ -114,9 +139,6 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
       const res = await fetch(`${API_URL}/gastos/categorias`, { headers: headerAuth() });
       const categoriasData = await res.json();
       setCategorias(categoriasData);
-      if (categoriasData[0] && !categoriasData.some((c: CategoriaGasto) => c.id === categoriaId)) {
-        setCategoriaId(categoriasData[0].id);
-      }
     } catch {
       setMensaje('No se pudo cargar las categorías de gasto');
     }
@@ -184,12 +206,12 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
   }
 
   async function crearCategoriaNueva() {
-    if (!nombreCategoriaNueva.trim()) return;
+    if (!nombreCategoriaNueva.trim() || !departamento) return;
     try {
       const res = await fetch(`${API_URL}/gastos/categorias`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...headerAuth() },
-        body: JSON.stringify({ nombre: nombreCategoriaNueva.trim(), departamento: departamentoNuevo }),
+        body: JSON.stringify({ nombre: nombreCategoriaNueva.trim(), departamento }),
       });
       if (!res.ok) throw new Error();
       const nueva = await res.json();
@@ -197,6 +219,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
       setCategoriaId(nueva.id);
       setNombreCategoriaNueva('');
       setMostrarNuevaCategoria(false);
+      setPaso('importe');
     } catch {
       setMensaje('No se pudo crear la categoría.');
     }
@@ -317,8 +340,8 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'No se pudo guardar');
       setMensaje(`Gasto registrado.${avisoCortesRecalculados([data.corteRecalculado])}`);
-      setConcepto('');
-      setMonto('');
+      reiniciarRegistro();
+      setPestana('menu');
       setFecha(formatDateInput(new Date()));
       setProveedorElegido(null);
       if (previaFoto) URL.revokeObjectURL(previaFoto);
@@ -330,6 +353,47 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
     } finally {
       setGuardando(false);
     }
+  }
+
+  function reiniciarRegistro() {
+    setPaso('categoria');
+    setDepartamento('');
+    setCategoriaId('');
+    setConcepto('');
+    setMonto('');
+    setMetodoPago('efectivo');
+    setFecha(formatDateInput(new Date()));
+    setProveedorElegido(null);
+    setMostrarNuevaCategoria(false);
+    setNombreCategoriaNueva('');
+    if (previaFoto) URL.revokeObjectURL(previaFoto);
+    setFotoComprobante(null);
+    setPreviaFoto(null);
+  }
+
+  function empezarRegistro() {
+    reiniciarRegistro();
+    setPestana('registrar');
+  }
+
+  function pasoAnterior() {
+    const i = PASOS.indexOf(paso);
+    if (i === 0) {
+      setPestana('menu');
+      return;
+    }
+    setMostrarNuevaCategoria(false);
+    setPaso(PASOS[i - 1]);
+  }
+
+  function siguienteDesde(e: React.FormEvent, valido: boolean, mensajeError: string, siguiente: PasoRegistro) {
+    e.preventDefault();
+    if (!valido) {
+      setMensaje(mensajeError);
+      return;
+    }
+    setMensaje(null);
+    setPaso(siguiente);
   }
 
   async function verComprobante(gastoId: string) {
@@ -375,6 +439,10 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
     }
   }
 
+  const categoriaElegida = categorias.find((c) => c.id === categoriaId);
+  const subcategorias = categorias.filter((c) => c.departamento === departamento);
+  const numeroPaso = PASOS.indexOf(paso) + 1;
+
   const categoriasPorDepartamento = categorias.reduce<Record<string, CategoriaGasto[]>>((acc, c) => {
     (acc[c.departamento] ??= []).push(c);
     return acc;
@@ -413,149 +481,241 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
 
         {mensaje && <div className="banner-mensaje" onClick={() => setMensaje(null)}>{mensaje}</div>}
 
-        <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid var(--ios-separator)' }}>
-          {(['registrar', 'historico'] as const).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPestana(p)}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: '8px 4px',
-                borderBottom: pestana === p ? '2px solid var(--acento)' : '2px solid transparent',
-                fontWeight: pestana === p ? 700 : 400,
-                color: pestana === p ? 'var(--acento)' : 'var(--texto-fuerte)',
-              }}
-            >
-              {p === 'registrar' ? 'Registrar' : 'Histórico'}
-            </button>
-          ))}
-        </div>
+        {pestana === 'menu' && (
+          <div className="grid-menu">
+            <div className="tarjeta-menu" onClick={empezarRegistro}>
+              <div className="icono-menu" style={{ background: '#b8892f' }}><Icono nombre="cartera" size={22} /></div>
+              <div>
+                <p className="titulo-menu">Registrar gasto</p>
+                <p className="descripcion-menu">Capturar un gasto nuevo paso a paso</p>
+              </div>
+            </div>
+            <div className="tarjeta-menu" onClick={() => setPestana('historico')}>
+              <div className="icono-menu" style={{ background: '#8a5a6e' }}><Icono nombre="reloj" size={22} /></div>
+              <div>
+                <p className="titulo-menu">Histórico de gastos</p>
+                <p className="descripcion-menu">Ver, filtrar, editar y exportar gastos</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {pestana === 'historico' && (
+          <button type="button" className="boton-secundario" onClick={() => setPestana('menu')} style={{ width: 'auto', marginTop: 0, justifySelf: 'start' }}>
+            ← Gastos
+          </button>
+        )}
 
         {pestana === 'registrar' && (
-          <form onSubmit={handleSubmit} className="tarjeta-grid-075">
-            <h3>Registrar gasto</h3>
-            <input value={concepto} onChange={(e) => setConcepto(e.target.value)} placeholder="Concepto" required />
-            <input value={monto} onChange={(e) => setMonto(e.target.value)} type="number" step="0.01" placeholder="Monto" required />
-            <select value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)}>
-              <option value="efectivo">Efectivo</option>
-              <option value="transferencia">Transferencia</option>
-            </select>
+          <div className="tarjeta-grid-075">
+            <div className="fila-entre-centro">
+              <button type="button" className="boton-secundario" onClick={pasoAnterior} style={{ width: 'auto', marginTop: 0 }}>
+                ← Atrás
+              </button>
+              <small className="t-tenue">Paso {numeroPaso} de {PASOS.length}</small>
+            </div>
 
-            {esAdmin && (
-              <>
-                <label className="etiqueta">Día en que se aplica el gasto</label>
-                <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
-              </>
+            {/* Lo que ya se eligio, para no perder de vista el gasto */}
+            {paso !== 'categoria' && (
+              <div className="t-tenue-12" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px' }}>
+                <span><strong>{departamento}</strong>{categoriaElegida && paso !== 'subcategoria' ? ` › ${categoriaElegida.nombre}` : ''}</span>
+                {monto && PASOS.indexOf(paso) > PASOS.indexOf('importe') && <span>{formatoMoneda(Number(monto))}</span>}
+                {concepto && PASOS.indexOf(paso) > PASOS.indexOf('concepto') && <span>{concepto}</span>}
+                {paso === 'comprobante' && <span>{nombreMetodo(metodoPago)}</span>}
+              </div>
             )}
 
-            <label className="etiqueta">Categoría</label>
-            {!mostrarNuevaCategoria ? (
+            {paso === 'categoria' && (
               <>
-                <select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
-                  {Object.entries(categoriasPorDepartamento).map(([departamento, cats]) => (
-                    <optgroup key={departamento} label={departamento}>
-                      {cats.map((c) => (
-                        <option key={c.id} value={c.id}>{c.nombre}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-                <button type="button" className="boton-secundario w-100-mt-0" onClick={() => setMostrarNuevaCategoria(true)}>
-                  + Nueva categoría
-                </button>
-              </>
-            ) : (
-              <div className="grid-gap-8">
-                <input
-                  placeholder="Nombre de la categoría"
-                  value={nombreCategoriaNueva}
-                  onChange={(e) => setNombreCategoriaNueva(e.target.value)}
-                />
-                <select value={departamentoNuevo} onChange={(e) => setDepartamentoNuevo(e.target.value)}>
+                <h3>¿En qué categoría va el gasto?</h3>
+                <div className="grid-gap-8">
                   {DEPARTAMENTOS.map((d) => (
-                    <option key={d} value={d}>{d}</option>
+                    <div
+                      key={d}
+                      className="tarjeta-menu"
+                      onClick={() => {
+                        setDepartamento(d);
+                        setCategoriaId('');
+                        setPaso('subcategoria');
+                      }}
+                    >
+                      <div className="icono-menu" style={{ background: ESTILO_DEPARTAMENTO[d]?.color }}>
+                        <Icono nombre={ESTILO_DEPARTAMENTO[d]?.icono ?? 'cartera'} size={22} />
+                      </div>
+                      <p className="titulo-menu">{d}</p>
+                    </div>
                   ))}
-                </select>
-                <div className="fila-gap-8">
-                  <button type="button" onClick={crearCategoriaNueva}>Guardar categoría</button>
-                  <button type="button" onClick={() => setMostrarNuevaCategoria(false)}>Cancelar</button>
                 </div>
-              </div>
+              </>
             )}
 
-            <label className="etiqueta">Proveedor (opcional)</label>
-            {proveedorElegido ? (
-              <div className="cliente-chip">
-                <span>{proveedorElegido.nombre}</span>
-                <button type="button" onClick={() => setProveedorElegido(null)}>Quitar</button>
-              </div>
-            ) : (
+            {paso === 'subcategoria' && (
               <>
-                <input
-                  className="buscador"
-                  placeholder="Buscar proveedor por nombre"
-                  value={busquedaProveedor}
-                  onChange={(e) => buscarProveedor(e.target.value)}
-                />
-                {resultadosProveedor.map((p) => (
-                  <div key={p.id} className="resultado-cliente" onClick={() => elegirProveedor(p)}>
-                    {p.nombre}
+                <h3>Subcategoría de {departamento}</h3>
+                {!mostrarNuevaCategoria ? (
+                  <>
+                    <div role="listbox" aria-label={`Subcategorías de ${departamento}`} className="grid-gap-8">
+                      {subcategorias.map((c) => (
+                        <div
+                          key={c.id}
+                          role="option"
+                          aria-selected={c.id === categoriaId}
+                          className="resultado-cliente"
+                          onClick={() => {
+                            setCategoriaId(c.id);
+                            setPaso('importe');
+                          }}
+                        >
+                          {c.nombre}
+                        </div>
+                      ))}
+                      {subcategorias.length === 0 && <p className="t-tenue">Todavía no hay subcategorías en {departamento}.</p>}
+                    </div>
+                    <button type="button" className="boton-secundario w-100-mt-0" onClick={() => setMostrarNuevaCategoria(true)}>
+                      + Nueva subcategoría
+                    </button>
+                  </>
+                ) : (
+                  <div className="grid-gap-8">
+                    <input
+                      autoFocus
+                      placeholder={`Nombre de la subcategoría (${departamento})`}
+                      value={nombreCategoriaNueva}
+                      onChange={(e) => setNombreCategoriaNueva(e.target.value)}
+                    />
+                    <div className="fila-gap-8">
+                      <button type="button" onClick={crearCategoriaNueva}>Guardar y seguir</button>
+                      <button type="button" onClick={() => setMostrarNuevaCategoria(false)}>Cancelar</button>
+                    </div>
                   </div>
-                ))}
-                {busquedaProveedor.length >= 2 && resultadosProveedor.length === 0 && (
-                  <button type="button" className="boton-secundario w-100-mt-0" onClick={crearProveedorDesdeGasto}>
-                    + Agregar "{busquedaProveedor}" como proveedor nuevo
-                  </button>
                 )}
               </>
             )}
 
-            <label className="etiqueta">Foto del comprobante (obligatoria)</label>
-            {/* El <input type="file"> nativo queda oculto y se dispara desde
-                este botón grande de verdad -- en computadora el input solo
-                se ve como un texto gris chiquito ("Seleccionar archivo") que
-                es facil no notar; asi siempre hay algo obviamente clickeable
-                sin importar el navegador. Sin "capture": en celular el
-                navegador ofrece elegir entre tomar foto o subir de la
-                galeria, en vez de forzar la camara. */}
-            <label
-              htmlFor="foto-comprobante-gasto"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                border: '2px dashed var(--ios-gray-3)',
-                borderRadius: 12,
-                padding: '1.25rem',
-                cursor: 'pointer',
-                color: 'var(--acento)',
-                fontWeight: 600,
-                textAlign: 'center',
-              }}
-            >
-              {fotoComprobante ? <><Icono nombre="adjunto" size={16} /> {fotoComprobante.name} (toca para cambiarla)</> : <><Icono nombre="camara" size={16} /> Toca para elegir o tomar la foto</>}
-            </label>
-            <input
-              id="foto-comprobante-gasto"
-              type="file"
-              accept="image/*"
-              onChange={elegirFotoComprobante}
-              style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
-            />
-            {previaFoto && (
-              <img
-                src={previaFoto}
-                alt="Comprobante"
-                style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'contain' }}
-              />
+            {paso === 'importe' && (
+              <form className="grid-gap-8" onSubmit={(e) => siguienteDesde(e, Number(monto) > 0, 'Escribe un importe mayor a cero.', 'concepto')}>
+                <h3>¿Cuál es el importe?</h3>
+                <input autoFocus value={monto} onChange={(e) => setMonto(e.target.value)} type="number" inputMode="decimal" step="0.01" min="0.01" placeholder="$0.00" />
+                <button type="submit">Siguiente</button>
+              </form>
             )}
 
-            <button type="submit" disabled={guardando}>
-              {guardando ? 'Guardando...' : 'Guardar gasto'}
-            </button>
-          </form>
+            {paso === 'concepto' && (
+              <form className="grid-gap-8" onSubmit={(e) => siguienteDesde(e, !!concepto.trim(), 'Escribe el concepto del gasto.', 'metodo')}>
+                <h3>¿Cuál es el concepto?</h3>
+                <input autoFocus value={concepto} onChange={(e) => setConcepto(e.target.value)} placeholder="Ej. Recibo de luz de octubre" />
+                <button type="submit">Siguiente</button>
+              </form>
+            )}
+
+            {paso === 'metodo' && (
+              <>
+                <h3>¿Cómo se pagó?</h3>
+                <div className="grid-gap-8">
+                  {METODOS_PAGO.map((m) => (
+                    <div
+                      key={m.valor}
+                      className="tarjeta-menu"
+                      onClick={() => {
+                        setMetodoPago(m.valor);
+                        setPaso('comprobante');
+                      }}
+                    >
+                      <div className="icono-menu" style={{ background: m.color }}><Icono nombre={m.icono} size={22} /></div>
+                      <div>
+                        <p className="titulo-menu">{m.titulo}</p>
+                        <p className="descripcion-menu">{m.descripcion}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {paso === 'comprobante' && (
+              <form onSubmit={handleSubmit} className="grid-gap-8">
+                <h3>Comprobante y guardar</h3>
+                {esAdmin && (
+                  <>
+                    <label className="etiqueta">Día en que se aplica el gasto</label>
+                    <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+                  </>
+                )}
+
+              <label className="etiqueta">Proveedor (opcional)</label>
+              {proveedorElegido ? (
+                <div className="cliente-chip">
+                  <span>{proveedorElegido.nombre}</span>
+                  <button type="button" onClick={() => setProveedorElegido(null)}>Quitar</button>
+                </div>
+              ) : (
+                <>
+                  <input
+                    className="buscador"
+                    placeholder="Buscar proveedor por nombre"
+                    value={busquedaProveedor}
+                    onChange={(e) => buscarProveedor(e.target.value)}
+                  />
+                  {resultadosProveedor.map((p) => (
+                    <div key={p.id} className="resultado-cliente" onClick={() => elegirProveedor(p)}>
+                      {p.nombre}
+                    </div>
+                  ))}
+                  {busquedaProveedor.length >= 2 && resultadosProveedor.length === 0 && (
+                    <button type="button" className="boton-secundario w-100-mt-0" onClick={crearProveedorDesdeGasto}>
+                      + Agregar "{busquedaProveedor}" como proveedor nuevo
+                    </button>
+                  )}
+                </>
+              )}
+
+              <label className="etiqueta">Foto del comprobante (obligatoria)</label>
+              {/* El <input type="file"> nativo queda oculto y se dispara desde
+                  este botón grande de verdad -- en computadora el input solo
+                  se ve como un texto gris chiquito ("Seleccionar archivo") que
+                  es facil no notar; asi siempre hay algo obviamente clickeable
+                  sin importar el navegador. Sin "capture": en celular el
+                  navegador ofrece elegir entre tomar foto o subir de la
+                  galeria, en vez de forzar la camara. */}
+              <label
+                htmlFor="foto-comprobante-gasto"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  border: '2px dashed var(--ios-gray-3)',
+                  borderRadius: 12,
+                  padding: '1.25rem',
+                  cursor: 'pointer',
+                  color: 'var(--acento)',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                }}
+              >
+                {fotoComprobante ? <><Icono nombre="adjunto" size={16} /> {fotoComprobante.name} (toca para cambiarla)</> : <><Icono nombre="camara" size={16} /> Toca para elegir o tomar la foto</>}
+              </label>
+              <input
+                id="foto-comprobante-gasto"
+                type="file"
+                accept="image/*"
+                onChange={elegirFotoComprobante}
+                style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+              />
+              {previaFoto && (
+                <img
+                  src={previaFoto}
+                  alt="Comprobante"
+                  style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, objectFit: 'contain' }}
+                />
+              )}
+
+                <button type="submit" disabled={guardando}>
+                  {guardando ? 'Guardando...' : 'Guardar gasto'}
+                </button>
+              </form>
+            )}
+          </div>
         )}
 
         {pestana === 'historico' && (
@@ -612,6 +772,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                     <option value="">Todos</option>
                     <option value="efectivo">Efectivo</option>
                     <option value="transferencia">Transferencia</option>
+                    <option value="tarjeta">Tarjeta</option>
                   </select>
                 </label>
               </div>
@@ -689,6 +850,7 @@ export function AdminGastos({ onCerrar, esAdmin }: Props) {
                       <select value={editMetodoPago} onChange={(e) => setEditMetodoPago(e.target.value)}>
                         <option value="efectivo">Efectivo</option>
                         <option value="transferencia">Transferencia</option>
+                        <option value="tarjeta">Tarjeta</option>
                       </select>
                       <label className="etiqueta">Categoría</label>
                       <select value={editCategoriaId} onChange={(e) => setEditCategoriaId(e.target.value)}>
