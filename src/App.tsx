@@ -121,22 +121,23 @@ interface OpcionMenu {
   icono: NombreIcono;
   titulo: string;
   descripcion: string;
-  clase: string;
+  // Color de fondo del icono en el menu ☰ (icono blanco encima).
+  color: string;
 }
 
 // Estas opciones ahora alimentan el menu desplegable (☰) de la pantalla
 // de inicio -- Ventas ya no es un grupo aparte, es la pantalla de inicio
 // misma. Cada una se filtra segun los permisos reales del usuario.
 const OPCIONES_MENU: OpcionMenu[] = [
-  { pantalla: 'inicio', icono: 'ventas', titulo: 'Ventas', descripcion: 'Pantalla principal: ventas y nueva venta', clase: '' },
-  { pantalla: 'clientes', icono: 'clientes', titulo: 'Clientes', descripcion: 'Lista de clientes: alta, edición y datos', clase: 'boton-flotante-cartera' },
-  { pantalla: 'prospectos', icono: 'objetivo', titulo: 'Prospectos', descripcion: 'Posibles clientes: bitácora y seguimientos', clase: 'boton-flotante-cartera' },
-  { pantalla: 'clientesMenu', icono: 'cobranza', titulo: 'Cobranza', descripcion: 'Cartera, notas antiguas, llamadas y pendientes', clase: 'boton-flotante-cartera' },
-  { pantalla: 'proveedoresMenu', icono: 'proveedores', titulo: 'Proveedores', descripcion: 'Compras, facturas y cuentas por pagar', clase: 'boton-flotante-cuentas' },
-  { pantalla: 'inventarioMenu', icono: 'inventario', titulo: 'Inventario', descripcion: 'Productos, stock y movimientos', clase: 'boton-flotante-ajuste' },
-  { pantalla: 'finanzasMenu', icono: 'finanzas', titulo: 'Finanzas', descripcion: 'Corte, gastos y estadísticas', clase: 'boton-flotante-gastos' },
-  { pantalla: 'configuracionMenu', icono: 'configuracion', titulo: 'Configuración', descripcion: 'Negocio, usuarios y herramientas', clase: 'boton-flotante-ajuste' },
-  { pantalla: 'prospeccion', icono: 'prospeccion', titulo: 'Ruta de prospección', descripcion: 'Ruta de prospección y ventas en campo', clase: '' },
+  { pantalla: 'inicio', icono: 'ventas', titulo: 'Ventas', descripcion: 'Pantalla principal: ventas y nueva venta', color: 'var(--acento-solido)' },
+  { pantalla: 'clientes', icono: 'clientes', titulo: 'Clientes', descripcion: 'Lista de clientes: alta, edición y datos', color: '#ab6f47' },
+  { pantalla: 'prospectos', icono: 'objetivo', titulo: 'Prospectos', descripcion: 'Posibles clientes: bitácora y seguimientos', color: '#8a5a6e' },
+  { pantalla: 'clientesMenu', icono: 'cobranza', titulo: 'Cobranza', descripcion: 'Cartera, notas antiguas, llamadas y pendientes', color: '#4f7a5f' },
+  { pantalla: 'proveedoresMenu', icono: 'proveedores', titulo: 'Proveedores', descripcion: 'Compras, facturas y cuentas por pagar', color: '#3f6b73' },
+  { pantalla: 'inventarioMenu', icono: 'inventario', titulo: 'Inventario', descripcion: 'Productos, stock y movimientos', color: '#6b7f4e' },
+  { pantalla: 'finanzasMenu', icono: 'finanzas', titulo: 'Finanzas', descripcion: 'Corte, gastos y estadísticas', color: '#b8892f' },
+  { pantalla: 'configuracionMenu', icono: 'configuracion', titulo: 'Configuración', descripcion: 'Negocio, usuarios y herramientas', color: '#64748b' },
+  { pantalla: 'prospeccion', icono: 'prospeccion', titulo: 'Ruta de prospección', descripcion: 'Ruta de prospección y ventas en campo', color: '#5b6b9a' },
 ];
 
 // A que seccion de OPCIONES_MENU pertenece cada pantalla de detalle -- solo
@@ -1126,7 +1127,7 @@ export default function App() {
               className={`sidebar-desktop-item${seccionActivaSidebar === o.pantalla ? ' activo' : ''}`}
               onClick={() => abrirPantalla(o.pantalla)}
             >
-              <span className="sidebar-desktop-icono"><Icono nombre={o.icono} /></span>
+              <span className="sidebar-desktop-icono" style={{ background: o.color }}><Icono nombre={o.icono} size={16} /></span>
               <span>{o.titulo}</span>
             </div>
           ))}
@@ -1268,7 +1269,21 @@ export default function App() {
                   cursor: 'pointer',
                 }}
               >
-                <Icono nombre={o.icono} />
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 34,
+                    height: 34,
+                    minWidth: 34,
+                    borderRadius: 10,
+                    background: o.color,
+                    color: 'white',
+                  }}
+                >
+                  <Icono nombre={o.icono} size={18} />
+                </span>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14 }}>{o.titulo}</div>
                   <div className="t-tenue-12">{o.descripcion}</div>

@@ -298,7 +298,11 @@ textarea:focus {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 8px;
+    color: white;
   }
 
   .sidebar-desktop-footer {
