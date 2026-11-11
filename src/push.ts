@@ -30,15 +30,32 @@ export async function activarNotificaciones(): Promise<void> {
     throw new Error('No se concedió permiso para mandar notificaciones.');
   }
   const publicKey = await obtenerVapidPublicKey();
+  const llave = urlBase64ToUint8Array(publicKey);
   const reg = await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();
+  // Si el servidor cambio su llave VAPID (rotacion por seguridad), la
+  // suscripcion vieja ya no sirve: se borra en el servidor y en el
+  // navegador, y se crea una nueva con la llave actual.
+  if (sub && !mismaLlave(sub, llave)) {
+    await desuscribirsePush(sub.endpoint).catch(() => {});
+    await sub.unsubscribe().catch(() => {});
+    sub = null;
+  }
   if (!sub) {
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
+      applicationServerKey: llave as BufferSource,
     });
   }
   await suscribirsePush(sub);
+}
+
+function mismaLlave(sub: PushSubscription, llave: Uint8Array): boolean {
+  const actual = sub.options?.applicationServerKey;
+  // Navegadores que no exponen la llave: se asume que es la misma.
+  if (!actual) return true;
+  const bytes = new Uint8Array(actual);
+  return bytes.length === llave.length && bytes.every((b, i) => b === llave[i]);
 }
 
 export async function desactivarNotificaciones(): Promise<void> {
@@ -69,8 +86,10 @@ export async function intentarActivarNotificacionesAutomatico(): Promise<void> {
   if (Notification.permission === 'denied') return;
   try {
     if (Notification.permission === 'granted') {
-      const yaActiva = await notificacionesActivadas();
-      if (!yaActiva) await activarNotificaciones();
+      // Siempre se pasa por activarNotificaciones: si ya hay suscripcion
+      // con la llave correcta solo se re-registra (upsert en el servidor);
+      // si la llave cambio, se renueva sin volver a pedir permiso.
+      await activarNotificaciones();
       return;
     }
     await activarNotificaciones();
