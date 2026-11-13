@@ -787,6 +787,16 @@ export async function buscarProveedores(query: string): Promise<Proveedor[]> {
   return res.json();
 }
 
+// Proveedores ya usados en gastos, del mas usado al menos usado.
+export async function obtenerProveedoresUsadosEnGastos(): Promise<Proveedor[]> {
+  const res = await fetch(`${API_URL}/gastos/proveedores-usados`, { headers: headerAuth() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'No se pudieron cargar los proveedores usados');
+  }
+  return res.json();
+}
+
 export async function crearProveedorRapido(nombre: string, telefono?: string): Promise<Proveedor> {
   const res = await fetch(`${API_URL}/proveedores`, {
     method: 'POST',

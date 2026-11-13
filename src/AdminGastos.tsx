@@ -1,11 +1,12 @@
 import { Icono, type NombreIcono } from './iconos';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
 import {
   headerAuth,
   API_URL,
   buscarProveedores,
   crearProveedorRapido,
+  obtenerProveedoresUsadosEnGastos,
   obtenerGastos,
   editarGasto,
   listarAutomoviles,
@@ -37,6 +38,11 @@ const METODOS_PAGO: { valor: string; titulo: string; descripcion: string; icono:
 // 'automovil' solo aparece si la subcategoria lo pide (ver usoAutomovil).
 type PasoRegistro = 'categoria' | 'subcategoria' | 'automovil' | 'importe' | 'concepto' | 'metodo' | 'comprobante';
 const PASOS: PasoRegistro[] = ['categoria', 'subcategoria', 'automovil', 'importe', 'concepto', 'metodo', 'comprobante'];
+
+// Sin acentos y en minusculas, para buscar "panaderia" y encontrar "Panadería".
+function normalizarTexto(texto: string) {
+  return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
 
 function nombreMetodo(valor: string) {
   return METODOS_PAGO.find((m) => m.valor === valor)?.titulo ?? valor;
@@ -84,6 +90,12 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
   const [busquedaProveedor, setBusquedaProveedor] = useState('');
   const [resultadosProveedor, setResultadosProveedor] = useState<Proveedor[]>([]);
   const [proveedorElegido, setProveedorElegido] = useState<Proveedor | null>(null);
+  // Proveedores ya usados en gastos (los mas usados primero): se sugieren
+  // en la lista desplegable del buscador al capturar un gasto.
+  const [proveedoresUsados, setProveedoresUsados] = useState<Proveedor[]>([]);
+  const [listaProveedorAbierta, setListaProveedorAbierta] = useState(false);
+  const [indiceProveedor, setIndiceProveedor] = useState(0);
+  const ultimaBusquedaProveedor = useRef('');
 
   const [mostrarNuevaCategoria, setMostrarNuevaCategoria] = useState(false);
   const [nombreCategoriaNueva, setNombreCategoriaNueva] = useState('');
@@ -127,6 +139,7 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
 
   useEffect(() => {
     cargarCategorias();
+    cargarProveedoresUsados();
     listarAutomoviles()
       .then(setAutomoviles)
       .catch(() => setMensaje('No se pudo cargar la lista de automóviles.'));
@@ -182,19 +195,35 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
     setBusquedaProveedorFiltro('');
   }
 
+  function cargarProveedoresUsados() {
+    obtenerProveedoresUsadosEnGastos()
+      .then(setProveedoresUsados)
+      .catch(() => setProveedoresUsados([]));
+  }
+
   async function buscarProveedor(valor: string) {
     setBusquedaProveedor(valor);
-    if (valor.length < 2) {
+    setListaProveedorAbierta(true);
+    setIndiceProveedor(0);
+    if (valor.trim().length < 2) {
       setResultadosProveedor([]);
       return;
     }
-    setResultadosProveedor(await buscarProveedores(valor));
+    ultimaBusquedaProveedor.current = valor;
+    try {
+      const encontrados = await buscarProveedores(valor.trim());
+      // Si el usuario siguio tecleando, no pisar con resultados viejos.
+      if (ultimaBusquedaProveedor.current === valor) setResultadosProveedor(encontrados);
+    } catch {
+      setResultadosProveedor([]);
+    }
   }
 
   function elegirProveedor(p: Proveedor) {
     setProveedorElegido(p);
     setResultadosProveedor([]);
     setBusquedaProveedor('');
+    setListaProveedorAbierta(false);
   }
 
   async function crearProveedorDesdeGasto() {
@@ -204,6 +233,7 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
       setProveedorElegido(nuevo);
       setResultadosProveedor([]);
       setBusquedaProveedor('');
+      setListaProveedorAbierta(false);
     } catch {
       setMensaje('No se pudo crear el proveedor.');
     }
@@ -321,6 +351,10 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
       setMensaje('Elige una categoría antes de guardar.');
       return;
     }
+    if (!proveedorElegido) {
+      setMensaje('Elige el proveedor del gasto antes de guardar.');
+      return;
+    }
     if (!fotoComprobante) {
       setMensaje('Sube una foto del comprobante antes de guardar.');
       return;
@@ -329,7 +363,7 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
     try {
       const cuerpo = new FormData();
       cuerpo.append('categoriaId', categoriaId);
-      if (proveedorElegido) cuerpo.append('proveedorId', proveedorElegido.id);
+      cuerpo.append('proveedorId', proveedorElegido.id);
       if (usoAuto !== 'no' && automovilId) cuerpo.append('automovilId', automovilId);
       cuerpo.append('concepto', concepto);
       cuerpo.append('monto', monto);
@@ -355,6 +389,7 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
       setFotoComprobante(null);
       setPreviaFoto(null);
       cargarHistorial();
+      cargarProveedoresUsados();
     } catch (err: any) {
       setMensaje(err.message || 'No se pudo registrar el gasto');
     } finally {
@@ -372,6 +407,9 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
     setMetodoPago('efectivo');
     setFecha(formatDateInput(new Date()));
     setProveedorElegido(null);
+    setBusquedaProveedor('');
+    setResultadosProveedor([]);
+    setListaProveedorAbierta(false);
     setMostrarNuevaCategoria(false);
     setNombreCategoriaNueva('');
     if (previaFoto) URL.revokeObjectURL(previaFoto);
@@ -483,6 +521,22 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
     acc[dep] = (acc[dep] ?? 0) + Number(g.monto);
     return acc;
   }, {});
+
+  // Opciones del buscador de proveedor: primero los ya usados en gastos
+  // (filtrados por lo que se teclea), luego otros proveedores que
+  // coincidan con la busqueda en el servidor.
+  const textoProveedor = normalizarTexto(busquedaProveedor.trim());
+  const usadosFiltrados = proveedoresUsados.filter((p) => normalizarTexto(p.nombre).includes(textoProveedor));
+  const idsUsados = new Set(usadosFiltrados.map((p) => p.id));
+  const opcionesProveedor = [
+    ...usadosFiltrados.map((proveedor) => ({ proveedor, usado: true })),
+    ...(textoProveedor.length >= 2
+      ? resultadosProveedor.filter((p) => !idsUsados.has(p.id) && !proveedoresUsados.some((u) => u.id === p.id)).map((proveedor) => ({ proveedor, usado: false }))
+      : []),
+  ];
+  const puedeAgregarProveedor =
+    textoProveedor.length >= 2 &&
+    ![...proveedoresUsados, ...resultadosProveedor].some((p) => normalizarTexto(p.nombre) === textoProveedor);
 
   return (
     <div className="pantalla-centrada pantalla-arriba">
@@ -713,31 +767,105 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
                   </>
                 )}
 
-              <label className="etiqueta">Proveedor (opcional)</label>
+              <label className="etiqueta">Proveedor (obligatorio)</label>
               {proveedorElegido ? (
                 <div className="cliente-chip">
                   <span>{proveedorElegido.nombre}</span>
-                  <button type="button" onClick={() => setProveedorElegido(null)}>Quitar</button>
+                  <button type="button" onClick={() => setProveedorElegido(null)}>Cambiar</button>
                 </div>
               ) : (
-                <>
+                <div style={{ position: 'relative' }}>
                   <input
                     className="buscador"
-                    placeholder="Buscar proveedor por nombre"
+                    placeholder="Escribe o elige un proveedor"
                     value={busquedaProveedor}
+                    autoComplete="off"
+                    role="combobox"
+                    aria-expanded={listaProveedorAbierta}
+                    onFocus={() => setListaProveedorAbierta(true)}
+                    onBlur={() => setListaProveedorAbierta(false)}
                     onChange={(e) => buscarProveedor(e.target.value)}
+                    onKeyDown={(e) => {
+                      const total = opcionesProveedor.length + (puedeAgregarProveedor ? 1 : 0);
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setListaProveedorAbierta(true);
+                        setIndiceProveedor((i) => Math.min(i + 1, Math.max(total - 1, 0)));
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setIndiceProveedor((i) => Math.max(i - 1, 0));
+                      } else if (e.key === 'Enter') {
+                        // Enter elige la opcion resaltada en vez de mandar el formulario.
+                        e.preventDefault();
+                        if (!listaProveedorAbierta || total === 0) return;
+                        if (indiceProveedor < opcionesProveedor.length) elegirProveedor(opcionesProveedor[indiceProveedor].proveedor);
+                        else crearProveedorDesdeGasto();
+                      } else if (e.key === 'Escape') {
+                        setListaProveedorAbierta(false);
+                      }
+                    }}
                   />
-                  {resultadosProveedor.map((p) => (
-                    <div key={p.id} className="resultado-cliente" onClick={() => elegirProveedor(p)}>
-                      {p.nombre}
+                  {listaProveedorAbierta && (opcionesProveedor.length > 0 || puedeAgregarProveedor) && (
+                    <div
+                      role="listbox"
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        zIndex: 20,
+                        marginTop: 4,
+                        maxHeight: 260,
+                        overflowY: 'auto',
+                        background: 'var(--superficie)',
+                        borderRadius: 12,
+                        boxShadow: '0 6px 24px rgba(0,0,0,0.18)',
+                      }}
+                    >
+                      {opcionesProveedor.map((o, i) => (
+                        <div key={o.proveedor.id}>
+                          {(i === 0 || opcionesProveedor[i - 1].usado !== o.usado) && (
+                            <div style={{ padding: '6px 12px 2px', fontSize: 11, opacity: 0.6, textTransform: 'uppercase' }}>
+                              {o.usado ? 'Usados anteriormente' : 'Otros proveedores'}
+                            </div>
+                          )}
+                          <div
+                            role="option"
+                            aria-selected={i === indiceProveedor}
+                            className="resultado-cliente"
+                            style={i === indiceProveedor ? { background: 'var(--ios-gray-fill)' } : undefined}
+                            // onMouseDown para elegir antes de que el blur cierre la lista.
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              elegirProveedor(o.proveedor);
+                            }}
+                            onMouseEnter={() => setIndiceProveedor(i)}
+                          >
+                            {o.proveedor.nombre}
+                          </div>
+                        </div>
+                      ))}
+                      {puedeAgregarProveedor && (
+                        <div
+                          role="option"
+                          aria-selected={indiceProveedor === opcionesProveedor.length}
+                          className="resultado-cliente"
+                          style={{
+                            fontWeight: 600,
+                            ...(indiceProveedor === opcionesProveedor.length ? { background: 'var(--ios-gray-fill)' } : {}),
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            crearProveedorDesdeGasto();
+                          }}
+                          onMouseEnter={() => setIndiceProveedor(opcionesProveedor.length)}
+                        >
+                          + Agregar "{busquedaProveedor.trim()}" como proveedor nuevo
+                        </div>
+                      )}
                     </div>
-                  ))}
-                  {busquedaProveedor.length >= 2 && resultadosProveedor.length === 0 && (
-                    <button type="button" className="boton-secundario w-100-mt-0" onClick={crearProveedorDesdeGasto}>
-                      + Agregar "{busquedaProveedor}" como proveedor nuevo
-                    </button>
                   )}
-                </>
+                </div>
               )}
 
               <label className="etiqueta">Foto del comprobante (obligatoria)</label>
