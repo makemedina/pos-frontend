@@ -228,7 +228,16 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
                         </div>
                       ))}
                     </div>
-                    <div style={{ fontWeight: 700 }}>{formatoKg(p.stockDisponible)} kg</div>
+                    <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 8 }}>
+                      <div style={{ fontWeight: 700 }}>{formatoKg(p.stockDisponible)} kg</div>
+                      {/* Costo total del inventario de esta ficha: cada lote
+                          a su propio costo (kg disponibles x costo/kg). */}
+                      {p.lotes.length > 0 && (
+                        <div className="t-tenue-12">
+                          Costo total {formatoMoneda(p.lotes.reduce((acc, l) => acc + l.cantidadDisponible * l.costoUnitario, 0))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
