@@ -501,15 +501,29 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
     return acc;
   }, {});
 
+  // Un solo campo de busqueda para todo: concepto, categoria, departamento,
+  // proveedor, automovil, metodo de pago, quien lo registro e importe.
+  // El importe se busca sin "$" ni comas: "1500", "1,500" o "$1,500.00"
+  // encuentran un gasto de 1500.
   const gastosFiltrados = gastos.filter((g) => {
-    if (!busquedaGasto.trim()) return true;
-    const q = busquedaGasto.trim().toLowerCase();
-    return (
-      g.concepto.toLowerCase().includes(q) ||
-      g.categoria.nombre.toLowerCase().includes(q) ||
-      (g.proveedor?.nombre || '').toLowerCase().includes(q) ||
-      (g.automovil?.nombre || '').toLowerCase().includes(q)
-    );
+    const q = normalizarTexto(busquedaGasto.trim());
+    if (!q) return true;
+    const textos = [
+      g.concepto,
+      g.categoria.nombre,
+      g.categoria.departamento,
+      g.proveedor?.nombre || '',
+      g.automovil ? nombreAutomovil(g.automovil) : '',
+      nombreMetodo(g.metodoPago),
+      g.registradoPor?.nombre || '',
+    ];
+    if (textos.some((t) => normalizarTexto(t).includes(q))) return true;
+    const qNumero = q.replace(/[$,\s]/g, '');
+    if (!qNumero || !/^\d*\.?\d*$/.test(qNumero)) return false;
+    const monto = Number(g.monto);
+    const montoTexto = monto.toFixed(2);
+    // Desde el inicio del numero: "150" encuentra 150 y 1500, no 2150.
+    return montoTexto.startsWith(qNumero);
   });
 
   // Los totales/subtotales del reporte no cuentan los gastos cancelados
@@ -1041,7 +1055,7 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
 
             <input
               className="buscador"
-              placeholder="Buscar por concepto, categoría o proveedor"
+              placeholder="Buscar por concepto, importe, proveedor, categoría…"
               value={busquedaGasto}
               onChange={(e) => setBusquedaGasto(e.target.value)}
             />
