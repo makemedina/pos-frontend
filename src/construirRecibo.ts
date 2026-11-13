@@ -21,6 +21,9 @@ export interface DatosRecibo {
   vendedor: string;
   cliente?: { nombre: string; telefono: string } | null;
   items: ItemReciboDatos[];
+  // Servicio a domicilio, ya incluido en total. Se imprime como renglon
+  // aparte si es mayor a cero.
+  cargoDomicilio?: number;
   total: number;
   // El pago inicial se puede repartir entre varios metodos (ej. parte en
   // efectivo y parte por transferencia) -- se muestra cada uno por separado.
@@ -66,6 +69,9 @@ export function construirLineasRecibo(config: Configuracion, datos: DatosRecibo)
     lineas.push({
       texto: lineaDosColumnas(`${item.cantidad}kg x $${item.precioUnitario.toFixed(2)}`, `$${subtotal.toFixed(2)}`, ancho),
     });
+  }
+  if (datos.cargoDomicilio && datos.cargoDomicilio > 0) {
+    lineas.push({ texto: lineaDosColumnas('Servicio a domicilio', `$${datos.cargoDomicilio.toFixed(2)}`, ancho) });
   }
   lineas.push({ texto: lineaSeparadora(ancho) });
   lineas.push({ texto: lineaDosColumnas('TOTAL', `$${datos.total.toFixed(2)}`, ancho), negrita: true, doble: true });

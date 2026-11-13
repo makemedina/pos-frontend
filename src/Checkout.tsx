@@ -14,6 +14,8 @@ interface Props {
     clienteTelefono: string;
     esCredito: boolean;
     pagos: { monto: number; metodoPago: string }[];
+    // Servicio a domicilio (0 si no aplica), se suma al total de la nota.
+    cargoDomicilio: number;
     autorizadoPorTelefono?: string;
     autorizadoPin?: string;
     motivoAutorizacion?: string;
@@ -50,7 +52,14 @@ export function Checkout({
   // dar ruido tipo 136.01000000000002 (mas facil de ver ahora que la
   // cantidad admite hasta 3 decimales), y este total precarga el campo
   // de efectivo, asi que se veria tal cual en la pantalla.
-  const total = Math.round(items.reduce((acc, i) => acc + i.cantidad * i.precioUnitario, 0) * 100) / 100;
+  const subtotalProductos = Math.round(items.reduce((acc, i) => acc + i.cantidad * i.precioUnitario, 0) * 100) / 100;
+
+  // Servicio a domicilio: si se marca, se captura el importe y se suma al
+  // total de la nota.
+  const [conDomicilio, setConDomicilio] = useState(false);
+  const [textoDomicilio, setTextoDomicilio] = useState('');
+  const cargoDomicilio = conDomicilio ? Math.max(Math.round((Number(textoDomicilio) || 0) * 100) / 100, 0) : 0;
+  const total = Math.round((subtotalProductos + cargoDomicilio) * 100) / 100;
 
   const [esCredito, setEsCredito] = useState(false);
   // El pago se puede repartir entre efectivo y transferencia -- ej. el
@@ -120,6 +129,10 @@ export function Checkout({
     if (guardandoVenta) return;
     setErrorMontos(null);
 
+    if (conDomicilio && cargoDomicilio <= 0) {
+      setErrorMontos('Escribe el importe del servicio a domicilio, o desmarca la casilla.');
+      return;
+    }
     if (!esCredito && diferenciaContado > 0.01) {
       setErrorMontos(`Falta ${formatoMoneda(diferenciaContado)} para completar el total.`);
       return;
@@ -143,6 +156,7 @@ export function Checkout({
       clienteTelefono: cliente.telefono,
       esCredito,
       pagos,
+      cargoDomicilio,
       autorizadoPorTelefono: autorizadoPorTelefono.trim() || undefined,
       autorizadoPin: autorizadoPin.trim() || undefined,
       motivoAutorizacion: motivoAutorizacion.trim() || undefined,
@@ -164,11 +178,52 @@ export function Checkout({
               <span>{formatoMoneda((i.cantidad * i.precioUnitario))}</span>
             </div>
           ))}
+          {cargoDomicilio > 0 && (
+            <div className="linea-resumen">
+              <span>Servicio a domicilio</span>
+              <span>{formatoMoneda(cargoDomicilio)}</span>
+            </div>
+          )}
           <div className="linea-resumen total">
             <span>Total</span>
             <span>{formatoMoneda(total)}</span>
           </div>
         </div>
+
+        <label className="fs-13" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '12px 0 4px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={conDomicilio}
+            style={{ width: 20, height: 20, margin: 0 }}
+            onChange={(e) => {
+              setConDomicilio(e.target.checked);
+              if (!e.target.checked) setTextoDomicilio('');
+              setErrorMontos(null);
+            }}
+          />
+          Incluir servicio a domicilio
+        </label>
+        {conDomicilio && (
+          <label className="fs-13">
+            Importe del servicio a domicilio
+            <div className="campo-precio">
+              <span>$</span>
+              <input
+                autoFocus
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={textoDomicilio}
+                onChange={(e) => {
+                  setTextoDomicilio(e.target.value);
+                  setErrorMontos(null);
+                }}
+              />
+            </div>
+          </label>
+        )}
 
         <label className="etiqueta">Cliente</label>
         <div className="cliente-chip">

@@ -536,6 +536,7 @@ export default function App() {
     clienteTelefono: string;
     esCredito: boolean;
     pagos: { monto: number; metodoPago: string }[];
+    cargoDomicilio: number;
     autorizadoPorTelefono?: string;
     autorizadoPin?: string;
     motivoAutorizacion?: string;
@@ -559,6 +560,7 @@ export default function App() {
         ? await confirmarCotizacion(cotizacionActivaId, {
             esCredito: datos.esCredito,
             pagos: datos.pagos,
+            cargoDomicilio: datos.cargoDomicilio,
             autorizadoPorTelefono: datos.autorizadoPorTelefono,
             autorizadoPin: datos.autorizadoPin,
             motivoAutorizacion: datos.motivoAutorizacion,
@@ -584,6 +586,7 @@ export default function App() {
             }),
             esCredito: datos.esCredito,
             pagos: datos.pagos,
+            cargoDomicilio: datos.cargoDomicilio,
           });
       setMensaje(`Venta #${resultado.venta.folio} registrada. Total: $${resultado.venta.total}`);
       setCotizacionActivaId(null);
@@ -600,6 +603,7 @@ export default function App() {
           cantidad: i.cantidad,
           precioUnitario: i.precioUnitario,
         })),
+        cargoDomicilio: datos.cargoDomicilio,
         total: Number(resultado.venta.total),
         pagos: datos.pagos,
         esCredito: datos.esCredito,
@@ -649,7 +653,7 @@ export default function App() {
 
         // Sin conexion pero es una venta normal (sin autorizacion pendiente):
         // se guarda en el celular y se sube sola cuando regrese internet.
-        const total = carrito.reduce((acc, i) => acc + i.cantidad * i.precioUnitario, 0);
+        const total = carrito.reduce((acc, i) => acc + i.cantidad * i.precioUnitario, 0) + datos.cargoDomicilio;
         encolarVenta(
           {
             clienteId: datos.clienteId,
@@ -660,6 +664,7 @@ export default function App() {
             })),
             esCredito: datos.esCredito,
             pagos: datos.pagos,
+            cargoDomicilio: datos.cargoDomicilio,
           },
           {
             clienteNombre: datos.clienteNombre,
@@ -683,6 +688,7 @@ export default function App() {
             cantidad: i.cantidad,
             precioUnitario: i.precioUnitario,
           })),
+          cargoDomicilio: datos.cargoDomicilio,
           total,
           pagos: datos.pagos,
           esCredito: datos.esCredito,

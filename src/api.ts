@@ -707,6 +707,9 @@ export interface VentaDetalle {
   folio: number;
   fecha: string;
   total: number;
+  // Servicio a domicilio (ya incluido en total). Puede faltar en
+  // respuestas de un servidor anterior a este campo.
+  cargoDomicilio?: number;
   saldoPendiente: number;
   esCredito: boolean;
   estadoPago: string;
@@ -1254,6 +1257,8 @@ export interface CrearVentaPayload {
   // El pago inicial se puede repartir entre varios metodos (ej. parte en
   // efectivo y parte por transferencia).
   pagos?: PagoInicialPayload[];
+  // Cargo por servicio a domicilio, se suma al total de la nota.
+  cargoDomicilio?: number;
   // Solo para ventas capturadas sin conexion: el id de la cola local. Si
   // la misma venta se sube dos veces, el servidor regresa la que ya tenia.
   idLocal?: string;
@@ -1341,6 +1346,7 @@ export async function confirmarCotizacion(
     autorizadoPorTelefono?: string;
     autorizadoPin?: string;
     motivoAutorizacion?: string;
+    cargoDomicilio?: number;
   }
 ) {
   const res = await fetch(`${API_URL}/cotizaciones/${id}/confirmar`, {

@@ -68,6 +68,12 @@ export function ReciboVenta({ config, datos, elementId }: Props) {
           </div>
         </div>
       ))}
+      {!!datos.cargoDomicilio && datos.cargoDomicilio > 0 && (
+        <div className="fila-entre" style={{ marginBottom: 6 }}>
+          <span>Servicio a domicilio</span>
+          <span>{formatoMoneda(datos.cargoDomicilio)}</span>
+        </div>
+      )}
       <hr className="separador-punteado" />
       <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 16 }}>
         <span>TOTAL</span>

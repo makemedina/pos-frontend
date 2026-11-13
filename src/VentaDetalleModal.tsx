@@ -79,6 +79,7 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
           cantidad: it.cantidad,
           precioUnitario: it.precioUnitario,
         })),
+        cargoDomicilio: venta.cargoDomicilio,
         total: venta.total,
         // Un pago se pudo haber repartido entre efectivo y transferencia, o
         // la nota pudo recibir varios abonos con el mismo metodo -- se
@@ -186,6 +187,12 @@ export function VentaDetalleModal({ ventaId, esAdmin, onCerrar, onCancelada }: P
                   <span>{formatoMoneda(it.subtotal)}</span>
                 </div>
               ))}
+              {!!venta.cargoDomicilio && venta.cargoDomicilio > 0 && (
+                <div className="linea-resumen">
+                  <span>Servicio a domicilio</span>
+                  <span>{formatoMoneda(venta.cargoDomicilio)}</span>
+                </div>
+              )}
               <div className="linea-resumen total">
                 <span>Total</span>
                 <span>{formatoMoneda(venta.total)}</span>
