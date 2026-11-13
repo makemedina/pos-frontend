@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { Icono } from './iconos';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import {
@@ -199,12 +200,10 @@ export function AdminProspectos({ onCerrar, esAdmin, usuarioId, prospectoInicial
   }
 
   const filtrados = useMemo(() => {
-    const q = busqueda.trim().toLowerCase();
     return prospectos.filter(
       (p) =>
         (!filtroOrigen || p.origen === filtroOrigen) &&
-        (!q ||
-          [p.nombre, p.nombreContacto, p.telefono, p.colonia, p.interes].some((v) => v?.toLowerCase().includes(q)))
+        coincideBusqueda(busqueda, [p.nombre, p.nombreContacto, p.telefono, p.colonia, p.interes])
     );
   }, [prospectos, busqueda, filtroOrigen]);
 

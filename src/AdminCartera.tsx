@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, etiquetaMetodoPago, formatoFecha, formatoFechaHora } from './formato';
@@ -556,7 +557,7 @@ export function AdminCartera({ onCerrar }: Props) {
 
   const clientesFiltrados = clientes.filter((c) => {
     if (ocultarSinSaldo && c.saldoTotal === 0) return false;
-    return !busquedaCartera.trim() || c.nombre.toLowerCase().includes(busquedaCartera.trim().toLowerCase());
+    return coincideBusqueda(busquedaCartera, [c.nombre, c.telefono], [c.saldoTotal]);
   });
   const totalCartera = clientesFiltrados.reduce((acc, c) => acc + c.saldoTotal, 0);
 
@@ -804,7 +805,7 @@ export function AdminCartera({ onCerrar }: Props) {
           <>
             <input
               className="buscador"
-              placeholder="Buscar cliente por nombre"
+              placeholder="Buscar por cliente, teléfono o importe"
               value={busquedaCartera}
               onChange={(e) => setBusquedaCartera(e.target.value)}
             />

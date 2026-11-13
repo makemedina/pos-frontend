@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoFecha } from './formato';
@@ -33,14 +34,9 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
   const totalPendiente = facturas.reduce((acc, f) => acc + f.saldoPendiente, 0);
 
   const facturasFiltradas = facturas
-    .filter((f) => {
-      if (!busqueda.trim()) return true;
-      const q = busqueda.trim().toLowerCase();
-      return (
-        f.proveedor.nombre.toLowerCase().includes(q) ||
-        (f.numeroFactura || '').toLowerCase().includes(q)
-      );
-    })
+    .filter((f) =>
+      coincideBusqueda(busqueda, [f.proveedor.nombre, f.numeroFactura], [f.saldoPendiente, f.total])
+    )
     .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
   async function exportar() {
@@ -77,7 +73,7 @@ export function AdminFacturasPendientes({ onCerrar }: Props) {
 
         <input
           className="buscador"
-          placeholder="Buscar por proveedor o número de factura"
+          placeholder="Buscar por proveedor, factura o importe"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />

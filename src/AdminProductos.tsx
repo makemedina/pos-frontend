@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoKg, formatoFecha, formatoFechaHora } from './formato';
@@ -143,9 +144,7 @@ export function AdminProductos({ onCerrar, onIrAjusteGeneral, onRegistrarAjuste,
   }
 
   const productosVisibles = (verSinStock ? productos : productos.filter((p) => p.stockDisponible > 0)).filter((p) => {
-    if (!busquedaProducto.trim()) return true;
-    const q = busquedaProducto.trim().toLowerCase();
-    return p.producto.toLowerCase().includes(q) || p.marca.toLowerCase().includes(q);
+    return coincideBusqueda(busquedaProducto, [p.producto, p.marca]);
   });
 
   // Valor del stock que se ve en la lista (segun filtros activos), valuado

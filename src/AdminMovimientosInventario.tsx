@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoKg, formatoFecha, formatoFechaHora } from './formato';
@@ -55,6 +56,9 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
 
   const [resumen, setResumen] = useState<ResumenMovimientosInventario | null>(null);
   const [movimientos, setMovimientos] = useState<MovimientoInventario[]>([]);
+  // Buscador de un solo campo sobre la lista: producto, marca, referencia,
+  // tipo, kilos o importe.
+  const [busquedaMovimiento, setBusquedaMovimiento] = useState('');
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
@@ -87,6 +91,14 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
       setCargando(false);
     }
   }
+
+  const movimientosVisibles = movimientos.filter((m) =>
+    coincideBusqueda(
+      busquedaMovimiento,
+      [m.producto, m.marca, m.referencia, ETIQUETAS_TIPO[m.tipo]?.texto],
+      [m.valor, m.cantidad]
+    )
+  );
 
   async function buscarProducto(valor: string) {
     setBusquedaProducto(valor);
@@ -228,9 +240,16 @@ export function AdminMovimientosInventario({ onCerrar }: Props) {
               </div>
             )}
 
+            <input
+              className="buscador"
+              placeholder="Buscar por producto, referencia o importe"
+              value={busquedaMovimiento}
+              onChange={(e) => setBusquedaMovimiento(e.target.value)}
+            />
+
             <div className="lista-tarjetas grid-gap-05">
-              {movimientos.length === 0 && <p className="t-tenue">No hay movimientos con esos filtros.</p>}
-              {movimientos.map((m) => {
+              {movimientosVisibles.length === 0 && <p className="t-tenue">No hay movimientos con esos filtros.</p>}
+              {movimientosVisibles.map((m) => {
                 const info = ETIQUETAS_TIPO[m.tipo];
                 return (
                   <div

@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { Icono } from './iconos';
 import { useEffect, useMemo, useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora, etiquetaMetodoPago } from './formato';
@@ -191,8 +192,8 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
   }
   const saldoAFavorElegido = saldoAFavorDe(proveedorElegido?.id);
 
-  const proveedoresFiltrados = proveedoresResumen.filter(
-    (p) => !busqueda.trim() || p.nombre.toLowerCase().includes(busqueda.trim().toLowerCase())
+  const proveedoresFiltrados = proveedoresResumen.filter((p) =>
+    coincideBusqueda(busqueda, [p.nombre, p.telefono], [p.saldoTotal])
   );
   const totalPorPagar = proveedoresFiltrados.reduce((acc, p) => acc + p.saldoTotal, 0);
 
@@ -601,7 +602,7 @@ export function AdminCuentasPorPagar({ onCerrar }: Props) {
           <>
             <input
               className="buscador"
-              placeholder="Buscar proveedor por nombre"
+              placeholder="Buscar por proveedor, teléfono o importe"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />

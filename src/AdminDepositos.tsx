@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
@@ -164,11 +165,9 @@ export function AdminDepositos({ onCerrar }: Props) {
     }
   }
 
-  const depositosFiltrados = depositos.filter((d) => {
-    if (!busqueda.trim()) return true;
-    const q = busqueda.trim().toLowerCase();
-    return (d.notas || '').toLowerCase().includes(q) || d.registradoPor.nombre.toLowerCase().includes(q);
-  });
+  const depositosFiltrados = depositos.filter((d) =>
+    coincideBusqueda(busqueda, [d.notas, d.registradoPor.nombre], [d.monto])
+  );
 
   return (
     <div className="pantalla-centrada pantalla-arriba">
@@ -258,7 +257,7 @@ export function AdminDepositos({ onCerrar }: Props) {
           <>
             <input
               className="buscador"
-              placeholder="Buscar por notas o quién lo registró"
+              placeholder="Buscar por notas, importe o quién lo registró"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />

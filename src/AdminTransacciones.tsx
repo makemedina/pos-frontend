@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { useEffect, useMemo, useState } from 'react';
 import { API_URL, headerAuth } from './api';
 
@@ -46,12 +47,15 @@ export function AdminTransacciones({ onCerrar }: Props) {
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
 
+  const [busqueda, setBusqueda] = useState('');
   const transaccionesFiltradas = useMemo(
     () =>
-      filtroTipo === 'todo'
-        ? transacciones
-        : transacciones.filter((transaccion) => transaccion.tipo === filtroTipo),
-    [filtroTipo, transacciones]
+      transacciones.filter(
+        (t) =>
+          (filtroTipo === 'todo' || t.tipo === filtroTipo) &&
+          coincideBusqueda(busqueda, [t.tipo, t.referencia, t.contrapartida, t.metodoPago], [t.monto])
+      ),
+    [filtroTipo, transacciones, busqueda]
   );
 
   useEffect(() => {
@@ -142,6 +146,13 @@ export function AdminTransacciones({ onCerrar }: Props) {
             Compras
           </button>
         </div>
+
+        <input
+          className="buscador"
+          placeholder="Buscar por referencia, cliente/proveedor o importe"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
 
         {cargando ? (
           <p>Cargando transacciones...</p>

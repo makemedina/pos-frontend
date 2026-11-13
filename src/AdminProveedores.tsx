@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { useEffect, useState } from 'react';
 import {
   obtenerProveedoresTodos,
@@ -95,11 +96,7 @@ export function AdminProveedores({ onCerrar, esAdmin, puedeVerCostos }: Props) {
     }
   }
 
-  const proveedoresFiltrados = proveedores.filter((p) => {
-    if (!busqueda.trim()) return true;
-    const q = busqueda.trim().toLowerCase();
-    return p.nombre.toLowerCase().includes(q) || (p.telefono || '').includes(busqueda.trim());
-  });
+  const proveedoresFiltrados = proveedores.filter((p) => coincideBusqueda(busqueda, [p.nombre, p.telefono]));
 
   if (proveedorCostos) {
     return (

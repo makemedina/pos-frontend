@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, etiquetaMetodoPago, formatoFecha, formatoFechaHora } from './formato';
@@ -88,7 +89,25 @@ export function AdminHistorialVentas({
   const [resultadosProducto, setResultadosProducto] = useState<Producto[]>([]);
   const [productoElegido, setProductoElegido] = useState<Producto | null>(null);
 
-  const [ventas, setVentas] = useState<VentaHistorial[]>([]);
+  const [ventasCargadas, setVentas] = useState<VentaHistorial[]>([]);
+  // Buscador de un solo campo sobre las ventas ya cargadas: folio,
+  // cliente, telefono, vendedor, metodo de pago, productos o importe.
+  const [busquedaVenta, setBusquedaVenta] = useState('');
+  const ventas = ventasCargadas.filter((v) =>
+    coincideBusqueda(
+      busquedaVenta,
+      [
+        String(v.folio),
+        `#${v.folio}`,
+        v.cliente.nombre,
+        v.cliente.telefono,
+        v.vendedor.nombre,
+        ...v.metodosPago.map(etiquetaMetodoPago),
+        ...v.items.flatMap((it) => [it.producto, it.marca]),
+      ],
+      [v.total, v.saldoPendiente]
+    )
+  );
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [notaAbierta, setNotaAbierta] = useState<string | null>(null);
@@ -397,6 +416,13 @@ export function AdminHistorialVentas({
             </button>
           </label>
         </div>
+
+        <input
+          className="buscador"
+          placeholder="Buscar por folio, cliente, producto o importe"
+          value={busquedaVenta}
+          onChange={(e) => setBusquedaVenta(e.target.value)}
+        />
 
         {/* Resumen del periodo filtrado */}
         {!cargando && (

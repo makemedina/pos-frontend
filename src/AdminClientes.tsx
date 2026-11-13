@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { Icono } from './iconos';
 import { useEffect, useState } from 'react';
 import { formatoMoneda, formatoDireccion, formatoFecha, formatoFechaHora, haceDias, telefonoValido, MENSAJE_TELEFONO_INVALIDO } from './formato';
@@ -466,9 +467,7 @@ export function AdminClientes({ onCerrar, esAdmin, usuarioId }: Props) {
   const clientesFiltrados = clientes
     .filter((c) => {
       if (c.activo !== verActivos) return false;
-      if (!busquedaCliente.trim()) return true;
-      const q = busquedaCliente.trim().toLowerCase();
-      return c.nombre.toLowerCase().includes(q) || c.telefono.includes(busquedaCliente.trim());
+      return coincideBusqueda(busquedaCliente, [c.nombre, c.telefono], [c.saldoTotal]);
     })
     .sort((a, b) => {
       // monto: saldo pendiente de mayor a menor; ultimaCompra: la mas
@@ -628,7 +627,7 @@ export function AdminClientes({ onCerrar, esAdmin, usuarioId }: Props) {
 
             <input
               className="buscador"
-              placeholder="Buscar por nombre o teléfono"
+              placeholder="Buscar por nombre, teléfono o saldo"
               value={busquedaCliente}
               onChange={(e) => setBusquedaCliente(e.target.value)}
             />

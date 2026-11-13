@@ -1,3 +1,4 @@
+import { coincideBusqueda, normalizarTexto } from './busqueda';
 import { Icono, type NombreIcono } from './iconos';
 import { useEffect, useRef, useState } from 'react';
 import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
@@ -38,11 +39,6 @@ const METODOS_PAGO: { valor: string; titulo: string; descripcion: string; icono:
 // 'automovil' solo aparece si la subcategoria lo pide (ver usoAutomovil).
 type PasoRegistro = 'categoria' | 'subcategoria' | 'automovil' | 'importe' | 'concepto' | 'metodo' | 'comprobante';
 const PASOS: PasoRegistro[] = ['categoria', 'subcategoria', 'automovil', 'importe', 'concepto', 'metodo', 'comprobante'];
-
-// Sin acentos y en minusculas, para buscar "panaderia" y encontrar "Panadería".
-function normalizarTexto(texto: string) {
-  return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-}
 
 function nombreMetodo(valor: string) {
   return METODOS_PAGO.find((m) => m.valor === valor)?.titulo ?? valor;
@@ -505,26 +501,23 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
   // proveedor, automovil, metodo de pago, quien lo registro e importe.
   // El importe se busca sin "$" ni comas: "1500", "1,500" o "$1,500.00"
   // encuentran un gasto de 1500.
-  const gastosFiltrados = gastos.filter((g) => {
-    const q = normalizarTexto(busquedaGasto.trim());
-    if (!q) return true;
-    const textos = [
-      g.concepto,
-      g.categoria.nombre,
-      g.categoria.departamento,
-      g.proveedor?.nombre || '',
-      g.automovil ? nombreAutomovil(g.automovil) : '',
-      nombreMetodo(g.metodoPago),
-      g.registradoPor?.nombre || '',
-    ];
-    if (textos.some((t) => normalizarTexto(t).includes(q))) return true;
-    const qNumero = q.replace(/[$,\s]/g, '');
-    if (!qNumero || !/^\d*\.?\d*$/.test(qNumero)) return false;
-    const monto = Number(g.monto);
-    const montoTexto = monto.toFixed(2);
-    // Desde el inicio del numero: "150" encuentra 150 y 1500, no 2150.
-    return montoTexto.startsWith(qNumero);
-  });
+  // Un solo campo de busqueda para todo: concepto, categoria, departamento,
+  // proveedor, automovil, metodo de pago, quien lo registro e importe.
+  const gastosFiltrados = gastos.filter((g) =>
+    coincideBusqueda(
+      busquedaGasto,
+      [
+        g.concepto,
+        g.categoria.nombre,
+        g.categoria.departamento,
+        g.proveedor?.nombre,
+        g.automovil ? nombreAutomovil(g.automovil) : '',
+        nombreMetodo(g.metodoPago),
+        g.registradoPor?.nombre,
+      ],
+      [g.monto]
+    )
+  );
 
   // Los totales/subtotales del reporte no cuentan los gastos cancelados
   // -- ese dinero nunca salio de verdad, igual que en el corte de caja.

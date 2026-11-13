@@ -1,6 +1,7 @@
+import { coincideBusqueda } from './busqueda';
 import { Icono } from './iconos';
 import { useEffect, useMemo, useState } from 'react';
-import { formatoMoneda, formatoFecha, formatoFechaHora } from './formato';
+import { formatoMoneda, formatoFecha, formatoFechaHora, etiquetaMetodoPago } from './formato';
 import {
   obtenerHistorialCompras,
   buscarProveedores,
@@ -67,7 +68,23 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
   const [resultadosProducto, setResultadosProducto] = useState<Producto[]>([]);
   const [productoElegido, setProductoElegido] = useState<Producto | null>(null);
 
-  const [compras, setCompras] = useState<CompraHistorial[]>([]);
+  const [comprasCargadas, setCompras] = useState<CompraHistorial[]>([]);
+  // Buscador de un solo campo sobre las compras ya cargadas: factura,
+  // proveedor, metodo de pago, productos o importe.
+  const [busquedaCompra, setBusquedaCompra] = useState('');
+  const compras = comprasCargadas.filter((c) =>
+    coincideBusqueda(
+      busquedaCompra,
+      [
+        c.numeroFactura,
+        c.proveedor.nombre,
+        c.proveedor.telefono,
+        ...c.metodosPago.map(etiquetaMetodoPago),
+        ...c.items.flatMap((it) => [it.producto, it.marca]),
+      ],
+      [c.total, c.saldoPendiente]
+    )
+  );
   const [cargando, setCargando] = useState(true);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [compraAbierta, setCompraAbierta] = useState<string | null>(null);
@@ -277,6 +294,13 @@ export function AdminHistorialCompras({ onCerrar, proveedor }: Props) {
             )}
           </div>
         </div>
+
+        <input
+          className="buscador"
+          placeholder="Buscar por factura, proveedor, producto o importe"
+          value={busquedaCompra}
+          onChange={(e) => setBusquedaCompra(e.target.value)}
+        />
 
         {!cargando && (
           <div className="fila-gap-075-wrap">
