@@ -30,6 +30,7 @@ const METODOS_PAGO: { valor: string; titulo: string; descripcion: string; icono:
   { valor: 'efectivo', titulo: 'Efectivo', descripcion: 'Sale de la caja', icono: 'cartera', color: '#4f7a5f' },
   { valor: 'transferencia', titulo: 'Transferencia', descripcion: 'Sale del banco', icono: 'banco', color: '#3f6b73' },
   { valor: 'tarjeta', titulo: 'Tarjeta', descripcion: 'Sale del banco', icono: 'tarjeta', color: '#5b6b9a' },
+  { valor: 'cheque', titulo: 'Cheque', descripcion: 'Sale del banco', icono: 'documento', color: '#7a6a4f' },
 ];
 
 // Pasos del registro de un gasto, en orden.
@@ -843,6 +844,7 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
                     <option value="efectivo">Efectivo</option>
                     <option value="transferencia">Transferencia</option>
                     <option value="tarjeta">Tarjeta</option>
+                    <option value="cheque">Cheque</option>
                   </select>
                 </label>
 
@@ -933,6 +935,7 @@ export function AdminGastos({ onCerrar, esAdmin, onAbrirCategorias }: Props) {
                         <option value="efectivo">Efectivo</option>
                         <option value="transferencia">Transferencia</option>
                         <option value="tarjeta">Tarjeta</option>
+                        <option value="cheque">Cheque</option>
                       </select>
                       <label className="etiqueta">Categoría</label>
                       <select value={editCategoriaId} onChange={(e) => setEditCategoriaId(e.target.value)}>
