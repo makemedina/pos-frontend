@@ -1,3 +1,4 @@
+import { coincideBusqueda } from './busqueda';
 import { useEffect, useState } from 'react';
 import { Icono, type NombreIcono } from './iconos';
 import SelectorTema from './SelectorTema';
@@ -1040,11 +1041,10 @@ export default function App() {
     }
 
     if (pantallaActiva === 'catalogo' && clienteVenta) {
-      const catalogoFiltrado = catalogo.filter((v) => {
-        if (!busquedaProducto.trim()) return true;
-        const q = busquedaProducto.trim().toLowerCase();
-        return v.producto.toLowerCase().includes(q) || v.marca.toLowerCase().includes(q);
-      });
+      // Producto, marca, categoria o precio, en un solo campo.
+      const catalogoFiltrado = catalogo.filter((v) =>
+        coincideBusqueda(busquedaProducto, [v.producto, v.marca, v.categoria], [v.precioVenta])
+      );
 
       return (
         <>
@@ -1069,7 +1069,7 @@ export default function App() {
 
           <input
             className="buscador"
-            placeholder="Buscar producto o marca"
+            placeholder="Buscar producto, marca o precio"
             value={busquedaProducto}
             onChange={(e) => setBusquedaProducto(e.target.value)}
             style={{ marginBottom: 10 }}

@@ -484,16 +484,14 @@ export function AdminClientes({ onCerrar, esAdmin, usuarioId }: Props) {
   const totalActivos = clientes.filter((c) => c.activo).length;
   const totalInactivos = clientes.length - totalActivos;
 
-  const ventasFiltradas = ventas.filter((v) => {
-    if (!busquedaProducto.trim()) return true;
-    const q = busquedaProducto.trim().toLowerCase();
-    return v.items.some(
-      (it) =>
-        it.producto.toLowerCase().includes(q) ||
-        it.marca.toLowerCase().includes(q) ||
-        it.productoId.toLowerCase().includes(q)
-    );
-  });
+  // Folio, producto, marca, codigo o importe (total o saldo), en un solo campo.
+  const ventasFiltradas = ventas.filter((v) =>
+    coincideBusqueda(
+      busquedaProducto,
+      [String(v.folio), `#${v.folio}`, ...v.items.flatMap((it) => [it.producto, it.marca, it.productoId])],
+      [v.total, v.saldoPendiente]
+    )
+  );
 
   async function exportar() {
     try {
@@ -848,7 +846,7 @@ export function AdminClientes({ onCerrar, esAdmin, usuarioId }: Props) {
               <div className="grid-gap-05">
                 <input
                   className="buscador"
-                  placeholder="Buscar por producto, marca o código"
+                  placeholder="Buscar por folio, producto o importe"
                   value={busquedaProducto}
                   onChange={(e) => setBusquedaProducto(e.target.value)}
                 />
